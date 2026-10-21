@@ -20,25 +20,26 @@ python3 -m http.server 8765
 
 Puis ouvrir http://localhost:8765.
 
-## Rafraîchir les prix (≈ 3 minutes)
+## Les prix
+
+Chaque dimanche à 05:00 UTC (08:00 à Bucarest en été), le workflow GitHub « Publier Duo » lance `tools/fetch-prices.mjs`, enregistre `data/prices.js` et republie l'app. Pour forcer une mise à jour : onglet **Actions** du dépôt › « Publier Duo » › **Run workflow**, ou sur le Mac :
 
 ```bash
 node tools/fetch-prices.mjs
 ```
 
-Auchan et Carrefour : prix du site en ligne. Kaufland : seulement les offres de la semaine. Lidl et METRO n'ont pas de prix en ligne : saisissez-les dans « Mes courses › Prix ↗ » depuis vos tickets.
+Auchan et Carrefour : prix du site en ligne. Lidl : produits en magasin cette semaine (prix normal et Lidl Plus). Kaufland : offres de la semaine (prix normal et Kaufland Card). METRO n'a pas de prix publics : saisissez-les dans « Mes courses › Prix ↗ ».
 
 ## Sur l'iPhone (recommandé : app installée, 100 % hors ligne)
 
-1. Mettre le dossier `duo-app` en ligne une fois en **https** (GitHub Pages, Netlify ou Cloudflare Pages, gratuits). Le site ne contient que l'app : vos données restent dans l'iPhone.
-2. Ouvrir l'adresse dans **Safari** › Partager › **Sur l'écran d'accueil**.
+1. L'app est en ligne sur **https://baptistepradellepro.github.io/duo-app/** (GitHub Pages, republiée à chaque modification). Le site ne contient que l'app : vos données restent dans l'iPhone.
+2. Ouvrir cette adresse dans **Safari** › Partager › **Sur l'écran d'accueil**.
 3. Ouvrir l'app une fois en ligne : ensuite elle fonctionne **sans réseau** (planning, liste de courses, placard, recettes). Seuls le scan (fiche Open Food Facts) et le rafraîchissement des prix demandent internet.
-4. Pour mettre à jour les prix : `node tools/fetch-prices.mjs` sur le Mac, puis republier le dossier.
 
 Sans hébergement, l'iPhone peut ouvrir l'app servie par le Mac sur le même Wi-Fi (`python3 -m http.server 8765 --bind 0.0.0.0`, puis `http://<IP-du-Mac>:8765`), mais sans mode hors ligne ni caméra en direct.
 
 ## Le dimanche matin, automatiquement
 
-Raccourcis › Automatisation › **Heure de la journée** › dimanche 9:00 › action **Ouvrir les URL** : `https://<votre-adresse>/#dimanche`, et désactiver « Demander avant d'exécuter ».
+Raccourcis › Automatisation › **Heure de la journée** › dimanche 9:00 › action **Ouvrir les URL** : `https://baptistepradellepro.github.io/duo-app/#dimanche`, et désactiver « Demander avant d'exécuter ».
 
 À l'ouverture du dimanche (ou via `#dimanche`), Duo prépare la semaine suivante si ce n'est pas déjà fait, ouvre le panneau « Dimanche : batch cooking & courses », et le bouton **📤 Envoyer le programme & la liste** l'envoie par WhatsApp, Messages ou e-mail.
