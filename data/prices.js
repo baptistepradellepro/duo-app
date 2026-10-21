@@ -1690,6 +1690,14 @@ window.PRICES = {
      "url": "https://www.auchan.ro/sfecla-rosie-cuburi-auchan-200-g/p"
     }
    ],
+   "lemon": [
+    {
+     "name": "Lamaie bio stoarsa congelata Frutivo, 10 x 35 g",
+     "price": 19.99,
+     "pack": 350,
+     "url": "https://www.auchan.ro/lamaie-bio-stoarsa-congelata-frutivo-10-x-35-g/p"
+    }
+   ],
    "herbs": [
     {
      "name": "Patrunjel Pouce, 8 g",
@@ -2574,6 +2582,12 @@ window.PRICES = {
      "price": 4.29,
      "pack": 500,
      "url": "https://www.auchan.ro/gris-baneasa-500-g/p"
+    },
+    {
+     "name": "Gris din grau Titan, 500 g",
+     "price": 4.99,
+     "pack": 500,
+     "url": "https://www.auchan.ro/titan-gris-din-grau-500g/p"
     },
     {
      "name": "Grisine cu sare Pouce, 90 g",
@@ -4460,9 +4474,9 @@ window.PRICES = {
      "url": "https://carrefour.ro/catalogsearch/result/?q=ciocolata%20neagra"
     },
     {
-     "name": "Ciocolata neagra Poiana cu 65% cacao 80 g",
-     "price": 6.29,
-     "pack": 80,
+     "name": "Ciocolata neagra Carrefour Selection cu bucati de boabe de cacao caramelizate 100 g",
+     "price": 7.99,
+     "pack": 100,
      "url": "https://carrefour.ro/catalogsearch/result/?q=ciocolata%20neagra"
     },
     {
