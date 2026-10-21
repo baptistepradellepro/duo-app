@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#234e3d" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Duo" />
+    <title>Duo — Votre semaine à table</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="icons/icon-180.png" />
+    <link rel="icon" href="icons/icon-192.png" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <aside>
+      <a class="logo" href="#">duo<span>✳</span></a
+      ><small>BIEN MANGER. À DEUX.</small>
+      <nav id="nav"></nav>
+      <div class="aside-bottom">
+        <div class="avatars">● ●</div>
+        <b>Votre petite équipe</b>
+        <p>2 personnes · Roumanie</p>
+        <button onclick="go('profils')">Personnaliser les profils ↗</button>
+      </div>
+    </aside>
+    <main>
+      <header>
+        <span>Votre cuisine, un peu plus organisée.</span
+        ><span class="pill">🇷🇴 RON · Lidl · Kaufland · Carrefour · Auchan</span>
+      </header>
+      <div id="app"></div>
+      <footer>
+        Vos données sont mémorisées sur cet appareil. Exportez une sauvegarde
+        pour les conserver ou les transférer.
+        <button onclick="backup()">Exporter</button>
+        <label class="link"
+          >Importer<input
+            hidden
+            type="file"
+            accept="application/json"
+            onchange="restore(event)"
+        /></label>
+      </footer>
+    </main>
+    <dialog id="modal"></dialog>
+    <div id="toast" role="status"></div>
+    <script src="vendor/zxing.min.js"></script>
+    <script src="data/ingredients.js"></script>
+    <script src="data/prices.js"></script>
+    <script src="data/recipes.js"></script>
+    <script src="data/recipes-plus.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
