@@ -137,6 +137,7 @@ window.CATALOG = [
   ["berries", "Fruits rouges surgelés · Fructe de pădure congelate", "g", 450, 12.99, 50, 1, "fructe de padure congelate", ["fructe", "padure"], ["ceai", "suc", "iaurt", "gem", "sirop"]],
   ["cauliflower", "Chou-fleur · Conopidă", "g", 1000, 7.99, 25, 2, "conopida", ["conopida"], ["congelata"]],
   ["sweet_potato", "Patates douces · Cartofi dulci", "g", 1000, 9.99, 86, 1.6, "cartofi dulci", ["cartofi", "dulci"], ["congelati", "chips"]],
+  ["matcha", "Thé matcha en poudre · Ceai matcha pudră", "g", 30, 29.99, 324, 30, "ceai matcha", ["matcha"], ["biscuiti", "ciocolata", "napolitane", "bautura", "latte"]],
   ["green_beans", "Haricots verts surgelés · Fasole verde congelată", "g", 450, 6.99, 31, 1.8, "fasole verde congelata", ["fasole", "verde"], []],
 ].map(([id, name, unit, pack, price, kcal, protein, query, must = [], not = [], store = "Lidl"]) => ({
   id,

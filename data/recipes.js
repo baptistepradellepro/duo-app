@@ -1,5 +1,6 @@
 // Carnet de recettes (textes rédigés pour Duo).
 // type "breakfast" et "main" : quantités PAR PERSONNE (l'app double pour deux).
+// type "drink" (boisson) et "snack" (en-cas) : par personne, hors planning, à enregistrer avec « Cuisiné en plus ».
 // type "batch" : quantités TOTALES pour la fournée ; portions = nombre de portions individuelles produites.
 // fixed : "chirashi" (mardi soir), "ramen" (jeudi ou vendredi soir).
 // yields : ce que la préparation ajoute au placard (ex. blancs et cuisses du poulet entier).
@@ -21,6 +22,7 @@ function r(id, name, emoji, cuisine, type, time, ingredients, steps, o = {}) {
     meal: o.meal || (type === "breakfast" ? "breakfast" : "main"),
     fixed: o.fixed || null,
     yields: o.yields || null,
+    snack: !!o.snack,
   });
 }
 

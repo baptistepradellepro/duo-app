@@ -125,6 +125,7 @@ window.ALIASES = {
   cauliflower: "chou fleur|conopida|cauliflower",
   sweet_potato: "patates douces|patate douce|cartofi dulci|sweet potato",
   green_beans: "haricots verts|haricot vert|fasole verde|green beans",
+  matcha: "the matcha|matcha|ceai matcha|matcha powder",
 };
 window.CATS = {
   milk: "milks|laits",
@@ -211,8 +212,8 @@ window.TAXONOMY = {
   "Sauces & condiments": { "Sauces asiatiques": "soy_sauce|fish_sauce|oyster_sauce|gochujang|miso|curry_paste", Condiments: "mustard|mayonnaise", "Huiles & vinaigres": "oil|oil_sun|sesame_oil|rice_vinegar", "Sauces froides & piquantes": "", Autre: "" },
   "Épices & aides culinaires": { "Épices & herbes séchées": "curry_powder|paprika|taco_spice|provence_herbs|cinnamon|sesame_seeds", Bouillons: "stock_cube", "Aides pâtisserie": "yeast|baking_powder|cornstarch", Autre: "" },
   "Sucré": { "Sucres & miel": "sugar|honey", "Pâtes à tartiner & confitures": "jam|peanut", "Chocolat & cacao": "cocoa|chocolate", "Desserts protéinés": "protein_pudding", Autre: "" },
-  "Boissons": { Sodas: "", Jus: "", Sirops: "", Eaux: "", "Café & thé": "", "Boissons protéinées": "protein_coffee", "Vins & alcools": "red_wine", Autre: "" },
-  "Snacks": { "Chips & salés": "", "Biscuits & gâteaux": "", Confiseries: "", "Barres": "", Autre: "" },
+  "Boissons": { Sodas: "", Jus: "", Sirops: "", Eaux: "", "Café & thé": "matcha", "Boissons protéinées": "protein_coffee", "Vins & alcools": "red_wine", Autre: "" },
+  "En-cas": { "Chips & salés": "", "Biscuits & gâteaux": "", Confiseries: "", "Barres": "", Autre: "" },
   "Autre": { Autre: "" },
 };
 // « Rayon › Sous-catégorie » pour chaque place possible, et la place de chaque aliment de l'app.
