@@ -175,3 +175,33 @@ r("carottes_houmous", "Bâtonnets de carottes & houmous express", "🥕", "Médi
 r("oeufs_durs", "Œufs durs & sel au paprika", "🥚", "Basiques", "snack", 12,
   { egg: 2, paprika: 0.5 },
   ["Cuire les œufs 10 minutes dans l’eau bouillante, refroidir à l’eau froide.", "Écaler, saupoudrer de sel et de paprika. Se gardent 4 jours au frigo dans leur coquille."], { veg: true });
+
+// ─── Sauces maison (quantités pour un pot) ────────────────────────────────
+r("sauce_teriyaki", "Sauce teriyaki maison", "🥫", "Japonaise", "sauce", 10,
+  { soy_sauce: 100, honey: 40, garlic: 10, ginger: 10, rice_vinegar: 15, cornstarch: 8 },
+  ["Dans une petite casserole : soja, miel, vinaigre de riz, ail et gingembre râpés, 100 ml d’eau.", "Porter à frémissement, ajouter la fécule délayée dans 2 cuillères d’eau froide, remuer 1 minute jusqu’à ce que la sauce nappe la cuillère.", "Pot fermé au réfrigérateur : 1 semaine. Pour laquer poulet, saumon ou légumes."],
+  { veg: true, portions: 6 });
+r("sauce_cacahuete", "Sauce cacahuète", "🥜", "Thaïlandaise", "sauce", 5,
+  { peanut: 80, coconut_milk: 100, soy_sauce: 30, lemon: 20, honey: 15, garlic: 5 },
+  ["Fouetter tous les ingrédients jusqu’à ce que ce soit lisse (ou au mixeur plongeant).", "Allonger avec un peu d’eau chaude si elle est trop épaisse.", "Réfrigérateur : 5 jours. Avec nouilles, bo bun, brochettes de poulet, crudités."],
+  { veg: true, portions: 6 });
+r("sauce_yaourt_ail", "Sauce yaourt, ail & herbes", "🥛", "Méditerranéenne", "sauce", 5,
+  { yogurt: 250, garlic: 6, lemon: 15, herbs: 0.5, oil: 10 },
+  ["Râper l’ail, ciseler les herbes.", "Mélanger au yaourt avec le jus de citron, l’huile, sel et poivre.", "Réfrigérateur : 3 jours. Pour wraps, shawarma, galettes de courgette, pommes de terre."],
+  { veg: true, portions: 6 });
+r("vinaigrette", "Vinaigrette moutarde-citron", "🫙", "Française", "sauce", 3,
+  { oil: 90, mustard: 15, lemon: 30, honey: 5 },
+  ["Dans un pot : moutarde, jus de citron, miel, sel, poivre.", "Ajouter l’huile, fermer et secouer jusqu’à ce que ce soit émulsionné.", "Se garde 1 semaine au réfrigérateur ; secouer avant usage."],
+  { veg: true, portions: 8 });
+r("sauce_tomate", "Sauce tomate maison à congeler", "🍅", "Italienne", "sauce", 40,
+  { passata: 700, tomato: 400, onion: 150, garlic: 10, oil: 30, provence_herbs: 2 },
+  ["Faire fondre l’oignon et l’ail hachés dans l’huile, 8 minutes à feu doux.", "Ajouter passata, tomates et herbes, mijoter 30 minutes à couvert.", "Mixer au mixeur plongeant si vous la voulez lisse. Portionner : 4 jours au réfrigérateur ou 3 mois au congélateur. Pour pâtes, pizzas, shakshuka."],
+  { veg: true, freezer: true, portions: 8 });
+r("mayo_epicee", "Mayonnaise épicée", "🌶️", "Japonaise", "sauce", 3,
+  { mayonnaise: 150, chili: 5, lemon: 10, garlic: 3 },
+  ["Hacher très finement le piment et l’ail.", "Mélanger à la mayonnaise avec le jus de citron.", "Réfrigérateur : 5 jours. Pour onigiri, chirashi, nuggets, smash tacos."],
+  { veg: true, portions: 8 });
+r("nuoc_cham", "Nước chấm (sauce vietnamienne)", "🥢", "Vietnamienne", "sauce", 5,
+  { fish_sauce: 45, sugar: 30, lemon: 40, garlic: 6, chili: 3 },
+  ["Dissoudre le sucre dans 120 ml d’eau tiède.", "Ajouter sauce poisson, jus de citron, ail et piment hachés.", "Réfrigérateur : 1 semaine. Pour bo bun, nems, salades de vermicelles."],
+  { portions: 6 });
