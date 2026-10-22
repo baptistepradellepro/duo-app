@@ -1,6 +1,6 @@
 // Garde l'app disponible hors ligne sur l'iPhone.
 // Les fichiers sont pris sur le réseau quand il est là, sinon dans le cache.
-const CACHE = "duo-v12";
+const CACHE = "duo-v14";
 const SHELL = [
   "./",
   "index.html",
@@ -30,7 +30,8 @@ self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET" || url.origin !== location.origin) return;
   // Réseau d'abord pour recevoir les mises à jour, cache si hors ligne.
   e.respondWith(
-    fetch(e.request)
+    // « no-cache » : le navigateur revérifie chaque fichier auprès du serveur, les mises à jour arrivent tout de suite.
+    fetch(e.request, { cache: "no-cache" })
       .then((res) => {
         if (res.ok) caches.open(CACHE).then((c) => c.put(e.request, res.clone()));
         return res.clone();
