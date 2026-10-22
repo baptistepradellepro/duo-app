@@ -197,3 +197,19 @@ window.PIECE_G = {
   cucumber: 300, apple: 150, banana: 120, lemon: 100, garlic: 5, ginger: 30, mushroom: 20, cabbage: 1200, cauliflower: 800,
   beetroot: 200, broccoli: 400, mozzarella: 125, tofu: 200, tuna: 140, beans: 240, chickpea: 240, corn: 285, tomato: 400,
 };
+// Rayons du placard. Les produits ajoutés à part prennent l'un de ces rayons (ou « Snacks & sucreries », « Autre »).
+window.GROUPS = {
+  "Viandes & poissons": "chicken|whole_chicken|chicken_thigh|chicken_mince|turkey|duck|pork_mince|beef_mince|beef_stew|bacon|ham|tuna|salmon",
+  "Œufs & crèmerie": "egg|milk|yogurt|cheese|cottage|butter|cream|sour_cream|mozzarella|grated_cheese|cheese_slices|telemea|parmesan|cream_cheese|tofu",
+  "Fruits & légumes": "banana|apple|lemon|avocado|potato|sweet_potato|carrot|onion|garlic|ginger|spring_onion|pepper|zucchini|eggplant|mushroom|cucumber|fresh_tomato|lettuce|cabbage|cauliflower|beetroot|herbs|chili",
+  "Surgelés": "broccoli|spinach|frozen_peas|green_beans|wok_veg|frozen_fries|berries",
+  "Féculents & céréales": "rice|sushi_rice|pasta|noodles|rice_noodles|rice_paper|oats|bread|sandwich_bread|baguette|tortilla|flour|semolina|couscous|bulgur|buckwheat|polenta|gnocchi|puff_pastry|panko|lentil",
+  "Conserves & épicerie salée": "beans|chickpea|tomato|passata|tomato_paste|coconut_milk|corn|pickles|sauerkraut|kimchi|stock_cube|nuts|peanuts",
+  "Sauces & huiles": "oil|oil_sun|soy_sauce|rice_vinegar|sesame_oil|fish_sauce|oyster_sauce|gochujang|miso|curry_paste|mustard|mayonnaise",
+  "Épices & aides culinaires": "curry_powder|paprika|taco_spice|provence_herbs|cinnamon|sesame_seeds|yeast|baking_powder|cornstarch",
+  "Épicerie sucrée": "sugar|honey|jam|cocoa|chocolate|peanut",
+  "Boissons": "red_wine",
+  "Protéinés": "protein_coffee|protein_pudding",
+};
+window.CATEGORIES = [...Object.keys(window.GROUPS), "Snacks & sucreries", "Autre"];
+window.GROUP_OF = Object.fromEntries(Object.entries(window.GROUPS).flatMap(([g, ids]) => ids.split("|").map((id) => [id, g])));

@@ -692,12 +692,12 @@ function setFreezer(i, j, id) {
 function stock() {
   const frozen = Object.entries(s.freezer).filter(([id, n]) => n > 0 && byR[id]),
     mine = C.filter((x) => (s.stock[x.id] || 0) > 0).sort((a, b) => a.name.localeCompare(b.name, "fr")),
-    review = s.custom.filter((x) => by[x.id]);
+    review = s.custom.filter((x) => by[x.id] && !x.confirmed);
   return (
     heading("LA BASE DE VOS FUTURS REPAS", "Mon placard.", "Scannez, tapez ou modifiez ce que vous avez. Les recettes et les courses en tiennent compte.") +
-    `<div class="panel"><h2>➕ Ajouter des aliments</h2><div class="row"><button onclick="scanner()">📷 Scanner un code-barres</button></div><label>Ou tapez-les, un par ligne ou séparés par des virgules<textarea id="quick" rows="3" placeholder="2 steaks, 500 g de vermicelles de riz, sauce soja, 6 œufs, 1 kg de carottes"></textarea></label><button class="secondary" onclick="quickParse()">Analyser</button><div id="quick-result"></div></div>` +
+    `<div class="panel"><div class="row spread"><h2>➕ Ajouter des aliments</h2><button class="secondary small" onclick="aiSettings()">🤖 Claude : ${aiKey() ? "activé" : "désactivé"}</button></div><div class="row"><button onclick="scanner()">📷 Scanner un code-barres</button></div><label>Ou tapez-les, un par ligne ou séparés par des virgules<textarea id="quick" rows="3" placeholder="2 steaks, 500 g de vermicelles de riz, sauce soja, 6 œufs, 1 kg de carottes"></textarea></label><button class="secondary" onclick="quickParse()">Analyser</button><div id="quick-result"></div></div>` +
     (review.length
-      ? `<div class="panel review"><h2>🔗 À rattacher (${review.length})</h2><p class="muted">Ces produits ne sont pas reliés à un aliment de l’app : les recettes ne peuvent pas les utiliser. Rattachez-les pour qu’ils comptent.</p>${review
+      ? `<div class="panel review"><h2>🔗 À rattacher (${review.length})</h2><p class="muted">Reliez chaque produit à un aliment de l’app pour que les recettes l’utilisent, ou confirmez que c’est un produit à part (sirop, snack…) : il reçoit alors son rayon.</p>${aiKey() ? `<button class="small" onclick="aiReview()">🤖 Classer avec Claude</button>` : `<button class="secondary small" onclick="aiSettings()">🤖 Activer le classement par Claude</button>`}${review
           .map((x) => {
             const m = matchProduct(x.name)[0];
             return `<div class="review-row"><span><b>${esc(x.name)}</b> <small class="muted">${qtyLabel(s.stock[x.id] || 0, x.unit)}</small></span><span class="row">${m && !m.id.startsWith("custom") ? `<button class="small" onclick="mergeInto('${x.id}','${m.id}')">= ${esc(by[m.id].name.split(" · ")[0])}</button>` : ""}<button class="secondary small" onclick="editItem('${x.id}')">Choisir…</button></span></div>`;
@@ -718,12 +718,10 @@ function stockRows() {
   const e = document.getElementById("stockrows");
   if (e) {
     const mine = C.filter((x) => (s.stock[x.id] || 0) > 0 && hit(x)).sort((a, b) => a.name.localeCompare(b.name, "fr"));
+    const groups = [...window.CATEGORIES, "À rattacher"].map((g) => [g, mine.filter((x) => aisle(x) === g)]).filter(([, l]) => l.length);
     e.innerHTML =
-      mine
-        .map(
-          (x) =>
-            `<div class="pantry-row"><button class="link-like" onclick="editItem('${x.id}')">${esc(x.name.split(" · ")[0])}${x.id.startsWith("custom") ? ' <small class="badge">à rattacher</small>' : ""}</button><span class="row"><input aria-label="Quantité ${esc(x.name)}" type="number" min="0" step="${x.unit === "pièce" ? 1 : 10}" value="${Math.round((s.stock[x.id] || 0) * 100) / 100}" onchange="s.stock['${x.id}']=Math.max(0,+this.value);s.setup=true;save()"><small class="muted">${x.unit}</small><button class="secondary small" onclick="editItem('${x.id}')" aria-label="Modifier ${esc(x.name)}">✏️</button></span></div>`,
-        )
+      groups
+        .map(([g, list]) => `<h3 class="aisle">${esc(g)}</h3>` + list.map(pantryRow).join(""))
         .join("") || `<p class="muted">${q ? "Rien de ce nom dans le placard." : "Placard vide : scannez ou tapez vos aliments ci-dessus."}</p>`;
   }
   const all = document.getElementById("allrows");
@@ -735,6 +733,12 @@ function stockRows() {
       )
       .join("");
 }
+// Rayon d'un aliment : celui du catalogue, celui choisi pour un produit à part, sinon « À rattacher ».
+const aisle = (x) => window.GROUP_OF[x.id] || (x.confirmed ? x.cat || "Autre" : "À rattacher");
+function pantryRow(x) {
+  return `<div class="pantry-row"><button class="link-like" onclick="editItem('${x.id}')">${esc(x.name.split(" · ")[0])}${x.id.startsWith("custom") && !x.confirmed ? ' <small class="badge">à rattacher</small>' : ""}</button><span class="row"><input aria-label="Quantité ${esc(x.name)}" type="number" min="0" step="${x.unit === "pièce" ? 1 : 10}" value="${Math.round((s.stock[x.id] || 0) * 100) / 100}" onchange="s.stock['${x.id}']=Math.max(0,+this.value);s.setup=true;save()"><small class="muted">${x.unit}</small><button class="secondary small" onclick="editItem('${x.id}')" aria-label="Modifier ${esc(x.name)}">✏️</button></span></div>`;
+}
+
 function exclude(id, on) {
   s.exclude = s.exclude.filter((x) => x !== id);
   if (on) s.exclude.push(id);
@@ -1156,6 +1160,9 @@ function parseQty(q) {
   return { qty: 1, unit: "pièce" };
 }
 // ─── Reconnaissance des aliments : synonymes, catégories Open Food Facts, quantités ───
+// Mots trop vagues pour rapprocher deux noms (« frais » rapprochait « saumon frais » et « sirop à la fraise »).
+const WEAK = new Set(["frai", "fraiche", "file", "filet", "nature", "natur", "classic", "original", "extra", "premium", "mini", "maxi", "pack", "sachet", "bucati", "buca", "pentru", "with", "avec", "sans", "light", "family", "gust", "aroma"]);
+const NOT_COOKING = /\b(sirop|syrup|sirup|soda|limonade|limonada|boisson|bautura|jus|suc|nectar|biscuit|biscuiti|bonbon|bomboane|chips|barre|baton|cereale|cereales|glace|inghetata|napolitane|tablette|energy|monin|cola)s?\b/;
 const singular = (t) => t.split(" ").map((w) => (w.length > 3 ? w.replace(/(x|s)$/, "") : w)).join(" ");
 const ALIAS_LIST = Object.entries(window.ALIASES || {}).flatMap(([id, list]) => list.split("|").map((a) => ({ id, a: " " + singular(norm(a)) + " " })));
 // Aliments de l'app les plus probables pour un nom de produit, du plus sûr au moins sûr.
@@ -1170,9 +1177,13 @@ function matchProduct(text, cats = []) {
     if (tags.length && list.split("|").some((c) => tags.some((tag) => tag.endsWith(":" + c) || tag.includes(c)))) scores[id] = (scores[id] || 0) + 25;
   if (!Object.keys(scores).length)
     for (const x of C) {
-      const n = singular(norm(x.name + " " + (x.query || ""))).split(" ").filter((w) => w.length >= 4 && t.includes(" " + w)).length;
+      const n = singular(norm(x.name + " " + (x.query || "")))
+        .split(" ")
+        .filter((w) => w.length >= 5 && !WEAK.has(w) && t.includes(" " + w + " ")).length;
       if (n) add(x.id, n * 3);
     }
+  // Sirop, soda, biscuits… : on propose, mais jamais de rattachement automatique.
+  if (NOT_COOKING.test(norm(text))) for (const id in scores) scores[id] = Math.min(scores[id], 12);
   return Object.entries(scores)
     .sort((a, b) => b[1] - a[1])
     .map(([id, score]) => ({ id, score }));
@@ -1236,7 +1247,7 @@ function quickParse() {
       (it, k) =>
         `<div class="quick-row ${it.sure ? "" : "unsure"}"><small class="muted">« ${esc(it.raw)} »${it.sure ? "" : " · à vérifier"}</small><select onchange="quickLink(${k},this.value)">${options(it)}</select><span class="row"><input type="number" min="0" step="any" value="${Math.round(it.qty * 100) / 100}" onchange="quickItems[${k}].qty=+this.value"><small class="muted" id="qu-${k}">${it.id ? by[it.id].unit : !it.unit || PACK_WORDS.test(it.unit) ? "pièce" : it.unit}</small><button class="secondary small" onclick="quickItems[${k}]=null;this.closest('.quick-row').remove()" aria-label="Retirer">✕</button></span></div>`,
     )
-    .join("")}</div><button onclick="quickSave()">Ajouter au placard</button>`;
+    .join("")}</div><div class="row">${quickItems.some((it) => !it.sure) ? (aiKey() ? `<button class="secondary" onclick="aiQuick()">🤖 Vérifier les lignes incertaines avec Claude</button>` : `<button class="secondary" onclick="aiSettings()">🤖 Activer Claude pour les lignes incertaines</button>`) : ""}<button onclick="quickSave()">Ajouter au placard</button></div>`;
 }
 function quickLink(k, id) {
   const it = quickItems[k];
@@ -1257,7 +1268,8 @@ function quickSave() {
       const u = it.unit || "",
         unit = !u || PACK_WORDS.test(u) ? "pièce" : /^(l|litres?|cl|ml)$/.test(u) ? "ml" : "g";
       if (unit !== "pièce" && it.n != null && it.qty === it.n) it.qty = it.n * (/^(kg|kilos?|l|litres?)$/.test(u) ? 1000 : u === "cl" ? 10 : 1);
-      id = newCustom(it.name.replace(/^./, (c) => c.toUpperCase()), unit, it.qty);
+      id = newCustom(it.name.replace(/^./, (c) => c.toUpperCase()), it.aiUnit || unit, it.qty);
+      if (it.aiCat) Object.assign(by[id], { confirmed: true, cat: it.aiCat });
     }
     s.stock[id] = (s.stock[id] || 0) + it.qty;
     done.push(by[id].name.split(" · ")[0]);
@@ -1318,7 +1330,7 @@ function editItem(id) {
     custom = id.startsWith("custom"),
     m = matchProduct(x.name).filter((c) => c.id !== id && !c.id.startsWith("custom")).slice(0, 5);
   const codes = Object.entries(s.barcodes).filter(([, b]) => b.id === id).map(([c]) => c);
-  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>${esc(x.name.split(" · ")[0])}</h2>${custom ? '<p class="muted">Produit ajouté par vous, pas encore relié à un aliment de l’app.</p>' : `<p class="muted">${esc(x.name)}</p>`}<form onsubmit="saveItem(event,'${id}')">${custom ? `<label>Nom<input name="name" maxlength="70" value="${esc(x.name)}"></label>` : ""}<div class="row"><label>Quantité en stock<input name="qty" type="number" min="0" step="any" value="${Math.round((s.stock[id] || 0) * 100) / 100}"></label>${custom ? `<label>Unité<select name="unit">${["g", "ml", "pièce"].map((u) => `<option ${u === x.unit ? "selected" : ""}>${u}</option>`).join("")}</select></label>` : `<span class="muted">${x.unit}</span>`}</div><label>${custom ? "C’est en fait…" : "Déplacer ce stock vers un autre aliment"}<select name="link"><option value="">${custom ? "— Garder comme produit à part —" : "— Non —"}</option>${m.length ? `<optgroup label="Suggestions">${m.map((c) => `<option value="${c.id}" ${custom && c === m[0] ? "selected" : ""}>${esc(by[c.id].name)}</option>`).join("")}</optgroup>` : ""}<optgroup label="Tous les aliments">${C.filter((c) => c.id !== id && !m.some((y) => y.id === c.id)).map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join("")}</optgroup></select></label>${codes.length ? `<p class="muted">Code-barres associé${codes.length > 1 ? "s" : ""} : ${codes.join(", ")}</p>` : ""}<div class="row"><button type="submit">Enregistrer</button><button type="button" class="secondary" onclick="s.stock['${id}']=0;save();modal().close();render()">Vider</button>${custom ? `<button type="button" class="secondary" onclick="deleteItem('${id}')">Supprimer le produit</button>` : ""}</div></form>`;
+  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>${esc(x.name.split(" · ")[0])}</h2>${custom ? '<p class="muted">Produit ajouté par vous, pas encore relié à un aliment de l’app.</p>' : `<p class="muted">${esc(x.name)}</p>`}<form onsubmit="saveItem(event,'${id}')">${custom ? `<label>Nom<input name="name" maxlength="70" value="${esc(x.name)}"></label>` : ""}<div class="row"><label>Quantité en stock<input name="qty" type="number" min="0" step="any" value="${Math.round((s.stock[id] || 0) * 100) / 100}"></label>${custom ? `<label>Unité<select name="unit">${["g", "ml", "pièce"].map((u) => `<option ${u === x.unit ? "selected" : ""}>${u}</option>`).join("")}</select></label>` : `<span class="muted">${x.unit}</span>`}</div><label>${custom ? "C’est en fait…" : "Déplacer ce stock vers un autre aliment"}<select name="link"><option value="">${custom ? "— Garder comme produit à part —" : "— Non —"}</option>${m.length ? `<optgroup label="Suggestions">${m.map((c) => `<option value="${c.id}" ${custom && c === m[0] ? "selected" : ""}>${esc(by[c.id].name)}</option>`).join("")}</optgroup>` : ""}<optgroup label="Tous les aliments">${C.filter((c) => c.id !== id && !m.some((y) => y.id === c.id)).map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join("")}</optgroup></select></label>${custom ? `<fieldset class="standalone"><legend>Ou c’est un produit à part</legend><p class="muted">Pour un produit qui n’entre dans aucune recette de l’app (sirop, soda, snack…). Il reste dans le placard, rangé dans son rayon.</p><label>Rayon<select name="cat">${window.CATEGORIES.map((c) => `<option ${(x.cat || "Autre") === c ? "selected" : ""}>${esc(c)}</option>`).join("")}</select></label><button type="button" class="secondary" onclick="confirmItem('${id}',this.form.cat.value,this.form.name.value)">✓ Produit à part, dans ce rayon</button></fieldset>` : ""}${codes.length ? `<p class="muted">Code-barres associé${codes.length > 1 ? "s" : ""} : ${codes.join(", ")}</p>` : ""}<div class="row"><button type="submit">Enregistrer</button><button type="button" class="secondary" onclick="s.stock['${id}']=0;save();modal().close();render()">Vider</button>${custom ? `<button type="button" class="secondary" onclick="deleteItem('${id}')">Supprimer le produit</button>` : ""}</div></form>`;
   modal().showModal();
 }
 function saveItem(ev, id) {
@@ -1345,10 +1357,167 @@ function deleteItem(id) {
   modal().close();
   render();
 }
+function confirmItem(id, cat, name) {
+  const x = by[id];
+  if (name) x.name = name.trim().slice(0, 70) || x.name;
+  Object.assign(x, { confirmed: true, cat });
+  save();
+  modal().close();
+  render();
+  toast(`${x.name} rangé dans « ${cat} ».`);
+}
+
+// ─── Classement par Claude (clé API personnelle, gardée sur cet appareil) ───
+const AI_KEY = "duo-claude-key",
+  AI_MODEL = "claude-opus-5-5",
+  SDK_URL = "https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@0.132.0/+esm";
+const aiKey = () => {
+  try {
+    return localStorage.getItem(AI_KEY) || "";
+  } catch {
+    return "";
+  }
+};
+let aiClient = null;
+async function claudeClient() {
+  if (!aiKey()) throw Error("Clé API Claude manquante.");
+  if (!navigator.onLine) throw Error("Pas de connexion internet.");
+  if (!aiClient) {
+    const { default: Anthropic } = await import(SDK_URL);
+    aiClient = new Anthropic({ apiKey: aiKey(), dangerouslyAllowBrowser: true });
+  }
+  return aiClient;
+}
+function aiSettings() {
+  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>🤖 Classement par Claude</h2><p>Quand un produit n’est pas reconnu avec certitude, Claude lit son nom, sa marque et ses catégories Open Food Facts, puis le relie au bon aliment de l’app, ou le range comme produit à part.</p><div class="notice">Il faut une clé API Anthropic (console.anthropic.com › API Keys) et internet. Chaque classement coûte environ 1 à 3 centimes, facturés sur votre compte Anthropic. La clé reste sur cet appareil : elle n’est ni exportée dans la sauvegarde ni publiée. Mettez une limite de dépense sur la clé.</div><form onsubmit="event.preventDefault();saveAiKey(this.key.value)"><label>Clé API<input name="key" type="password" autocomplete="off" placeholder="sk-ant-…" value="${aiKey() ? "••••••••" : ""}"></label><div class="row"><button type="submit">Enregistrer</button>${aiKey() ? `<button type="button" class="secondary" onclick="saveAiKey('')">Supprimer la clé</button>` : ""}</div></form>`;
+  modal().showModal();
+}
+function saveAiKey(v) {
+  if (v === "••••••••") return modal().close();
+  try {
+    if (v.trim()) localStorage.setItem(AI_KEY, v.trim());
+    else localStorage.removeItem(AI_KEY);
+  } catch {
+    return toast("Impossible d’enregistrer la clé sur cet appareil.");
+  }
+  aiClient = null;
+  modal().close();
+  render();
+  toast(v.trim() ? "Claude activé pour le classement des produits." : "Clé supprimée.");
+}
+// Classe une liste de produits : aliment du catalogue (ou « none »), rayon, unité, nom court.
+async function aiClassify(items) {
+  const client = await claudeClient();
+  const catalog = C.filter((x) => !x.id.startsWith("custom"));
+  const schema = {
+    type: "object",
+    properties: {
+      results: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            index: { type: "integer" },
+            match: { type: "string", enum: [...catalog.map((x) => x.id), "none"] },
+            category: { type: "string", enum: window.CATEGORIES },
+            unit: { type: "string", enum: ["g", "ml", "pièce"] },
+            name_fr: { type: "string" },
+            reason: { type: "string" },
+          },
+          required: ["index", "match", "category", "unit", "name_fr", "reason"],
+          additionalProperties: false,
+        },
+      },
+    },
+    required: ["results"],
+    additionalProperties: false,
+  };
+  const res = await client.beta.messages.create({
+    model: AI_MODEL,
+    max_tokens: 8000,
+    betas: ["server-side-fallback-2026-07-01"],
+    fallbacks: "default",
+    system:
+      "Tu ranges les produits du placard d’un couple qui fait ses courses en Roumanie, pour une app de cuisine. " +
+      "Pour chaque produit, donne l’identifiant du catalogue seulement si le produit EST cet ingrédient tel qu’on l’utilise en cuisine : « tăiței de orez » = rice_noodles, « steak » = beef_stew, « steak haché » = beef_mince. " +
+      "Un produit sucré, une boisson, un plat préparé ou un produit dont l’ingrédient n’est qu’un parfum ne correspond à aucun : « sirop Monin fraise » → none, rayon Boissons ; « chips paprika » → none, rayon Snacks & sucreries. " +
+      "Dans le doute, réponds none : une mauvaise correspondance fausse les recettes et le stock. " +
+      "category : le rayon le plus juste. unit : comment on le compte (g, ml ou pièce). name_fr : nom court en français, sans la marque. reason : une phrase courte en français.",
+    messages: [
+      {
+        role: "user",
+        content:
+          "Catalogue (identifiant : nom, unité) :\n" +
+          catalog.map((x) => `${x.id} : ${x.name} (${x.unit})`).join("\n") +
+          "\n\nProduits à classer :\n" +
+          items.map((it, i) => `${i}. ${it.name}${it.brand ? ` · marque ${it.brand}` : ""}${it.quantity ? ` · ${it.quantity}` : ""}${it.categories?.length ? ` · catégories Open Food Facts : ${it.categories.slice(0, 10).join(", ")}` : ""}`).join("\n"),
+      },
+    ],
+    output_config: { format: { type: "json_schema", schema } },
+  });
+  if (res.stop_reason === "refusal") throw Error("Claude a refusé cette demande.");
+  if (res.stop_reason === "max_tokens") throw Error("Réponse de Claude incomplète.");
+  const text = res.content.find((b) => b.type === "text")?.text;
+  return JSON.parse(text).results.filter((r) => items[r.index]);
+}
+const aiError = (e) => toast(`Claude indisponible : ${e.message || e}. Le classement automatique reste utilisé.`);
+async function aiQuick() {
+  const todo = quickItems.map((it, k) => [it, k]).filter(([it]) => it && !it.sure);
+  if (!todo.length) return;
+  toast("Claude réfléchit…");
+  try {
+    const out = await aiClassify(todo.map(([it]) => ({ name: it.name })));
+    for (const r of out) {
+      const [it, k] = todo[r.index],
+        row = document.querySelectorAll(".quick-row")[k];
+      if (!row) continue;
+      if (r.match !== "none") {
+        row.querySelector("select").value = r.match;
+        quickLink(k, r.match);
+      } else {
+        row.querySelector("select").value = "new";
+        quickLink(k, "new");
+        Object.assign(it, { aiCat: r.category, aiUnit: r.unit, name: r.name_fr || it.name });
+      }
+      it.sure = true;
+      row.classList.remove("unsure");
+      row.querySelector("small").textContent = `« ${it.raw} » · 🤖 ${r.match === "none" ? `produit à part, rayon ${r.category}` : "reconnu"} : ${r.reason}`;
+    }
+  } catch (e) {
+    aiError(e);
+  }
+}
+async function aiReview() {
+  const todo = s.custom.filter((x) => by[x.id] && !x.confirmed);
+  if (!todo.length) return;
+  toast("Claude classe vos produits…");
+  try {
+    const out = await aiClassify(todo.map((x) => ({ name: x.name })));
+    let linked = 0,
+      apart = 0;
+    for (const r of out) {
+      const x = todo[r.index];
+      if (r.match !== "none" && by[r.match]) {
+        mergeInto(x.id, r.match, true);
+        linked++;
+      } else {
+        Object.assign(x, { confirmed: true, cat: r.category });
+        apart++;
+      }
+    }
+    save();
+    render();
+    toast(`Claude : ${linked} produit${linked > 1 ? "s" : ""} rattaché${linked > 1 ? "s" : ""}, ${apart} rangé${apart > 1 ? "s" : ""} à part.`);
+  } catch (e) {
+    aiError(e);
+  }
+}
+
 // Au lancement : rattache automatiquement les produits enregistrés à part quand la correspondance est sûre.
 function autoSync() {
   let n = 0;
   for (const x of [...s.custom]) {
+    if (x.confirmed) continue;
     const m = matchProduct(x.name).filter((c) => !c.id.startsWith("custom"));
     if (sure(m)) {
       mergeInto(x.id, m[0].id, true);
@@ -1385,6 +1554,29 @@ async function onCode(code) {
     sugg = found.slice(0, 5).map((x) => x.id);
   out.innerHTML = `${p ? `<div class="scan-product">${p.image_small_url ? `<img src="${esc(p.image_small_url)}" alt="" width="64">` : ""}<div><b>${esc(name || "Produit sans nom")}</b><br><small class="muted">${esc(p.quantity || "")} · code ${code}</small></div></div>` : `<div class="notice">Produit inconnu d’Open Food Facts (ou hors connexion). Donnez-lui un nom.</div>`}<form id="scan-form" onsubmit="saveScan(event,'${code}')"><label>Nom<input name="name" required maxlength="70" value="${esc(name)}"></label><label>Correspond à<select name="link" onchange="scanLinkChange(this.form)">${sugg.length ? `<optgroup label="Suggestions">${sugg.map((id) => `<option value="${id}" ${id === g ? "selected" : ""}>${esc(by[id].name)}</option>`).join("")}</optgroup>` : ""}<option value="new" ${g ? "" : "selected"}>— Nouveau produit du placard —</option><optgroup label="Tous les aliments">${C.filter((x) => !sugg.includes(x.id)).map((x) => `<option value="${x.id}">${esc(x.name)}</option>`).join("")}</optgroup></select></label>${g ? "" : '<p class="muted">Pas reconnu avec certitude : choisissez l’aliment pour que les recettes l’utilisent.</p>'}<div class="row"><label>Contenu d’un paquet<input name="qty" type="number" min="0" step="any" value="${pq.qty}" data-scan="${pq.qty}" data-unit="${pq.unit}"></label><label>Unité<select name="unit">${["g", "ml", "pièce"].map((u) => `<option ${u === pq.unit ? "selected" : ""}>${u}</option>`).join("")}</select></label><label>Nombre de paquets<input name="n" type="number" min="1" value="1"></label></div><button type="submit">Ajouter au placard</button></form>`;
   scanLinkChange(document.getElementById("scan-form"));
+  if (p && !sure(found) && aiKey()) aiScan(code, p, name);
+}
+async function aiScan(code, p, name) {
+  const note = document.createElement("p");
+  note.className = "muted";
+  note.textContent = "🤖 Claude vérifie ce produit…";
+  document.getElementById("scan-form")?.before(note);
+  try {
+    const [r] = await aiClassify([{ name: [p.product_name_fr, p.product_name, p.product_name_ro, p.generic_name_fr].filter(Boolean).join(" / ") || name, brand: p.brands, quantity: p.quantity, categories: p.categories_tags }]);
+    const f = document.getElementById("scan-form");
+    if (!r || !f) return;
+    if (r.match !== "none") {
+      f.link.value = r.match;
+    } else {
+      f.link.value = "new";
+      f.name.value = r.name_fr || f.name.value;
+      f.dataset.cat = r.category;
+    }
+    scanLinkChange(f);
+    note.textContent = `🤖 Claude : ${r.match === "none" ? `produit à part, rayon ${r.category}` : by[r.match].name.split(" · ")[0]}. ${r.reason}`;
+  } catch (e) {
+    note.textContent = `🤖 Claude indisponible (${e.message || e}). Choisissez l’aliment à la main.`;
+  }
 }
 function scanLinkChange(f) {
   const x = by[f.link.value],
@@ -1406,7 +1598,7 @@ function saveScan(ev, code) {
   let id = f.link.value;
   if (id === "new") {
     id = "custom" + Date.now();
-    const x = { id, name: f.name.value.trim().slice(0, 70), unit: f.unit.value, pack: qty || 1, price: 0, kcal: 0, protein: 0, store: "Lidl", must: [], not: [] };
+    const x = { id, name: f.name.value.trim().slice(0, 70), unit: f.unit.value, pack: qty || 1, price: 0, kcal: 0, protein: 0, store: "Lidl", must: [], not: [], ...(f.dataset.cat ? { confirmed: true, cat: f.dataset.cat } : {}) };
     C.push(x);
     by[id] = x;
     s.custom.push(x);
