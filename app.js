@@ -697,7 +697,7 @@ function stock() {
     heading("LA BASE DE VOS FUTURS REPAS", "Mon placard.", "Scannez, tapez ou modifiez ce que vous avez. Les recettes et les courses en tiennent compte.") +
     `<div class="panel"><div class="row spread"><h2>➕ Ajouter des aliments</h2><button class="secondary small" onclick="aiSettings()">🤖 Claude : ${aiKey() ? "activé" : "désactivé"}</button></div><div class="row"><button onclick="scanner()">📷 Scanner un code-barres</button></div><label>Ou tapez-les, un par ligne ou séparés par des virgules<textarea id="quick" rows="3" placeholder="2 steaks, 500 g de vermicelles de riz, sauce soja, 6 œufs, 1 kg de carottes"></textarea></label><button class="secondary" onclick="quickParse()">Analyser</button><div id="quick-result"></div></div>` +
     (review.length
-      ? `<div class="panel review"><h2>🔗 À rattacher (${review.length})</h2><p class="muted">Reliez chaque produit à un aliment de l’app pour que les recettes l’utilisent, ou confirmez que c’est un produit à part (sirop, snack…) : il reçoit alors son rayon.</p>${aiKey() ? `<button class="small" onclick="aiReview()">🤖 Classer avec Claude</button>` : `<button class="secondary small" onclick="aiSettings()">🤖 Activer le classement par Claude</button>`}${review
+      ? `<div class="panel review"><h2>🔗 À rattacher (${review.length})</h2><p class="muted">Reliez chaque produit à un aliment de l’app pour que les recettes l’utilisent, ou confirmez que c’est un produit à part (sirop, snack…) : il reçoit alors son rayon.</p><div class="row"><button class="small" onclick="claudeCopy()">📋 Classer avec l’app Claude</button><button class="secondary small" onclick="claudePaste()">📥 Coller la réponse de Claude</button>${aiKey() ? `<button class="secondary small" onclick="aiReview()">🤖 Classer automatiquement (clé API)</button>` : ""}</div>${review
           .map((x) => {
             const m = matchProduct(x.name)[0];
             return `<div class="review-row"><span><b>${esc(x.name)}</b> <small class="muted">${qtyLabel(s.stock[x.id] || 0, x.unit)}</small></span><span class="row">${m && !m.id.startsWith("custom") ? `<button class="small" onclick="mergeInto('${x.id}','${m.id}')">= ${esc(by[m.id].name.split(" · ")[0])}</button>` : ""}<button class="secondary small" onclick="editItem('${x.id}')">Choisir…</button></span></div>`;
@@ -1389,7 +1389,7 @@ async function claudeClient() {
   return aiClient;
 }
 function aiSettings() {
-  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>🤖 Classement par Claude</h2><p>Quand un produit n’est pas reconnu avec certitude, Claude lit son nom, sa marque et ses catégories Open Food Facts, puis le relie au bon aliment de l’app, ou le range comme produit à part.</p><div class="notice">Il faut une clé API Anthropic (console.anthropic.com › API Keys) et internet. Chaque classement coûte environ 1 à 3 centimes, facturés sur votre compte Anthropic. La clé reste sur cet appareil : elle n’est ni exportée dans la sauvegarde ni publiée. Mettez une limite de dépense sur la clé.</div><form onsubmit="event.preventDefault();saveAiKey(this.key.value)"><label>Clé API<input name="key" type="password" autocomplete="off" placeholder="sk-ant-…" value="${aiKey() ? "••••••••" : ""}"></label><div class="row"><button type="submit">Enregistrer</button>${aiKey() ? `<button type="button" class="secondary" onclick="saveAiKey('')">Supprimer la clé</button>` : ""}</div></form>`;
+  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>🤖 Classement par Claude</h2><p class="notice">Sans clé API : dans « À rattacher », touchez « 📋 Classer avec l’app Claude » pour passer par votre abonnement.</p><p>Quand un produit n’est pas reconnu avec certitude, Claude lit son nom, sa marque et ses catégories Open Food Facts, puis le relie au bon aliment de l’app, ou le range comme produit à part.</p><div class="notice">Il faut une clé API Anthropic (console.anthropic.com › API Keys) et internet. Chaque classement coûte environ 1 à 3 centimes, facturés sur votre compte Anthropic. La clé reste sur cet appareil : elle n’est ni exportée dans la sauvegarde ni publiée. Mettez une limite de dépense sur la clé.</div><form onsubmit="event.preventDefault();saveAiKey(this.key.value)"><label>Clé API<input name="key" type="password" autocomplete="off" placeholder="sk-ant-…" value="${aiKey() ? "••••••••" : ""}"></label><div class="row"><button type="submit">Enregistrer</button>${aiKey() ? `<button type="button" class="secondary" onclick="saveAiKey('')">Supprimer la clé</button>` : ""}</div></form>`;
   modal().showModal();
 }
 function saveAiKey(v) {
@@ -1459,6 +1459,80 @@ async function aiClassify(items) {
   if (res.stop_reason === "max_tokens") throw Error("Réponse de Claude incomplète.");
   const text = res.content.find((b) => b.type === "text")?.text;
   return JSON.parse(text).results.filter((r) => items[r.index]);
+}
+// ─── Classement via l'app Claude (abonnement) : demande copiée, réponse collée ───
+function claudePrompt(list) {
+  const catalog = C.filter((x) => !x.id.startsWith("custom"));
+  return [
+    "Je range le placard de mon app de cuisine (courses en Roumanie). Pour chaque produit ci-dessous, dis-moi à quel aliment du catalogue il correspond.",
+    "",
+    "Règles :",
+    "- match : l’identifiant du catalogue seulement si le produit EST cet ingrédient tel qu’on l’utilise en cuisine (« tăiței de orez » = rice_noodles, « steak » = beef_stew, « steak haché » = beef_mince).",
+    "- Un produit sucré, une boisson, un plat préparé ou un produit dont l’ingrédient n’est qu’un parfum → \"none\" (« sirop Monin fraise » → none, rayon Boissons).",
+    "- Dans le doute → \"none\".",
+    `- category : un de ces rayons : ${window.CATEGORIES.join(" | ")}.`,
+    "- unit : g, ml ou pièce. name_fr : nom court en français, sans la marque.",
+    "",
+    "Réponds UNIQUEMENT par un tableau JSON, sans texte autour, au format :",
+    '[{"id":"custom123","match":"rice_noodles","category":"Féculents & céréales","unit":"g","name_fr":"Vermicelles de riz"}]',
+    "",
+    "Produits à classer :",
+    ...list.map((x) => `${x.id} : ${x.name}`),
+    "",
+    "Catalogue (identifiant : nom) :",
+    ...catalog.map((x) => `${x.id} : ${x.name.split(" · ")[0]}`),
+  ].join("\n");
+}
+async function claudeCopy() {
+  const list = s.custom.filter((x) => by[x.id] && !x.confirmed);
+  if (!list.length) return toast("Rien à classer.");
+  const text = claudePrompt(list);
+  let copied = false;
+  try {
+    await navigator.clipboard.writeText(text);
+    copied = true;
+  } catch {}
+  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>📋 Classer avec l’app Claude</h2><ol class="steps"><li>${copied ? "La demande est copiée." : "Copiez la demande ci-dessous (tout sélectionner, puis Copier)."}</li><li>Ouvrez l’app Claude, collez-la dans une nouvelle conversation et envoyez.</li><li>Copiez la réponse de Claude (le tableau qui commence par <code>[</code>), revenez ici et touchez « Coller la réponse ».</li></ol><textarea readonly rows="6" onclick="this.select()">${esc(text)}</textarea><div class="row"><a class="button-like" href="https://claude.ai/new" target="_blank" rel="noopener">Ouvrir Claude</a><button class="secondary" onclick="claudePaste()">📥 Coller la réponse</button></div><p class="muted">${list.length} produit${list.length > 1 ? "s" : ""} à classer. Utilise votre abonnement Claude, sans clé API.</p>`;
+  modal().showModal();
+}
+function claudePaste() {
+  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>📥 Réponse de Claude</h2><p class="muted">Collez ici la réponse complète de Claude.</p><form onsubmit="event.preventDefault();claudeApply(this.reply.value)"><textarea name="reply" rows="8" placeholder='[{"id":"custom…","match":"…","category":"…","unit":"g","name_fr":"…"}]' required></textarea><div class="row"><button type="button" class="secondary" onclick="navigator.clipboard?.readText().then((v)=>{this.form.reply.value=v}).catch(()=>toast('Collez avec un appui long dans le champ.'))">Coller depuis le presse-papiers</button><button type="submit">Appliquer</button></div></form>`;
+  modal().showModal();
+}
+// Lit la réponse de Claude, vérifie chaque ligne, puis rattache ou range les produits.
+function claudeApply(reply) {
+  let rows;
+  try {
+    const a = reply.indexOf("["),
+      b = reply.lastIndexOf("]");
+    rows = JSON.parse(reply.slice(a, b + 1));
+    if (!Array.isArray(rows)) throw Error();
+  } catch {
+    return toast("Réponse illisible : copiez tout le tableau donné par Claude.");
+  }
+  let linked = 0,
+    apart = 0,
+    skipped = 0;
+  for (const r of rows) {
+    const x = r && typeof r.id === "string" ? by[r.id] : null;
+    if (!x || !r.id.startsWith("custom") || x.confirmed) {
+      skipped++;
+      continue;
+    }
+    if (typeof r.match === "string" && r.match !== "none" && by[r.match] && !r.match.startsWith("custom")) {
+      mergeInto(x.id, r.match, true);
+      linked++;
+    } else {
+      Object.assign(x, { confirmed: true, cat: window.CATEGORIES.includes(r.category) ? r.category : "Autre" });
+      if (typeof r.name_fr === "string" && r.name_fr.trim()) x.name = r.name_fr.trim().slice(0, 70);
+      if (["g", "ml", "pièce"].includes(r.unit) && !(s.stock[x.id] > 0)) x.unit = r.unit;
+      apart++;
+    }
+  }
+  save();
+  modal().close();
+  render();
+  toast(`Claude : ${linked} rattaché${linked > 1 ? "s" : ""}, ${apart} rangé${apart > 1 ? "s" : ""} à part${skipped ? `, ${skipped} ignoré${skipped > 1 ? "s" : ""}` : ""}.`);
 }
 const aiError = (e) => toast(`Claude indisponible : ${e.message || e}. Le classement automatique reste utilisé.`);
 async function aiQuick() {
