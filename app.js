@@ -718,11 +718,16 @@ function stockRows() {
   const e = document.getElementById("stockrows");
   if (e) {
     const mine = C.filter((x) => (s.stock[x.id] || 0) > 0 && hit(x)).sort((a, b) => a.name.localeCompare(b.name, "fr"));
-    const groups = [...window.CATEGORIES, "À rattacher"].map((g) => [g, mine.filter((x) => aisle(x) === g)]).filter(([, l]) => l.length);
+    const html = [...Object.keys(window.TAXONOMY), "À rattacher"]
+      .map((main) => {
+        const inMain = mine.filter((x) => aisle(x).split(" › ")[0] === main);
+        if (!inMain.length) return "";
+        const subs = [...new Set(inMain.map((x) => aisle(x).split(" › ")[1] || ""))];
+        return `<h3 class="aisle">${esc(main)}</h3>` + subs.map((sub) => (sub ? `<h4 class="sub-aisle">${esc(sub)}</h4>` : "") + inMain.filter((x) => (aisle(x).split(" › ")[1] || "") === sub).map(pantryRow).join("")).join("");
+      })
+      .join("");
     e.innerHTML =
-      groups
-        .map(([g, list]) => `<h3 class="aisle">${esc(g)}</h3>` + list.map(pantryRow).join(""))
-        .join("") || `<p class="muted">${q ? "Rien de ce nom dans le placard." : "Placard vide : scannez ou tapez vos aliments ci-dessus."}</p>`;
+      html || `<p class="muted">${q ? "Rien de ce nom dans le placard." : "Placard vide : scannez ou tapez vos aliments ci-dessus."}</p>`;
   }
   const all = document.getElementById("allrows");
   if (all)
@@ -733,8 +738,21 @@ function stockRows() {
       )
       .join("");
 }
-// Rayon d'un aliment : celui du catalogue, celui choisi pour un produit à part, sinon « À rattacher ».
-const aisle = (x) => window.GROUP_OF[x.id] || (x.confirmed ? x.cat || "Autre" : "À rattacher");
+// Place d'un aliment (« Rayon › Sous-catégorie ») : celle du catalogue, celle choisie pour un produit à part, sinon « À rattacher ».
+const aisle = (x) => window.GROUP_OF[x.id] || (x.confirmed ? normCat(x.cat) : "À rattacher");
+// Anciens rayons sans sous-catégorie (« Boissons », « Snacks & sucreries »…) → « Rayon › Autre ».
+const OLD_CATS = { "Viandes & poissons": "Viandes", "Fruits & légumes": "Légumes", "Conserves & épicerie salée": "Conserves", "Sauces & huiles": "Sauces & condiments", "Épicerie sucrée": "Sucré", Protéinés: "Sucré › Desserts protéinés", "Snacks & sucreries": "Snacks" };
+function normCat(c) {
+  if (window.CATEGORIES.includes(c)) return c;
+  const old = OLD_CATS[c] || c || "Autre";
+  if (window.CATEGORIES.includes(old)) return old;
+  const main = Object.keys(window.TAXONOMY).find((m) => m === old) || "Autre";
+  return `${main} › Autre`;
+}
+const catOptions = (cur) =>
+  Object.entries(window.TAXONOMY)
+    .map(([main, subs]) => `<optgroup label="${esc(main)}">${Object.keys(subs).map((sub) => `<option value="${esc(`${main} › ${sub}`)}" ${cur === `${main} › ${sub}` ? "selected" : ""}>${esc(sub)}</option>`).join("")}</optgroup>`)
+    .join("");
 function pantryRow(x) {
   return `<div class="pantry-row"><button class="link-like" onclick="editItem('${x.id}')">${esc(x.name.split(" · ")[0])}${x.id.startsWith("custom") && !x.confirmed ? ' <small class="badge">à rattacher</small>' : ""}</button><span class="row"><input aria-label="Quantité ${esc(x.name)}" type="number" min="0" step="${x.unit === "pièce" ? 1 : 10}" value="${Math.round((s.stock[x.id] || 0) * 100) / 100}" onchange="s.stock['${x.id}']=Math.max(0,+this.value);s.setup=true;save()"><small class="muted">${x.unit}</small><button class="secondary small" onclick="editItem('${x.id}')" aria-label="Modifier ${esc(x.name)}">✏️</button></span></div>`;
 }
@@ -1269,7 +1287,7 @@ function quickSave() {
         unit = !u || PACK_WORDS.test(u) ? "pièce" : /^(l|litres?|cl|ml)$/.test(u) ? "ml" : "g";
       if (unit !== "pièce" && it.n != null && it.qty === it.n) it.qty = it.n * (/^(kg|kilos?|l|litres?)$/.test(u) ? 1000 : u === "cl" ? 10 : 1);
       id = newCustom(it.name.replace(/^./, (c) => c.toUpperCase()), it.aiUnit || unit, it.qty);
-      if (it.aiCat) Object.assign(by[id], { confirmed: true, cat: it.aiCat });
+      if (it.aiCat) Object.assign(by[id], { confirmed: true, cat: normCat(it.aiCat) });
     }
     s.stock[id] = (s.stock[id] || 0) + it.qty;
     done.push(by[id].name.split(" · ")[0]);
@@ -1330,7 +1348,7 @@ function editItem(id) {
     custom = id.startsWith("custom"),
     m = matchProduct(x.name).filter((c) => c.id !== id && !c.id.startsWith("custom")).slice(0, 5);
   const codes = Object.entries(s.barcodes).filter(([, b]) => b.id === id).map(([c]) => c);
-  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>${esc(x.name.split(" · ")[0])}</h2>${custom ? '<p class="muted">Produit ajouté par vous, pas encore relié à un aliment de l’app.</p>' : `<p class="muted">${esc(x.name)}</p>`}<form onsubmit="saveItem(event,'${id}')">${custom ? `<label>Nom<input name="name" maxlength="70" value="${esc(x.name)}"></label>` : ""}<div class="row"><label>Quantité en stock<input name="qty" type="number" min="0" step="any" value="${Math.round((s.stock[id] || 0) * 100) / 100}"></label>${custom ? `<label>Unité<select name="unit">${["g", "ml", "pièce"].map((u) => `<option ${u === x.unit ? "selected" : ""}>${u}</option>`).join("")}</select></label>` : `<span class="muted">${x.unit}</span>`}</div><label>${custom ? "C’est en fait…" : "Déplacer ce stock vers un autre aliment"}<select name="link"><option value="">${custom ? "— Garder comme produit à part —" : "— Non —"}</option>${m.length ? `<optgroup label="Suggestions">${m.map((c) => `<option value="${c.id}" ${custom && c === m[0] ? "selected" : ""}>${esc(by[c.id].name)}</option>`).join("")}</optgroup>` : ""}<optgroup label="Tous les aliments">${C.filter((c) => c.id !== id && !m.some((y) => y.id === c.id)).map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join("")}</optgroup></select></label>${custom ? `<fieldset class="standalone"><legend>Ou c’est un produit à part</legend><p class="muted">Pour un produit qui n’entre dans aucune recette de l’app (sirop, soda, snack…). Il reste dans le placard, rangé dans son rayon.</p><label>Rayon<select name="cat">${window.CATEGORIES.map((c) => `<option ${(x.cat || "Autre") === c ? "selected" : ""}>${esc(c)}</option>`).join("")}</select></label><button type="button" class="secondary" onclick="confirmItem('${id}',this.form.cat.value,this.form.name.value)">✓ Produit à part, dans ce rayon</button></fieldset>` : ""}${codes.length ? `<p class="muted">Code-barres associé${codes.length > 1 ? "s" : ""} : ${codes.join(", ")}</p>` : ""}<div class="row"><button type="submit">Enregistrer</button><button type="button" class="secondary" onclick="s.stock['${id}']=0;save();modal().close();render()">Vider</button>${custom ? `<button type="button" class="secondary" onclick="deleteItem('${id}')">Supprimer le produit</button>` : ""}</div></form>`;
+  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>${esc(x.name.split(" · ")[0])}</h2>${custom ? '<p class="muted">Produit ajouté par vous, pas encore relié à un aliment de l’app.</p>' : `<p class="muted">${esc(x.name)}</p>`}<form onsubmit="saveItem(event,'${id}')">${custom ? `<label>Nom<input name="name" maxlength="70" value="${esc(x.name)}"></label>` : ""}<div class="row"><label>Quantité en stock<input name="qty" type="number" min="0" step="any" value="${Math.round((s.stock[id] || 0) * 100) / 100}"></label>${custom ? `<label>Unité<select name="unit">${["g", "ml", "pièce"].map((u) => `<option ${u === x.unit ? "selected" : ""}>${u}</option>`).join("")}</select></label>` : `<span class="muted">${x.unit}</span>`}</div><label>${custom ? "C’est en fait…" : "Déplacer ce stock vers un autre aliment"}<select name="link"><option value="">${custom ? "— Garder comme produit à part —" : "— Non —"}</option>${m.length ? `<optgroup label="Suggestions">${m.map((c) => `<option value="${c.id}" ${custom && c === m[0] ? "selected" : ""}>${esc(by[c.id].name)}</option>`).join("")}</optgroup>` : ""}<optgroup label="Tous les aliments">${C.filter((c) => c.id !== id && !m.some((y) => y.id === c.id)).map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join("")}</optgroup></select></label>${custom ? `<fieldset class="standalone"><legend>Ou c’est un produit à part</legend><p class="muted">Pour un produit qui n’entre dans aucune recette de l’app (sirop, soda, snack…). Il reste dans le placard, rangé dans son rayon.</p><label>Rayon et sous-catégorie<select name="cat">${catOptions(normCat(x.cat))}</select></label><button type="button" class="secondary" onclick="confirmItem('${id}',this.form.cat.value,this.form.name.value)">✓ Produit à part, dans ce rayon</button></fieldset>` : ""}${codes.length ? `<p class="muted">Code-barres associé${codes.length > 1 ? "s" : ""} : ${codes.join(", ")}</p>` : ""}<div class="row"><button type="submit">Enregistrer</button><button type="button" class="secondary" onclick="s.stock['${id}']=0;save();modal().close();render()">Vider</button>${custom ? `<button type="button" class="secondary" onclick="deleteItem('${id}')">Supprimer le produit</button>` : ""}</div></form>`;
   modal().showModal();
 }
 function saveItem(ev, id) {
@@ -1360,11 +1378,11 @@ function deleteItem(id) {
 function confirmItem(id, cat, name) {
   const x = by[id];
   if (name) x.name = name.trim().slice(0, 70) || x.name;
-  Object.assign(x, { confirmed: true, cat });
+  Object.assign(x, { confirmed: true, cat: normCat(cat) });
   save();
   modal().close();
   render();
-  toast(`${x.name} rangé dans « ${cat} ».`);
+  toast(`${x.name} rangé dans « ${x.cat} ».`);
 }
 
 // ─── Classement par Claude (clé API personnelle, gardée sur cet appareil) ───
@@ -1440,9 +1458,9 @@ async function aiClassify(items) {
     system:
       "Tu ranges les produits du placard d’un couple qui fait ses courses en Roumanie, pour une app de cuisine. " +
       "Pour chaque produit, donne l’identifiant du catalogue seulement si le produit EST cet ingrédient tel qu’on l’utilise en cuisine : « tăiței de orez » = rice_noodles, « steak » = beef_stew, « steak haché » = beef_mince. " +
-      "Un produit sucré, une boisson, un plat préparé ou un produit dont l’ingrédient n’est qu’un parfum ne correspond à aucun : « sirop Monin fraise » → none, rayon Boissons ; « chips paprika » → none, rayon Snacks & sucreries. " +
+      "Un produit sucré, une boisson, un plat préparé ou un produit dont l’ingrédient n’est qu’un parfum ne correspond à aucun : « sirop Monin fraise » → none, Boissons › Sirops ; « chips paprika » → none, Snacks › Chips & salés. " +
       "Dans le doute, réponds none : une mauvaise correspondance fausse les recettes et le stock. " +
-      "category : le rayon le plus juste. unit : comment on le compte (g, ml ou pièce). name_fr : nom court en français, sans la marque. reason : une phrase courte en français.",
+      "category : la place « Rayon › Sous-catégorie » la plus juste. unit : comment on le compte (g, ml ou pièce). name_fr : nom court en français, sans la marque. reason : une phrase courte en français.",
     messages: [
       {
         role: "user",
@@ -1468,13 +1486,14 @@ function claudePrompt(list) {
     "",
     "Règles :",
     "- match : l’identifiant du catalogue seulement si le produit EST cet ingrédient tel qu’on l’utilise en cuisine (« tăiței de orez » = rice_noodles, « steak » = beef_stew, « steak haché » = beef_mince).",
-    "- Un produit sucré, une boisson, un plat préparé ou un produit dont l’ingrédient n’est qu’un parfum → \"none\" (« sirop Monin fraise » → none, rayon Boissons).",
+    "- Un produit sucré, une boisson, un plat préparé ou un produit dont l’ingrédient n’est qu’un parfum → \"none\" (« sirop Monin fraise » → none, Boissons › Sirops).",
     "- Dans le doute → \"none\".",
-    `- category : un de ces rayons : ${window.CATEGORIES.join(" | ")}.`,
+    "- category : « Rayon › Sous-catégorie », exactement l’une de ces places :",
+    ...Object.entries(window.TAXONOMY).map(([main, subs]) => `  ${main} › ${Object.keys(subs).join(" | ")}`),
     "- unit : g, ml ou pièce. name_fr : nom court en français, sans la marque.",
     "",
     "Réponds UNIQUEMENT par un tableau JSON, sans texte autour, au format :",
-    '[{"id":"custom123","match":"rice_noodles","category":"Féculents & céréales","unit":"g","name_fr":"Vermicelles de riz"}]',
+    '[{"id":"custom123","match":"rice_noodles","category":"Féculents & céréales › Pâtes & nouilles","unit":"g","name_fr":"Vermicelles de riz"}]',
     "",
     "Produits à classer :",
     ...list.map((x) => `${x.id} : ${x.name}`),
@@ -1523,7 +1542,7 @@ function claudeApply(reply) {
       mergeInto(x.id, r.match, true);
       linked++;
     } else {
-      Object.assign(x, { confirmed: true, cat: window.CATEGORIES.includes(r.category) ? r.category : "Autre" });
+      Object.assign(x, { confirmed: true, cat: normCat(r.category) });
       if (typeof r.name_fr === "string" && r.name_fr.trim()) x.name = r.name_fr.trim().slice(0, 70);
       if (["g", "ml", "pièce"].includes(r.unit) && !(s.stock[x.id] > 0)) x.unit = r.unit;
       apart++;
@@ -1575,7 +1594,7 @@ async function aiReview() {
         mergeInto(x.id, r.match, true);
         linked++;
       } else {
-        Object.assign(x, { confirmed: true, cat: r.category });
+        Object.assign(x, { confirmed: true, cat: normCat(r.category) });
         apart++;
       }
     }
@@ -1672,7 +1691,7 @@ function saveScan(ev, code) {
   let id = f.link.value;
   if (id === "new") {
     id = "custom" + Date.now();
-    const x = { id, name: f.name.value.trim().slice(0, 70), unit: f.unit.value, pack: qty || 1, price: 0, kcal: 0, protein: 0, store: "Lidl", must: [], not: [], ...(f.dataset.cat ? { confirmed: true, cat: f.dataset.cat } : {}) };
+    const x = { id, name: f.name.value.trim().slice(0, 70), unit: f.unit.value, pack: qty || 1, price: 0, kcal: 0, protein: 0, store: "Lidl", must: [], not: [], ...(f.dataset.cat ? { confirmed: true, cat: normCat(f.dataset.cat) } : {}) };
     C.push(x);
     by[id] = x;
     s.custom.push(x);
@@ -1798,6 +1817,7 @@ async function updateRate() {
     } catch {}
   }
 }
+for (const x of s.custom) if (x.confirmed && x.cat !== normCat(x.cat)) x.cat = normCat(x.cat);
 autoSync();
 sundayRoutine();
 updateRate();

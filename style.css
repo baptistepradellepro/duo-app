@@ -1055,3 +1055,9 @@ fieldset.standalone legend {
   font-weight: 700;
   padding: 0 4px;
 }
+.pantry h4.sub-aisle {
+  margin: 8px 0 0 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green);
+}

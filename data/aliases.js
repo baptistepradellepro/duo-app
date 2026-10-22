@@ -197,19 +197,26 @@ window.PIECE_G = {
   cucumber: 300, apple: 150, banana: 120, lemon: 100, garlic: 5, ginger: 30, mushroom: 20, cabbage: 1200, cauliflower: 800,
   beetroot: 200, broccoli: 400, mozzarella: 125, tofu: 200, tuna: 140, beans: 240, chickpea: 240, corn: 285, tomato: 400,
 };
-// Rayons du placard. Les produits ajoutés à part prennent l'un de ces rayons (ou « Snacks & sucreries », « Autre »).
-window.GROUPS = {
-  "Viandes & poissons": "chicken|whole_chicken|chicken_thigh|chicken_mince|turkey|duck|pork_mince|beef_mince|beef_stew|bacon|ham|tuna|salmon",
-  "Œufs & crèmerie": "egg|milk|yogurt|cheese|cottage|butter|cream|sour_cream|mozzarella|grated_cheese|cheese_slices|telemea|parmesan|cream_cheese|tofu",
-  "Fruits & légumes": "banana|apple|lemon|avocado|potato|sweet_potato|carrot|onion|garlic|ginger|spring_onion|pepper|zucchini|eggplant|mushroom|cucumber|fresh_tomato|lettuce|cabbage|cauliflower|beetroot|herbs|chili",
-  "Surgelés": "broccoli|spinach|frozen_peas|green_beans|wok_veg|frozen_fries|berries",
-  "Féculents & céréales": "rice|sushi_rice|pasta|noodles|rice_noodles|rice_paper|oats|bread|sandwich_bread|baguette|tortilla|flour|semolina|couscous|bulgur|buckwheat|polenta|gnocchi|puff_pastry|panko|lentil",
-  "Conserves & épicerie salée": "beans|chickpea|tomato|passata|tomato_paste|coconut_milk|corn|pickles|sauerkraut|kimchi|stock_cube|nuts|peanuts",
-  "Sauces & huiles": "oil|oil_sun|soy_sauce|rice_vinegar|sesame_oil|fish_sauce|oyster_sauce|gochujang|miso|curry_paste|mustard|mayonnaise",
-  "Épices & aides culinaires": "curry_powder|paprika|taco_spice|provence_herbs|cinnamon|sesame_seeds|yeast|baking_powder|cornstarch",
-  "Épicerie sucrée": "sugar|honey|jam|cocoa|chocolate|peanut",
-  "Boissons": "red_wine",
-  "Protéinés": "protein_coffee|protein_pudding",
+// Rayons et sous-catégories du placard. Chaque aliment de l'app a sa place ;
+// les produits ajoutés à part en prennent une (ex. « Boissons › Sirops »).
+window.TAXONOMY = {
+  "Viandes": { Volaille: "chicken|whole_chicken|chicken_thigh|chicken_mince|turkey", "Bœuf": "beef_stew|beef_mince", Porc: "pork_mince", Canard: "duck", Charcuterie: "bacon|ham", Autre: "" },
+  "Poissons & fruits de mer": { "Poissons frais": "salmon", "Conserves de poisson": "tuna", "Fruits de mer": "", Autre: "" },
+  "Œufs & crèmerie": { "Œufs": "egg", "Lait & crèmes": "milk|cream|sour_cream", "Yaourts & fromages frais": "yogurt|cheese|cottage", Fromages: "mozzarella|grated_cheese|cheese_slices|telemea|parmesan|cream_cheese", Beurre: "butter", "Végétal": "tofu", Autre: "" },
+  "Légumes": { "Légumes frais": "pepper|zucchini|eggplant|mushroom|cucumber|fresh_tomato|cauliflower|cabbage", "Racines & tubercules": "potato|sweet_potato|carrot|beetroot", "Oignons & aromates": "onion|garlic|ginger|spring_onion|chili|herbs", Salades: "lettuce", Autre: "" },
+  "Fruits": { "Fruits frais": "banana|apple|lemon|avocado", "Fruits secs": "nuts|peanuts", Autre: "" },
+  "Surgelés": { "Légumes surgelés": "broccoli|spinach|frozen_peas|green_beans|wok_veg", Frites: "frozen_fries", "Fruits surgelés": "berries", "Plats surgelés": "", Autre: "" },
+  "Féculents & céréales": { Riz: "rice|sushi_rice", "Pâtes & nouilles": "pasta|noodles|rice_noodles|gnocchi", "Céréales & semoules": "oats|semolina|couscous|bulgur|buckwheat|polenta", "Légumineuses sèches": "lentil", "Pains & pâtes à cuire": "bread|sandwich_bread|baguette|tortilla|puff_pastry|rice_paper", "Farines & panure": "flour|panko", Autre: "" },
+  "Conserves": { "Légumineuses": "beans|chickpea", Tomates: "tomato|passata|tomato_paste", "Légumes & fermentés": "corn|pickles|sauerkraut|kimchi", "Lait de coco": "coconut_milk", Autre: "" },
+  "Sauces & condiments": { "Sauces asiatiques": "soy_sauce|fish_sauce|oyster_sauce|gochujang|miso|curry_paste", Condiments: "mustard|mayonnaise", "Huiles & vinaigres": "oil|oil_sun|sesame_oil|rice_vinegar", "Sauces froides & piquantes": "", Autre: "" },
+  "Épices & aides culinaires": { "Épices & herbes séchées": "curry_powder|paprika|taco_spice|provence_herbs|cinnamon|sesame_seeds", Bouillons: "stock_cube", "Aides pâtisserie": "yeast|baking_powder|cornstarch", Autre: "" },
+  "Sucré": { "Sucres & miel": "sugar|honey", "Pâtes à tartiner & confitures": "jam|peanut", "Chocolat & cacao": "cocoa|chocolate", "Desserts protéinés": "protein_pudding", Autre: "" },
+  "Boissons": { Sodas: "", Jus: "", Sirops: "", Eaux: "", "Café & thé": "", "Boissons protéinées": "protein_coffee", "Vins & alcools": "red_wine", Autre: "" },
+  "Snacks": { "Chips & salés": "", "Biscuits & gâteaux": "", Confiseries: "", "Barres": "", Autre: "" },
+  "Autre": { Autre: "" },
 };
-window.CATEGORIES = [...Object.keys(window.GROUPS), "Snacks & sucreries", "Autre"];
-window.GROUP_OF = Object.fromEntries(Object.entries(window.GROUPS).flatMap(([g, ids]) => ids.split("|").map((id) => [id, g])));
+// « Rayon › Sous-catégorie » pour chaque place possible, et la place de chaque aliment de l'app.
+window.CATEGORIES = Object.entries(window.TAXONOMY).flatMap(([cat, subs]) => Object.keys(subs).map((sub) => `${cat} › ${sub}`));
+window.GROUP_OF = Object.fromEntries(
+  Object.entries(window.TAXONOMY).flatMap(([cat, subs]) => Object.entries(subs).flatMap(([sub, ids]) => (ids ? ids.split("|").map((id) => [id, `${cat} › ${sub}`]) : []))),
+);
