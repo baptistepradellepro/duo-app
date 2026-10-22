@@ -640,7 +640,7 @@ function mealCell(i, j) {
     canFreeze = Object.entries(s.freezer).some(([id, n]) => n >= 2 && byR[id]?.meal === "main");
   if (ate) return `<div class="meal done"><div><small>${SLOTS[j]} · AUTRE CHOSE</small><b>🍽️ ${esc(ate)}</b><span class="muted">retiré du placard</span></div></div>`;
   const tag = done ? " · ✓" : fz ? " · 🧊 CONGÉLO" : r.fixed ? " · RITUEL" : r.type === "batch" ? (r.freezer ? " · CONGÉLO" : " · FOURNÉE") : "";
-  return `<div class="meal ${done ? "done" : ""} ${fz ? "frozen" : ""}"><div onclick="detail('${r.id}',${i},${j})" role="button" tabindex="0" onkeydown="if(event.key==='Enter')detail('${r.id}',${i},${j})"><small>${SLOTS[j]}${tag}</small><b>${r.emoji} ${esc(r.name)}</b><span class="muted">${Math.round(m.kcal)} kcal · ${Math.round(m.protein)} g prot.</span></div>${done ? "" : `<div class="meal-actions"><button class="text-button" onclick="swap(${i},${j})">Changer ↻</button>${j > 0 && canFreeze ? `<button class="text-button" onclick="useFreezer(${i},${j})">🧊 Congélo</button>` : ""}<button class="text-button" onclick="ateOther(${i},${j})">Autre</button></div>`}</div>`;
+  return `<div class="meal ${done ? "done" : ""} ${fz ? "frozen" : ""}"><div onclick="detail('${r.id}',${i},${j})" role="button" tabindex="0" onkeydown="if(event.key==='Enter')detail('${r.id}',${i},${j})"><small>${SLOTS[j]}${tag}</small><b>${r.emoji} ${esc(r.name)}</b><span class="muted">${Math.round(m.kcal)} kcal · ${Math.round(m.protein)} g prot.</span></div>${done ? "" : `<div class="meal-actions"><button class="text-button" onclick="pickMeal(${i},${j})">Choisir</button><button class="text-button" onclick="swap(${i},${j})">Au hasard ↻</button>${j > 0 && canFreeze ? `<button class="text-button" onclick="useFreezer(${i},${j})">🧊 Congélo</button>` : ""}<button class="text-button" onclick="ateOther(${i},${j})">Autre</button></div>`}</div>`;
 }
 function batchPanel() {
   const list = R.filter((r) => r.type === "batch");
@@ -658,6 +658,51 @@ function toggleBatch(id, on) {
   s.checked = {};
   save();
   render();
+}
+// ─── Choisir un repas dans le carnet ───
+// Recettes possibles pour une place du menu : petit-déjeuner ou plat, sans les recettes écartées.
+const fitsSlot = (r, j) => r.ratings !== -1 && s.ratings[r.id] !== -1 && (j === 0 ? r.meal === "breakfast" : r.type === "main");
+const inPantry = (r) => Object.entries(r.ingredients).every(([id, q]) => !by[id] || avail(id) >= q * factor(r));
+let pickQuery = "";
+function pickMeal(i, j) {
+  pickQuery = "";
+  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>Choisir le ${SLOTS[j].toLowerCase()}</h2><p class="muted">${DAYS[i]} ${dayDate(i)} · actuellement : ${esc(slot(i, j).r.name)}</p><input type="search" placeholder="Une recette, un ingrédient, une cuisine…" oninput="pickQuery=this.value;pickRows(${i},${j})" autofocus><div id="pick-rows" class="pick-list"></div>`;
+  modal().showModal();
+  pickRows(i, j);
+}
+function pickRows(i, j) {
+  const q = norm(pickQuery),
+    cur = slot(i, j).r.id;
+  const list = R.filter((r) => fitsSlot(r, j) && r.id !== cur && norm(r.name + " " + r.cuisine + " " + Object.keys(r.ingredients).map((id) => by[id]?.name || "").join(" ")).includes(q))
+    .map((r) => ({ r, ok: inPantry(r), like: s.ratings[r.id] === 1 }))
+    .sort((a, b) => b.ok - a.ok || b.like - a.like || a.r.name.localeCompare(b.r.name, "fr"));
+  document.getElementById("pick-rows").innerHTML =
+    list
+      .map(({ r, ok, like }) => {
+        const m = macro(r);
+        return `<button class="pick-row" onclick="setMeal(${i},${j},'${r.id}')"><span class="pick-emoji">${r.emoji}</span><span><b>${esc(r.name)}</b><small class="muted">${esc(r.cuisine)} · ${r.time} min · ${Math.round(m.kcal)} kcal · ${Math.round(m.protein)} g prot.${ok ? " · ✓ tout est au placard" : ""}${like ? " · 👍" : ""}</small></span></button>`;
+      })
+      .join("") || '<p class="muted">Aucune recette trouvée.</p>';
+}
+function setMeal(i, j, id) {
+  s.plan.days[i][j] = id;
+  if (s.plan.freezerUse) delete s.plan.freezerUse[i + "-" + j];
+  if (s.plan.ate) delete s.plan.ate[i + "-" + j];
+  delete s.done[i + "-" + j];
+  s.checked = {};
+  save();
+  modal().close();
+  render();
+  toast(`${DAYS[i]} : ${byR[id].name}. Courses et budget recalculés.`);
+}
+// Depuis une fiche recette : choisir le jour et le repas à remplacer.
+function addToMenu(id) {
+  const r = byR[id],
+    slots = r.meal === "breakfast" ? [0] : [1, 2];
+  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>📅 ${esc(r.name)}</h2><p class="muted">Remplace le repas choisi ; les courses et le budget suivent.</p><div class="slot-grid">${s.plan.days
+    .map((d, i) => `<div class="slot-day"><b>${DAYS[i].slice(0, 3)}. ${dayDate(i)}</b>${slots.map((j) => (s.done[i + "-" + j] ? `<span class="muted">${SLOTS[j].toLowerCase()} · fait</span>` : `<button class="secondary small" onclick="setMeal(${i},${j},'${id}')">${SLOTS[j].toLowerCase()}<br><small>${esc(slot(i, j).r.name)}</small></button>`)).join("")}</div>`)
+    .join("")}</div>`;
+  modal().showModal();
 }
 function swap(i, j) {
   const cur = s.plan.days[i][j];
@@ -911,6 +956,7 @@ function detail(id, i, j) {
     fz = key && s.plan?.freezerUse?.[key] === id;
   let action = "";
   if (key && !s.done[key]) action = `<button onclick="cook(${i},${j})">${fz ? "✓ Mangé : retirer 2 portions du congélateur" : r.type === "batch" ? "✓ Mangé" : "✓ Repas cuisiné : déduire du placard"}</button>`;
+  else if (!key && r.type !== "batch" && s.plan) action = `<button onclick="addToMenu('${id}')">📅 Mettre au menu</button>`;
   else if (!key && r.type === "batch" && s.batches.includes(id) && !s.batchDone[id]) action = `<button onclick="cookBatch('${id}')">✓ Fournée préparée : déduire du placard${r.freezer ? " et ranger au congélateur" : ""}</button>`;
   modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><div style="font-size:50px">${r.emoji}</div><h2>${esc(r.name)}</h2><p>${esc(r.cuisine)} · ${r.time} min · <b>${r.type === "batch" ? `fournée de ${r.portions} ${esc(r.unit)}` : "2 personnes"}</b>${r.freezer ? " · 🧊 se congèle" : ""}</p>${r.source ? `<p><a href="${esc(r.source)}" target="_blank" rel="noopener">Voir la recette d’origine ↗</a></p>` : ""}<div class="notice">Par ${r.type === "batch" ? "portion" : "personne"} : ${Math.round(m.kcal)} kcal · ${Math.round(m.protein)} g de protéines</div>${tools(r)}<h3>Dans la cuisine</h3><table>${Object.entries(r.ingredients)
     .filter(([x]) => by[x])

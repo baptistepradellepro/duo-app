@@ -1061,3 +1061,53 @@ fieldset.standalone legend {
   font-weight: 600;
   color: var(--green);
 }
+
+/* ─── Choisir un repas ─── */
+.pick-list {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.pick-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  text-align: left;
+  background: #fff;
+  color: inherit;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-weight: 400;
+}
+.pick-row b,
+.pick-row small {
+  display: block;
+}
+.pick-emoji {
+  font-size: 26px;
+}
+.slot-grid {
+  display: grid;
+  gap: 8px;
+}
+.slot-day {
+  display: grid;
+  grid-template-columns: 90px 1fr 1fr;
+  gap: 8px;
+  align-items: center;
+}
+.slot-day button {
+  text-align: left;
+  font-size: 12px;
+}
+@media (max-width: 680px) {
+  .slot-day {
+    grid-template-columns: 1fr 1fr;
+  }
+  .slot-day b {
+    grid-column: 1 / -1;
+  }
+}
