@@ -141,3 +141,13 @@ r("banana_bread", "Banana bread", "🍌", "Américaine", "batch", 70,
 r("energy_balls", "Energy balls avoine, cacahuète & chocolat", "🟤", "Tendance", "batch", 20,
   { oats: 150, peanut: 80, honey: 40, cocoa: 15, chocolate: 30 },
   ["Mixer l’avoine grossièrement.", "Mélanger avec beurre de cacahuète, miel, cacao et chocolat haché.", "Former 12 boules, 30 minutes au frais. Encas : 2 par personne."], { veg: true, freezer: true, portions: 12, unit: "boules", meal: "breakfast" });
+
+// ─── Douceurs à faire en plus ─────────────────────────────────────────────
+r("cookies", "Cookies aux pépites de chocolat", "🍪", "Américaine", "batch", 30,
+  { flour: 250, butter: 125, sugar: 150, egg: 1, chocolate: 150, baking_powder: 5 },
+  ["Au robot batteur : beurre mou et sucre 2 minutes, puis l’œuf.", "Ajouter farine, levure chimique, pincée de sel, puis le chocolat haché grossièrement.", "Boules de pâte espacées sur plaque : 10–12 minutes à 180 °C (ou 8 minutes à l’air fryer à 170 °C). Bords dorés, centre encore mou : ils durcissent en refroidissant. Se congèlent crus en boules."],
+  { veg: true, freezer: true, portions: 16, unit: "cookies", meal: "breakfast" });
+r("crepes", "Crêpes", "🥞", "Française", "batch", 30,
+  { flour: 250, milk: 500, egg: 3, sugar: 20, butter: 30 },
+  ["Au mixeur : farine, œufs, sucre, pincée de sel et lait, jusqu’à une pâte lisse. Repos 30 minutes si possible.", "Poêle chaude légèrement beurrée : une petite louche, étaler, 1 minute par face.", "Se congèlent empilées avec du papier cuisson entre chaque crêpe."],
+  { veg: true, freezer: true, portions: 12, unit: "crêpes", meal: "breakfast" });

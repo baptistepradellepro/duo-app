@@ -28,6 +28,7 @@ const initial = () => ({
   myRecipes: [],
   creators: [],
   ratings: {},
+  extras: [],
   freezerTarget: 8,
   prepDone: {},
   lastBatches: [],
@@ -408,7 +409,7 @@ function home() {
   return (
     heading(new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }).toUpperCase(), "Bonjour à vous deux 👋", s.plan ? `Semaine du ${dayDate(0)} au ${dayDate(6)}.` : "Commencez par générer votre semaine.") +
     (i >= 0
-      ? `<div class="panel"><div class="row spread"><h2>Aujourd’hui · ${DAYS[i]}</h2><button class="text-button" onclick="go('week')">Toute la semaine ↗</button></div><div class="today">${[0, 1, 2].map((j) => mealCell(i, j)).join("")}</div></div>`
+      ? `<div class="panel"><div class="row spread"><h2>Aujourd’hui · ${DAYS[i]}</h2><span class="row"><button class="secondary small" onclick="extraPicker()">🍳 Cuisiné en plus</button><button class="text-button" onclick="go('week')">Toute la semaine ↗</button></span></div><div class="today">${[0, 1, 2].map((j) => mealCell(i, j)).join("")}</div></div>`
       : `<div class="panel"><h2>${s.plan ? "Semaine terminée" : "Pas encore de semaine"}</h2><p>${s.plan ? "Dimanche, la semaine suivante se prépare toute seule." : "Générez votre première semaine : repas, batch cooking et liste de courses."}</p><button onclick="go('week');${s.plan ? "" : "generate()"}">${s.plan ? "Voir la semaine" : "✦ Générer ma semaine"}</button></div>`) +
     `<div class="stats home-stats"><div class="stat" onclick="go('stock')" role="button" tabindex="0"><small>🧊 Au congélateur</small><strong>${total} <span style="font-size:13px">portions</span></strong><em>${frozen.length ? frozen.slice(0, 3).map(([id, n]) => `${byR[id].emoji} ${n}`).join(" · ") : "prêtes pour les soirs de flemme"}</em></div><div class="stat" onclick="go('week')" role="button" tabindex="0"><small>🧑‍🍳 Batch cooking</small><strong>${!s.plan ? "—" : tasks.length ? `${tasks.length} <span style="font-size:13px">à faire</span>` : "✓"}</strong><em>${!s.plan ? "après la première semaine" : tasks.length ? "à faire dimanche" : "terminé pour cette semaine"}</em></div><div class="stat" onclick="go('shopping')" role="button" tabindex="0"><small>🛒 Courses</small><strong>${!s.plan ? "—" : left.length ? `${left.length} <span style="font-size:13px">articles</span>` : "✓"}</strong><em>${!s.plan ? "liste générée avec la semaine" : left.length ? `≈ ${eur(left.reduce((a, x) => a + x.total, 0))} à acheter` : "tout est acheté"}</em></div></div>${!s.setup ? '<div class="notice">👋 Première visite ? Scannez ou saisissez ce que vous avez dans « Mon placard ».</div>' : ""}`
   );
@@ -420,11 +421,11 @@ function week() {
     .map(([v, l]) => `<option value="${v}" ${String(s.fixed.ramen) === v ? "selected" : ""}>${l}</option>`)
     .join("");
   return (
-    heading("VOTRE MENU SUR MESURE", "La semaine à table.", s.plan ? `Du ${dayDate(0)} au ${dayDate(6)} · 2 personnes` : "7 jours · 3 repas par jour · 2 personnes", `<button onclick="generate()">${s.plan ? "↻ Recomposer" : "✦ Générer ma semaine"}</button>`) +
+    heading("VOTRE MENU SUR MESURE", "La semaine à table.", s.plan ? `Du ${dayDate(0)} au ${dayDate(6)} · 2 personnes` : "7 jours · 3 repas par jour · 2 personnes", `<span class="row"><button class="secondary" onclick="extraPicker()">🍳 Cuisiné en plus</button><button onclick="generate()">${s.plan ? "↻ Recomposer" : "✦ Générer ma semaine"}</button></span>`) +
     (s.plan ? sundayPanel() : "") +
     `<div class="panel row spread"><label>Budget courses · € par semaine pour deux<input type="number" min="0" step="5" value="${s.budgetEur}" onchange="s.budgetEur=Math.max(0,+this.value);save();render()"></label><label>Taux Revolut · 1 € = RON<input type="number" min="1" step="0.01" value="${s.rate}" onchange="setRate(this.value)"></label><span class="muted">${s.rateManual ? `Votre taux, gardé tel quel. <button class="text-button" onclick="s.rateManual=false;s.rateDate=null;save();updateRate()">Revenir au taux automatique</button>` : s.rateDate ? `Taux du marché du ${new Date(s.rateDate).toLocaleDateString("fr-FR")}, corrigez-le si Revolut affiche autre chose.` : ""} · ≈ ${money(budget())} RON</span></div>` +
     (s.plan
-      ? `<div class="notice ${c > budget() ? "warning" : ""}">${c > budget() ? "Budget dépassé pour la proposition la moins chère. Augmentez le budget ou ajoutez votre stock." : "Votre semaine tient dans le budget."} Consommé : <b>${eur(c)} / ${money(s.budgetEur)} €</b>. À payer en magasin : <b>${eur(pay)}</b>${pay - c > 1 ? ` (dont ${eur(pay - c)} de restes de paquets qui restent au placard)` : ""}. <button class="text-button" onclick="go('shopping')">Voir mes courses ↗</button></div>${topupNotice()}<p class="muted">Touchez un repas pour sa recette détaillée. Mangé autre chose ? « Autre » le retire du placard.</p>${s.plan.days.map((day, i) => `<div class="day ${i === todayIndex() ? "is-today" : ""}"><div class="day-label">${DAYS[i].slice(0, 3)}.<br><small class="muted">${dayDate(i)}</small></div>${day.map((_, j) => mealCell(i, j)).join("")}</div>`).join("")}`
+      ? `<div class="notice ${c > budget() ? "warning" : ""}">${c > budget() ? "Budget dépassé pour la proposition la moins chère. Augmentez le budget ou ajoutez votre stock." : "Votre semaine tient dans le budget."} Consommé : <b>${eur(c)} / ${money(s.budgetEur)} €</b>. À payer en magasin : <b>${eur(pay)}</b>${pay - c > 1 ? ` (dont ${eur(pay - c)} de restes de paquets qui restent au placard)` : ""}. <button class="text-button" onclick="go('shopping')">Voir mes courses ↗</button></div>${topupNotice()}${extrasPanel()}<p class="muted">Touchez un repas pour sa recette détaillée. Mangé autre chose ? « Autre » le retire du placard.</p>${s.plan.days.map((day, i) => `<div class="day ${i === todayIndex() ? "is-today" : ""}"><div class="day-label">${DAYS[i].slice(0, 3)}.<br><small class="muted">${dayDate(i)}</small></div>${day.map((_, j) => mealCell(i, j)).join("")}</div>`).join("")}`
       : '<div class="panel"><h2>Le menu commence ici.</h2><p>Générez 21 repas pour vous deux : les fournées du dimanche sont choisies selon votre congélateur, et la liste de courses prend le magasin le moins cher.</p></div>') +
     `<details class="panel"><summary>Réglages de la semaine</summary><div class="row"><label class="inline"><input type="checkbox" ${s.fixed.chirashi ? "checked" : ""} onchange="s.fixed.chirashi=this.checked;save()"> 🍣 Chirashi saumon & avocat le mardi soir</label><label>🍜 Ramen au bouillon<select onchange="s.fixed.ramen=+this.value;save()">${ramenSel}</select></label><label class="inline"><input type="checkbox" ${s.veg ? "checked" : ""} onchange="s.veg=this.checked;save()"> Menus végétariens</label><label>Garder au congélateur (portions de plats)<input type="number" min="0" max="40" value="${s.freezerTarget}" onchange="s.freezerTarget=Math.max(0,+this.value);save()"></label></div><p class="muted">Recomposez la semaine pour appliquer ces réglages. Le poulet entier est désossé chaque dimanche : ≈ 350 g de blancs et 400 g de cuisses pour la semaine, la carcasse et les ailes pour le bouillon du ramen.</p>${batchPanel()}</details>`
   );
@@ -659,6 +660,90 @@ function toggleBatch(id, on) {
   save();
   render();
 }
+// ─── Cuisiné en plus du planning : on retire les ingrédients du placard ───
+function extraPicker() {
+  pickQuery = "";
+  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>🍳 Cuisiné en plus</h2><p class="muted">Une recette faite en dehors du menu : ses ingrédients sortent du placard, le menu ne change pas.</p><input type="search" placeholder="Cookies, crêpes, une recette…" oninput="pickQuery=this.value;extraRows()" autofocus><div id="extra-rows" class="pick-list"></div><button class="secondary" onclick="manualExtra()">Pas dans le carnet : saisir les ingrédients</button>`;
+  modal().showModal();
+  extraRows();
+}
+function extraRows() {
+  const q = norm(pickQuery);
+  const list = R.filter((r) => norm(r.name + " " + r.cuisine + " " + Object.keys(r.ingredients).map((id) => by[id]?.name || "").join(" ")).includes(q))
+    .map((r) => ({ r, ok: inPantry(r) }))
+    .sort((a, b) => b.ok - a.ok || a.r.name.localeCompare(b.r.name, "fr"));
+  document.getElementById("extra-rows").innerHTML =
+    list.map(({ r, ok }) => `<button class="pick-row" onclick="cookExtra('${r.id}')"><span class="pick-emoji">${r.emoji}</span><span><b>${esc(r.name)}</b><small class="muted">${esc(r.cuisine)} · ${r.type === "batch" ? `${r.portions} ${esc(r.unit)}` : "plat"}${ok ? " · ✓ tout est au placard" : ""}</small></span></button>`).join("") || '<p class="muted">Aucune recette trouvée.</p>';
+}
+function cookExtra(id) {
+  const r = byR[id],
+    batch = r.type === "batch";
+  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><div style="font-size:44px">${r.emoji}</div><h2>${esc(r.name)}</h2><form oninput="extraPreview(this,'${id}')" onsubmit="saveExtra(event,'${id}')"><div class="row"><label>${batch ? `Nombre de fournées (1 = ${r.portions} ${esc(r.unit)})` : "Pour combien de personnes"}<input name="n" type="number" min="0.5" step="0.5" value="${batch ? 1 : 2}"></label><label>${batch ? `${esc(r.unit[0].toUpperCase() + r.unit.slice(1))} mis au congélateur` : "Portions mises au congélateur"}<input name="fz" type="number" min="0" step="1" value="${batch && r.freezer ? r.portions : 0}"></label></div><h3>Retiré du placard</h3><div id="extra-preview"></div><button type="submit">Retirer du placard</button></form>`;
+  modal().showModal();
+  extraPreview(modal().querySelector("form"), id);
+}
+function extraPreview(f, id) {
+  const r = byR[id],
+    n = Math.max(0, +f.n.value || 0);
+  document.getElementById("extra-preview").innerHTML = `<table>${Object.entries(r.ingredients)
+    .filter(([x]) => by[x])
+    .map(([x, q]) => {
+      const need = q * n,
+        have = s.stock[x] || 0;
+      return `<tr><td>${esc(by[x].name.split(" · ")[0])}</td><td>${qtyLabel(need, by[x].unit)}</td><td class="muted">${have >= need ? `reste ${qtyLabel(have - need, by[x].unit)}` : `⚠️ placard : ${qtyLabel(have, by[x].unit)}`}</td></tr>`;
+    })
+    .join("")}</table><p class="muted">Ce qui manque au placard est mis à zéro : corrigez le stock ensuite si besoin.</p>`;
+}
+function saveExtra(ev, id) {
+  ev.preventDefault();
+  const r = byR[id],
+    f = ev.target,
+    n = Math.max(0, +f.n.value || 0),
+    fz = Math.max(0, Math.round(+f.fz.value || 0));
+  if (!n) return toast("Indiquez la quantité préparée.");
+  Object.entries(r.ingredients).forEach(([x, q]) => by[x] && (s.stock[x] = Math.max(0, (s.stock[x] || 0) - q * n)));
+  if (fz) s.freezer[id] = (s.freezer[id] || 0) + fz;
+  (s.extras ??= []).push({ date: new Date().toISOString(), id, n, fz });
+  s.checked = {};
+  save();
+  modal().close();
+  render();
+  toast(`${r.name} : placard mis à jour${fz ? `, ${fz} au congélateur` : ""}. Courses recalculées.`);
+  if (s.ratings[id] === undefined) askRating(id);
+}
+function manualExtra() {
+  const row = `<div class="row ing-row"><input class="ing-name" list="ing-list" placeholder="Ingrédient"><input class="ing-qty" type="number" min="0" step="any" placeholder="Quantité"></div>`;
+  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>🍳 Cuisiné en plus</h2><form onsubmit="saveManualExtra(event)"><label>Qu’avez-vous préparé ?<input name="label" required maxlength="60" placeholder="Ex. gâteau d’anniversaire"></label><h3>Ingrédients utilisés</h3><p class="muted">En g, ml ou pièces selon l’aliment.</p><div id="extra-ing">${row.repeat(4)}</div><button type="button" class="secondary" onclick="document.getElementById('extra-ing').insertAdjacentHTML('beforeend',document.querySelector('#extra-ing .ing-row').outerHTML)">+ Ligne</button><datalist id="ing-list">${C.map((x) => `<option value="${esc(x.name)}">${x.unit}</option>`).join("")}</datalist><button type="submit">Retirer du placard</button></form>`;
+  modal().showModal();
+}
+function saveManualExtra(ev) {
+  ev.preventDefault();
+  const f = ev.target,
+    used = {};
+  for (const row of f.querySelectorAll(".ing-row")) {
+    const typed = row.querySelector(".ing-name").value,
+      q = +row.querySelector(".ing-qty").value,
+      m = matchProduct(typed),
+      x = C.find((c) => norm(c.name) === norm(typed)) || (m[0] && m[0].score >= 13 ? by[m[0].id] : null);
+    if (x && q > 0) used[x.id] = (used[x.id] || 0) + q;
+  }
+  if (!Object.keys(used).length) return toast("Ajoutez au moins un ingrédient reconnu avec sa quantité.");
+  Object.entries(used).forEach(([x, q]) => (s.stock[x] = Math.max(0, (s.stock[x] || 0) - q)));
+  (s.extras ??= []).push({ date: new Date().toISOString(), label: f.label.value.trim().slice(0, 60) });
+  s.checked = {};
+  save();
+  modal().close();
+  render();
+  toast("Placard mis à jour. Courses recalculées.");
+}
+function extrasPanel() {
+  const list = (s.extras || []).filter((e) => s.plan && e.date.slice(0, 10) >= s.plan.weekStart).reverse();
+  if (!list.length) return "";
+  return `<div class="panel"><h2>🍳 En plus cette semaine</h2>${list
+    .map((e) => `<div class="review-row"><span>${e.id && byR[e.id] ? `${byR[e.id].emoji} ${esc(byR[e.id].name)}` : `🍽️ ${esc(e.label || "Autre")}`}</span><small class="muted">${new Date(e.date).toLocaleDateString("fr-FR", { weekday: "long" })}${e.fz ? ` · ${e.fz} au congélateur` : ""}</small></div>`)
+    .join("")}</div>`;
+}
+
 // ─── Choisir un repas dans le carnet ───
 // Recettes possibles pour une place du menu : petit-déjeuner ou plat, sans les recettes écartées.
 const fitsSlot = (r, j) => r.ratings !== -1 && s.ratings[r.id] !== -1 && (j === 0 ? r.meal === "breakfast" : r.type === "main");
@@ -961,7 +1046,7 @@ function detail(id, i, j) {
   modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><div style="font-size:50px">${r.emoji}</div><h2>${esc(r.name)}</h2><p>${esc(r.cuisine)} · ${r.time} min · <b>${r.type === "batch" ? `fournée de ${r.portions} ${esc(r.unit)}` : "2 personnes"}</b>${r.freezer ? " · 🧊 se congèle" : ""}</p>${r.source ? `<p><a href="${esc(r.source)}" target="_blank" rel="noopener">Voir la recette d’origine ↗</a></p>` : ""}<div class="notice">Par ${r.type === "batch" ? "portion" : "personne"} : ${Math.round(m.kcal)} kcal · ${Math.round(m.protein)} g de protéines</div>${tools(r)}<h3>Dans la cuisine</h3><table>${Object.entries(r.ingredients)
     .filter(([x]) => by[x])
     .map(([x, q]) => `<tr><td>${esc(by[x].name)}</td><td>${qtyLabel(q * f, by[x].unit)}</td></tr>`)
-    .join("")}</table>${beforeCooking(r, i)}<h3>À vous de jouer</h3><ol class="steps rich">${richSteps(r, f)}</ol><p class="muted">Sel, poivre et eau selon vos préférences. Poids crus / secs / égouttés.</p>${action}${rateBlock(id)}${r.source !== undefined ? ` <button class="secondary" onclick="deleteRecipe('${id}')">Supprimer cette recette</button>` : ""}`;
+    .join("")}</table>${beforeCooking(r, i)}<h3>À vous de jouer</h3><ol class="steps rich">${richSteps(r, f)}</ol><p class="muted">Sel, poivre et eau selon vos préférences. Poids crus / secs / égouttés.</p>${action}${key ? "" : ` <button class="secondary" onclick="cookExtra('${id}')">🍳 Cuisiné en plus</button>`}${rateBlock(id)}${r.source !== undefined ? ` <button class="secondary" onclick="deleteRecipe('${id}')">Supprimer cette recette</button>` : ""}`;
   modal().showModal();
 }
 // Chaque étape rappelle les quantités des ingrédients qu'elle utilise (à la première mention).
