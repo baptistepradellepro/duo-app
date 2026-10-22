@@ -980,7 +980,7 @@ function recipes() {
   const cuisines = [...new Set(R.map((r) => r.cuisine))].sort();
   const creators = [...CREATORS, ...s.creators.map((h) => [h, "Ajouté par vous"])];
   return (
-    heading("D’ASIE, DE RUSSIE, DE FRANCE…", "Le carnet de recettes.", `${R.length} recettes · quantités pour deux à l’ouverture.`, `<button onclick="recipeForm()">+ Ajouter une recette</button>`) +
+    heading("D’ASIE, DE RUSSIE, DE FRANCE…", "Le carnet de recettes.", `${R.length} recettes · quantités pour deux à l’ouverture.`, `<span class="row"><button class="secondary" onclick="recipeImport()">📥 Importer depuis Claude</button><button onclick="recipeForm()">+ Ajouter une recette</button></span>`) +
     inspiration() +
     `<div class="row filters"><input id="rq" type="search" placeholder="Une recette, un ingrédient…" value="${esc(query)}" oninput="query=this.value;recipeRows()"><select onchange="category=this.value;recipeRows()">${[["all", "Toutes les recettes"], ["breakfast", "Petit-déjeuner"], ["main", "Déjeuner & dîner"], ["drink", "🥤 Boissons"], ["snack", "🍿 En-cas"], ["batch", "Fournées & congélation"], ["veg", "Végétarien"], ["mine", "Mes recettes"], ["liked", "👍 On aime"], ["unrated", "Pas encore notées"], ["disliked", "👎 Écartées"]].map(([v, l]) => `<option value="${v}" ${category === v ? "selected" : ""}>${l}</option>`).join("")}</select><select onchange="cuisine=this.value;recipeRows()"><option value="all">Toutes les cuisines</option>${cuisines.map((c) => `<option ${cuisine === c ? "selected" : ""}>${esc(c)}</option>`).join("")}</select></div><div class="grid" id="reciperows"></div><details class="panel"><summary>Créateurs food à suivre</summary><p class="muted">Vous voyez une recette qui vous plaît dans un reel ? Ajoutez-la avec « + Ajouter une recette » en collant le lien : elle entre dans le planning et la liste de courses.</p><div class="chips">${creators.map(([h, d]) => `<a class="chip" href="https://www.instagram.com/${encodeURIComponent(h)}/" target="_blank" rel="noopener">@${esc(h)} <small>${esc(d)}</small></a>`).join("")}</div><form class="row" onsubmit="event.preventDefault();addCreator(this.h.value)"><input name="h" placeholder="@compte_instagram" maxlength="40" required><button class="secondary">Ajouter</button></form></details>`
   );
@@ -1195,6 +1195,98 @@ function cookBatch(id) {
 }
 
 // ─── Mes recettes (vues sur Insta, TikTok…) ──────────────────────────────
+// ─── Importer des recettes depuis l'app Claude (abonnement) ───
+const RECIPE_TYPES = { main: "plat", breakfast: "petit-déjeuner", drink: "boisson", snack: "en-cas", batch: "fournée / batch cooking" };
+function importPrompt() {
+  return [
+    "Retrouve dans nos conversations passées toutes les recettes que tu m’as proposées (et celles de cette conversation si j’en colle). Je veux les importer dans mon app de cuisine.",
+    "",
+    "Réponds UNIQUEMENT par un tableau JSON, sans texte autour, une entrée par recette, sans doublon :",
+    '[{"name":"Poulet teriyaki","emoji":"🍗","cuisine":"Japonaise","type":"main","time":25,"servings":2,"portions":0,"freezer":false,"veg":false,"ingredients":[{"name":"hauts de cuisse de poulet","qty":300,"unit":"g"},{"name":"sauce soja","qty":45,"unit":"ml"},{"name":"oeuf","qty":2,"unit":"pièce"}],"steps":["Étape 1 claire et complète.","Étape 2."]}]',
+    "",
+    "Règles :",
+    `- type : ${Object.entries(RECIPE_TYPES).map(([k, v]) => `"${k}" (${v})`).join(", ")}.`,
+    "- servings : nombre de personnes pour les quantités données. Pour une fournée (batch), portions = nombre de portions produites.",
+    "- unit : seulement g, ml ou pièce. Convertis : 1 c. à soupe ≈ 15 g ou 15 ml, 1 c. à café ≈ 5 g ou 5 ml, 1 verre ≈ 200 ml, 1 gousse d’ail ≈ 5 g. Sel, poivre et eau : ne pas les lister.",
+    "- name des ingrédients : nom simple en français (« blanc de poulet », « riz », « sauce soja »), sans marque.",
+    "- steps : étapes réécrites clairement, avec températures et temps de cuisson. J’ai four, air fryer, plaques, rice cooker, soup maker, robot batteur, mixeur et hachoir.",
+    "- freezer : true si le plat se congèle bien. veg : true si végétarien.",
+  ].join("\n");
+}
+function recipeImport() {
+  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>📥 Importer depuis Claude</h2><ol class="steps"><li>Touchez « Copier la demande », ouvrez l’app Claude et collez-la dans une nouvelle conversation. Claude retrouve les recettes qu’il vous a déjà proposées. Vous pouvez aussi coller une recette en dessous de la demande.</li><li>Copiez sa réponse (le tableau qui commence par <code>[</code>) et collez-la ci-dessous.</li></ol><div class="row"><button class="secondary" onclick="navigator.clipboard.writeText(importPrompt()).then(()=>toast('Demande copiée : collez-la dans Claude.')).catch(()=>{document.getElementById('import-prompt').hidden=false})">📋 Copier la demande</button><a class="button-like" href="https://claude.ai/new" target="_blank" rel="noopener">Ouvrir Claude</a></div><textarea id="import-prompt" readonly rows="5" hidden onclick="this.select()">${esc(importPrompt())}</textarea><form onsubmit="event.preventDefault();importApply(this.reply.value)"><label>Réponse de Claude<textarea name="reply" rows="8" required placeholder='[{"name":"…","type":"main","ingredients":[…],"steps":[…]}]'></textarea></label><button type="submit">Importer les recettes</button></form>`;
+  modal().showModal();
+}
+// Ingrédient d'une recette importée : aliment de l'app si reconnu, sinon nouvel ingrédient.
+function importIngredient(name, qty, unit, created) {
+  const m = matchProduct(name),
+    x = C.find((c) => norm(c.name.split(" · ")[0]) === norm(name)) || (m[0] && m[0].score >= 13 && !m[0].id.startsWith("custom") ? by[m[0].id] : null);
+  const u = ["g", "ml", "pièce"].includes(unit) ? unit : "g";
+  if (x) {
+    if (x.unit === u || (x.unit !== "pièce" && u !== "pièce")) return [x.id, qty];
+    const piece = window.PIECE_G?.[x.id];
+    return [x.id, x.unit === "pièce" ? Math.max(0.25, Math.round((qty / (piece || 60)) * 4) / 4) : qty * (piece || 100)];
+  }
+  const id = newCustom(name.replace(/^./, (c) => c.toUpperCase()), u, u === "pièce" ? 1 : 500);
+  Object.assign(by[id], { confirmed: true, cat: "Autre › Autre" });
+  created.push(by[id].name);
+  return [id, qty];
+}
+function importApply(reply) {
+  let list;
+  try {
+    list = JSON.parse(reply.slice(reply.indexOf("["), reply.lastIndexOf("]") + 1));
+    if (!Array.isArray(list)) throw Error();
+  } catch {
+    return toast("Réponse illisible : copiez tout le tableau donné par Claude.");
+  }
+  const created = [],
+    added = [],
+    skipped = [];
+  for (const raw of list) {
+    if (!raw || typeof raw.name !== "string" || !Array.isArray(raw.ingredients) || !raw.ingredients.length) continue;
+    const name = raw.name.trim().slice(0, 80);
+    if (R.some((r) => norm(r.name) === norm(name))) {
+      skipped.push(name);
+      continue;
+    }
+    const type = RECIPE_TYPES[raw.type] ? raw.type : "main",
+      servings = Math.max(1, +raw.servings || 2),
+      ingredients = {};
+    for (const ing of raw.ingredients) {
+      const qty = +ing?.qty;
+      if (!ing || typeof ing.name !== "string" || !ing.name.trim() || !(qty > 0)) continue;
+      const [id, q] = importIngredient(ing.name.trim().slice(0, 70), qty, ing.unit, created);
+      ingredients[id] = (ingredients[id] || 0) + (type === "batch" ? q : q / servings);
+    }
+    if (!Object.keys(ingredients).length) continue;
+    s.myRecipes.push({
+      id: "my" + Date.now() + added.length,
+      name,
+      emoji: typeof raw.emoji === "string" && raw.emoji ? raw.emoji.slice(0, 4) : "🍽️",
+      cuisine: typeof raw.cuisine === "string" && raw.cuisine.trim() ? raw.cuisine.trim().slice(0, 30) : "Maison",
+      type,
+      time: Math.max(1, Math.round(+raw.time || 30)),
+      ingredients,
+      steps: (Array.isArray(raw.steps) ? raw.steps : []).filter((x) => typeof x === "string" && x.trim()).map((x) => x.trim().slice(0, 600)),
+      veg: !!raw.veg,
+      freezer: !!raw.freezer,
+      portions: type === "batch" ? Math.max(1, Math.round(+raw.portions || servings)) : 0,
+      unit: "portions",
+      meal: type === "breakfast" ? "breakfast" : "main",
+      fixed: null,
+      source: "",
+    });
+    added.push(name);
+  }
+  offerCache = {};
+  loadRecipes();
+  save();
+  modal().close();
+  category = "mine";
+  render();
+  toast(added.length ? `${added.length} recette${added.length > 1 ? "s" : ""} importée${added.length > 1 ? "s" : ""}${skipped.length ? `, ${skipped.length} déjà dans le carnet` : ""}${created.length ? `, ${created.length} nouvel${created.length > 1 ? "s" : ""} ingrédient${created.length > 1 ? "s" : ""}` : ""}.` : skipped.length ? "Ces recettes sont déjà dans le carnet." : "Aucune recette lisible dans la réponse.");
+}
 function recipeForm() {
   const row = () => `<div class="row ing-row"><input class="ing-name" list="ing-list" placeholder="Ingrédient"><input class="ing-qty" type="number" min="0" step="any" placeholder="Quantité"></div>`;
   modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>Ajouter une recette</h2><p class="muted">Notez avec vos mots une recette vue chez un créateur, et collez le lien de la vidéo pour la retrouver.</p><form id="recipe-form" onsubmit="saveRecipe(event)"><label>Nom<input name="name" required maxlength="80" placeholder="Ex. Ramen crémeux au miso"></label><div class="row"><label>Emoji<input name="emoji" maxlength="4" value="🍽️" style="width:70px"></label><label>Cuisine<input name="cuisine" list="cuisine-list" maxlength="30" value="Japonaise"></label><label>Temps (min)<input name="time" type="number" min="1" value="30"></label></div><div class="row"><label>Type<select name="type" onchange="this.form.portions.parentElement.hidden=this.value!=='batch'"><option value="main">Plat · quantités pour 2</option><option value="breakfast">Petit-déj · quantités pour 2</option><option value="drink">Boisson · quantités pour 2</option><option value="snack">En-cas · quantités pour 2</option><option value="batch">Fournée / congélation · quantités totales</option></select></label><label hidden>Portions produites<input name="portions" type="number" min="1" value="6"></label><label class="inline"><input type="checkbox" name="veg"> Végétarien</label><label class="inline"><input type="checkbox" name="freezer"> Se congèle</label></div><label>Lien de la vidéo (Instagram, TikTok…)<input name="source" type="url" placeholder="https://www.instagram.com/reel/…"></label><h3>Ingrédients</h3><p class="muted">Choisissez dans la liste pour que les courses suivent. Quantités en g, ml ou pièces selon l’ingrédient.</p><div id="ing-rows">${row().repeat(5)}</div><button type="button" class="secondary" onclick="document.getElementById('ing-rows').insertAdjacentHTML('beforeend',document.querySelector('.ing-row').outerHTML)">+ Ligne</button><datalist id="ing-list">${C.map((x) => `<option value="${esc(x.name)}">${x.unit}</option>`).join("")}</datalist><datalist id="cuisine-list">${[...new Set(R.map((r) => r.cuisine))].map((c) => `<option value="${esc(c)}">`).join("")}</datalist><label>Étapes (une par ligne)<textarea name="steps" rows="6" required></textarea></label><button type="submit">Enregistrer la recette</button></form>`;
