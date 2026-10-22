@@ -1,12 +1,13 @@
 // Garde l'app disponible hors ligne sur l'iPhone.
 // Les fichiers sont pris sur le réseau quand il est là, sinon dans le cache.
-const CACHE = "duo-v6";
+const CACHE = "duo-v7";
 const SHELL = [
   "./",
   "index.html",
   "style.css",
   "app.js",
   "data/ingredients.js",
+  "data/aliases.js",
   "data/prices.js",
   "data/recipes.js",
   "data/recipes-plus.js",

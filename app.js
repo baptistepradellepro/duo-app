@@ -690,27 +690,50 @@ function setFreezer(i, j, id) {
   toast("Repas du congélateur prévu : ses ingrédients sortent des courses.");
 }
 function stock() {
-  const frozen = Object.entries(s.freezer).filter(([id, n]) => n > 0 && byR[id]);
+  const frozen = Object.entries(s.freezer).filter(([id, n]) => n > 0 && byR[id]),
+    mine = C.filter((x) => (s.stock[x.id] || 0) > 0).sort((a, b) => a.name.localeCompare(b.name, "fr")),
+    review = s.custom.filter((x) => by[x.id]);
   return (
-    heading("LA BASE DE VOS FUTURS REPAS", "Mon placard.", "Scannez vos produits ou saisissez les quantités. Zéro signifie que vous n’en avez pas.") +
+    heading("LA BASE DE VOS FUTURS REPAS", "Mon placard.", "Scannez, tapez ou modifiez ce que vous avez. Les recettes et les courses en tiennent compte.") +
+    `<div class="panel"><h2>➕ Ajouter des aliments</h2><div class="row"><button onclick="scanner()">📷 Scanner un code-barres</button></div><label>Ou tapez-les, un par ligne ou séparés par des virgules<textarea id="quick" rows="3" placeholder="2 steaks, 500 g de vermicelles de riz, sauce soja, 6 œufs, 1 kg de carottes"></textarea></label><button class="secondary" onclick="quickParse()">Analyser</button><div id="quick-result"></div></div>` +
+    (review.length
+      ? `<div class="panel review"><h2>🔗 À rattacher (${review.length})</h2><p class="muted">Ces produits ne sont pas reliés à un aliment de l’app : les recettes ne peuvent pas les utiliser. Rattachez-les pour qu’ils comptent.</p>${review
+          .map((x) => {
+            const m = matchProduct(x.name)[0];
+            return `<div class="review-row"><span><b>${esc(x.name)}</b> <small class="muted">${qtyLabel(s.stock[x.id] || 0, x.unit)}</small></span><span class="row">${m && !m.id.startsWith("custom") ? `<button class="small" onclick="mergeInto('${x.id}','${m.id}')">= ${esc(by[m.id].name.split(" · ")[0])}</button>` : ""}<button class="secondary small" onclick="editItem('${x.id}')">Choisir…</button></span></div>`;
+          })
+          .join("")}</div>`
+      : "") +
+    `<div class="panel"><div class="row spread"><h2>🥫 Dans mon placard (${mine.length})</h2><input type="search" placeholder="Rechercher…" value="${esc(query)}" oninput="query=this.value;stockRows()"></div><div id="stockrows" class="pantry"></div></div>` +
     `<div class="panel"><div class="row spread"><h2>🧊 Congélateur</h2><select aria-label="Ajouter au congélateur" onchange="if(this.value){s.freezer[this.value]=(s.freezer[this.value]||0)+1;save();render()}"><option value="">+ Ajouter une portion…</option>${R.filter((r) => r.freezer).map((r) => `<option value="${r.id}">${r.emoji} ${esc(r.name)}</option>`).join("")}</select></div>${
       frozen.length
         ? `<div class="freezer">${frozen.map(([id, n]) => `<div class="freezer-item"><span>${byR[id].emoji} ${esc(byR[id].name)}</span><span class="row"><button class="secondary small" onclick="s.freezer['${id}']=Math.max(0,${n}-1);save();render()" aria-label="Retirer une portion">−</button><b>${n}</b><button class="secondary small" onclick="s.freezer['${id}']=${n}+1;save();render()" aria-label="Ajouter une portion">+</button><small class="muted">${esc(byR[id].unit)}</small></span></div>`).join("")}</div>`
-        : '<p class="muted">Vide pour l’instant. Les fournées marquées « Préparée » s’ajoutent ici automatiquement.</p>'
-    }</div><div class="panel"><div class="row spread"><button onclick="scanner()">📷 Scanner un produit</button><button class="secondary" onclick="newIngredient()">+ Ajouter un ingrédient</button><input type="search" placeholder="Rechercher un ingrédient…" value="${esc(query)}" oninput="query=this.value;stockRows()"><button class="secondary" onclick="s.setup=true;save();go('week')">Préparer ma semaine ↗</button></div><div class="table-wrap"><table><thead><tr><th>Ingrédient</th><th>En stock</th><th>Unité</th><th>Exclure</th></tr></thead><tbody id="stockrows"></tbody></table></div></div><p class="muted">Riz, pâtes et lentilles pesés secs ; viandes crues ; conserves égouttées. Le scanner retient chaque code-barres : la prochaine fois, un scan suffit pour ajouter le paquet. Les exclusions se font par ingrédient ; vérifiez aussi les étiquettes pour les allergènes.</p>`
+        : '<p class="muted">Vide pour l’instant. Les fournées marquées « Fait » s’ajoutent ici automatiquement.</p>'
+    }</div><details class="panel"><summary>Tous les aliments de l’app (${C.length})</summary><p class="muted">Pour saisir une quantité directement ou exclure un aliment des menus.</p><div class="table-wrap"><table><thead><tr><th>Aliment</th><th>En stock</th><th>Exclure</th></tr></thead><tbody id="allrows"></tbody></table></div></details><p class="muted">Riz, pâtes et lentilles pesés secs ; viandes crues ; conserves égouttées. Le scanner retient chaque code-barres : la prochaine fois, un scan suffit.</p>`
   );
 }
 function stockRows() {
+  const q = norm(query),
+    hit = (x) => !q || norm(x.name + " " + (window.ALIASES?.[x.id] || "")).includes(q);
   const e = document.getElementById("stockrows");
-  if (!e) return;
-  const q = norm(query);
-  e.innerHTML = C.filter((x) => norm(x.name).includes(q))
-    .sort((a, b) => (s.stock[b.id] > 0) - (s.stock[a.id] > 0))
-    .map(
-      (x) =>
-        `<tr><td>${esc(x.name)}</td><td><input aria-label="Stock ${esc(x.name)}" type="number" min="0" step="${x.unit === "pièce" ? 1 : 10}" value="${s.stock[x.id] || 0}" onchange="s.stock['${x.id}']=Math.max(0,+this.value);s.setup=true;save()"></td><td>${x.unit}</td><td><input aria-label="Exclure ${esc(x.name)}" type="checkbox" ${s.exclude.includes(x.id) ? "checked" : ""} onchange="exclude('${x.id}',this.checked)"></td></tr>`,
-    )
-    .join("");
+  if (e) {
+    const mine = C.filter((x) => (s.stock[x.id] || 0) > 0 && hit(x)).sort((a, b) => a.name.localeCompare(b.name, "fr"));
+    e.innerHTML =
+      mine
+        .map(
+          (x) =>
+            `<div class="pantry-row"><button class="link-like" onclick="editItem('${x.id}')">${esc(x.name.split(" · ")[0])}${x.id.startsWith("custom") ? ' <small class="badge">à rattacher</small>' : ""}</button><span class="row"><input aria-label="Quantité ${esc(x.name)}" type="number" min="0" step="${x.unit === "pièce" ? 1 : 10}" value="${Math.round((s.stock[x.id] || 0) * 100) / 100}" onchange="s.stock['${x.id}']=Math.max(0,+this.value);s.setup=true;save()"><small class="muted">${x.unit}</small><button class="secondary small" onclick="editItem('${x.id}')" aria-label="Modifier ${esc(x.name)}">✏️</button></span></div>`,
+        )
+        .join("") || `<p class="muted">${q ? "Rien de ce nom dans le placard." : "Placard vide : scannez ou tapez vos aliments ci-dessus."}</p>`;
+  }
+  const all = document.getElementById("allrows");
+  if (all)
+    all.innerHTML = C.filter(hit)
+      .map(
+        (x) =>
+          `<tr><td>${esc(x.name)}</td><td><input aria-label="Stock ${esc(x.name)}" type="number" min="0" step="${x.unit === "pièce" ? 1 : 10}" value="${s.stock[x.id] || 0}" onchange="s.stock['${x.id}']=Math.max(0,+this.value);s.setup=true;save()"> <small class="muted">${x.unit}</small></td><td><input aria-label="Exclure ${esc(x.name)}" type="checkbox" ${s.exclude.includes(x.id) ? "checked" : ""} onchange="exclude('${x.id}',this.checked)"></td></tr>`,
+      )
+      .join("");
 }
 function exclude(id, on) {
   s.exclude = s.exclude.filter((x) => x !== id);
@@ -987,7 +1010,9 @@ function saveAte(ev, i, j, label) {
       label = byR[f.freezer.value].name;
     }
     for (const row of f.querySelectorAll(".ing-row")) {
-      const x = C.find((c) => norm(c.name) === norm(row.querySelector(".ing-name").value)),
+      const typed = row.querySelector(".ing-name").value,
+        m = matchProduct(typed),
+        x = C.find((c) => norm(c.name) === norm(typed)) || (m[0] && m[0].score >= 13 ? by[m[0].id] : null),
         q = +row.querySelector(".ing-qty").value;
       if (x && q > 0) used[x.id] = (used[x.id] || 0) + q;
     }
@@ -1030,7 +1055,8 @@ function saveRecipe(ev) {
     const name = row.querySelector(".ing-name").value.trim(),
       q = +row.querySelector(".ing-qty").value;
     if (!name || !(q > 0)) continue;
-    let x = C.find((c) => norm(c.name) === norm(name)) || C.find((c) => norm(c.name).startsWith(norm(name)));
+    const m = matchProduct(name);
+    let x = C.find((c) => norm(c.name) === norm(name)) || (m[0] && m[0].score >= 13 ? by[m[0].id] : null);
     if (!x) {
       x = { id: "custom" + Date.now() + created++, name: name.slice(0, 70), unit: "g", pack: 500, price: 0, kcal: 0, protein: 0, store: "Lidl", must: [], not: [] };
       C.push(x);
@@ -1129,19 +1155,210 @@ function parseQty(q) {
   if ((m = n.match(/(\d+(?:\.\d+)?)\s*(kg|g|l|ml|cl)\b/))) return { qty: conv(+m[1], m[2]), unit: /l/.test(m[2]) ? "ml" : "g" };
   return { qty: 1, unit: "pièce" };
 }
-function guess(name) {
-  const words = norm(name).split(" ").filter((w) => w.length >= 4);
-  let best = null,
-    score = 0;
-  for (const x of C) {
-    const hay = norm(x.name + " " + (x.query || ""));
-    const sc = words.filter((w) => hay.includes(w)).length;
-    if (sc > score) {
-      score = sc;
-      best = x.id;
+// ─── Reconnaissance des aliments : synonymes, catégories Open Food Facts, quantités ───
+const singular = (t) => t.split(" ").map((w) => (w.length > 3 ? w.replace(/(x|s)$/, "") : w)).join(" ");
+const ALIAS_LIST = Object.entries(window.ALIASES || {}).flatMap(([id, list]) => list.split("|").map((a) => ({ id, a: " " + singular(norm(a)) + " " })));
+// Aliments de l'app les plus probables pour un nom de produit, du plus sûr au moins sûr.
+function matchProduct(text, cats = []) {
+  const t = " " + singular(norm(text)) + " ",
+    scores = {};
+  const add = (id, v) => by[id] && (scores[id] = Math.max(scores[id] || 0, v));
+  // L'expression la plus longue l'emporte : « steak haché » avant « steak ».
+  for (const { id, a } of ALIAS_LIST) if (t.includes(a)) add(id, 10 + a.length);
+  const tags = cats.map((c) => String(c).toLowerCase());
+  for (const [id, list] of Object.entries(window.CATS || {}))
+    if (tags.length && list.split("|").some((c) => tags.some((tag) => tag.endsWith(":" + c) || tag.includes(c)))) scores[id] = (scores[id] || 0) + 25;
+  if (!Object.keys(scores).length)
+    for (const x of C) {
+      const n = singular(norm(x.name + " " + (x.query || ""))).split(" ").filter((w) => w.length >= 4 && t.includes(" " + w)).length;
+      if (n) add(x.id, n * 3);
+    }
+  return Object.entries(scores)
+    .sort((a, b) => b[1] - a[1])
+    .map(([id, score]) => ({ id, score }));
+}
+const sure = (m) => m[0] && m[0].score >= 14 && (!m[1] || m[0].score - m[1].score >= 3);
+const PACK_WORDS = /^(boites?|paquets?|sachets?|bouteilles?|pots?|conserves?|barquettes?|briques?|filets?)$/;
+// Quantité exprimée dans l'unité de l'aliment (g, ml ou pièce).
+function toUnit(id, n, unit) {
+  const x = by[id],
+    piece = window.PIECE_G?.[id];
+  // Sans quantité : une pièce pour la viande et le poisson (« steak » = un steak), sinon un paquet.
+  if (n == null) return x.unit === "pièce" ? 1 : piece && ["beef_stew", "beef_mince", "chicken", "chicken_thigh", "turkey", "duck", "salmon", "pork_mince"].includes(id) ? piece : x.pack;
+  const u = (unit || "").toLowerCase();
+  let grams = null;
+  if (/^(kg|kilos?)$/.test(u)) grams = n * 1000;
+  else if (/^(g|gr|grammes?)$/.test(u)) grams = n;
+  else if (/^(l|litres?)$/.test(u)) grams = n * 1000;
+  else if (u === "cl") grams = n * 10;
+  else if (u === "ml") grams = n;
+  else if (PACK_WORDS.test(u)) return n * x.pack;
+  if (grams != null) return x.unit === "pièce" ? Math.max(1, Math.round(grams / (piece || 60))) : grams;
+  // « 2 steaks », « 3 carottes » : des pièces.
+  if (x.unit === "pièce") return n;
+  return piece ? n * piece : n * x.pack;
+}
+// « 500 g de vermicelles de riz », « 2 steaks », « sauce soja » → aliment + quantité.
+function parseFoodLine(line) {
+  const raw = line.trim();
+  if (!raw) return null;
+  const t = raw.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/œ/g, "oe");
+  let n = null,
+    unit = null,
+    name = t,
+    m = t.match(/^(\d+(?:[.,]\d+)?)\s*([a-z]+)?\s*(?:de |d'|d’)?(.*)$/);
+  if (m) {
+    n = parseFloat(m[1].replace(",", "."));
+    const word = m[2] || "";
+    if (/^(kg|kilos?|g|gr|grammes?|l|litres?|cl|ml)$/.test(word) || PACK_WORDS.test(word)) {
+      unit = word;
+      name = m[3];
+    } else name = (word + " " + m[3]).trim();
+  } else if ((m = t.match(/^(.*?)\s+(\d+(?:[.,]\d+)?)\s*(kg|g|l|cl|ml)\b/))) {
+    name = m[1];
+    n = parseFloat(m[2].replace(",", "."));
+    unit = m[3];
+  }
+  name = name.replace(/^(de |d'|d’)/, "").trim();
+  const matches = matchProduct(name),
+    best = matches[0];
+  return { raw, name, n, unit, id: best?.id || null, sure: sure(matches), alts: matches.slice(0, 5).map((x) => x.id), qty: best ? toUnit(best.id, n, unit) : n || 1 };
+}
+let quickItems = [];
+function quickParse() {
+  const text = document.getElementById("quick").value;
+  quickItems = text.split(/[\n,;]+/).map(parseFoodLine).filter(Boolean);
+  if (!quickItems.length) return toast("Tapez au moins un aliment.");
+  const options = (it) =>
+    `${it.alts.length ? `<optgroup label="Suggestions">${it.alts.map((id) => `<option value="${id}" ${id === it.id ? "selected" : ""}>${esc(by[id].name)}</option>`).join("")}</optgroup>` : ""}<option value="new" ${it.id ? "" : "selected"}>— Nouveau produit : « ${esc(it.name)} » —</option><optgroup label="Tous les aliments">${C.filter((x) => !it.alts.includes(x.id)).map((x) => `<option value="${x.id}">${esc(x.name)}</option>`).join("")}</optgroup>`;
+  document.getElementById("quick-result").innerHTML = `<div class="quick-list">${quickItems
+    .map(
+      (it, k) =>
+        `<div class="quick-row ${it.sure ? "" : "unsure"}"><small class="muted">« ${esc(it.raw)} »${it.sure ? "" : " · à vérifier"}</small><select onchange="quickLink(${k},this.value)">${options(it)}</select><span class="row"><input type="number" min="0" step="any" value="${Math.round(it.qty * 100) / 100}" onchange="quickItems[${k}].qty=+this.value"><small class="muted" id="qu-${k}">${it.id ? by[it.id].unit : !it.unit || PACK_WORDS.test(it.unit) ? "pièce" : it.unit}</small><button class="secondary small" onclick="quickItems[${k}]=null;this.closest('.quick-row').remove()" aria-label="Retirer">✕</button></span></div>`,
+    )
+    .join("")}</div><button onclick="quickSave()">Ajouter au placard</button>`;
+}
+function quickLink(k, id) {
+  const it = quickItems[k];
+  it.id = id === "new" ? null : id;
+  if (it.id) {
+    it.qty = toUnit(it.id, it.n, it.unit);
+    document.querySelectorAll(".quick-row")[k].querySelector("input").value = Math.round(it.qty * 100) / 100;
+  }
+  document.getElementById("qu-" + k).textContent = it.id ? by[it.id].unit : "g";
+}
+function quickSave() {
+  const done = [];
+  for (const it of quickItems.filter(Boolean)) {
+    if (!(it.qty > 0)) continue;
+    let id = it.id;
+    if (!id) {
+      // Produit inconnu : pièces sans unité, sinon grammes ou millilitres convertis.
+      const u = it.unit || "",
+        unit = !u || PACK_WORDS.test(u) ? "pièce" : /^(l|litres?|cl|ml)$/.test(u) ? "ml" : "g";
+      if (unit !== "pièce" && it.n != null && it.qty === it.n) it.qty = it.n * (/^(kg|kilos?|l|litres?)$/.test(u) ? 1000 : u === "cl" ? 10 : 1);
+      id = newCustom(it.name.replace(/^./, (c) => c.toUpperCase()), unit, it.qty);
+    }
+    s.stock[id] = (s.stock[id] || 0) + it.qty;
+    done.push(by[id].name.split(" · ")[0]);
+  }
+  s.setup = true;
+  offerCache = {};
+  save();
+  render();
+  toast(done.length ? `Ajouté : ${done.join(", ")}.` : "Rien à ajouter.");
+}
+function newCustom(name, unit, pack) {
+  const id = "custom" + Date.now() + Math.floor(Math.random() * 1000),
+    x = { id, name: name.slice(0, 70), unit, pack: pack || (unit === "pièce" ? 1 : 500), price: 0, kcal: 0, protein: 0, store: "Lidl", must: [], not: [] };
+  C.push(x);
+  by[id] = x;
+  s.custom.push(x);
+  return id;
+}
+// Convertit une quantité d'un aliment vers l'unité d'un autre (g ↔ ml ≈ 1:1, pièces via le poids moyen).
+function convertQty(q, from, to) {
+  const a = by[from].unit,
+    b = by[to].unit,
+    piece = window.PIECE_G?.[to] || (b === "pièce" ? 60 : 100);
+  if (a === b || (a !== "pièce" && b !== "pièce")) return q;
+  return a === "pièce" ? q * piece : Math.max(1, Math.round(q / piece));
+}
+// Fusionne un produit dans un aliment de l'app : stock, codes-barres, recettes perso, exclusions.
+function mergeInto(from, to, quiet = false) {
+  if (!by[from] || !by[to] || from === to) return;
+  const q = s.stock[from] || 0;
+  if (q) s.stock[to] = (s.stock[to] || 0) + convertQty(q, from, to);
+  delete s.stock[from];
+  for (const b of Object.values(s.barcodes)) if (b.id === from) Object.assign(b, { id: to, qty: convertQty(b.qty, from, to) });
+  for (const r of s.myRecipes)
+    if (r.ingredients[from] != null) {
+      r.ingredients[to] = (r.ingredients[to] || 0) + convertQty(r.ingredients[from], from, to);
+      delete r.ingredients[from];
+    }
+  s.exclude = s.exclude.map((x) => (x === from ? to : x));
+  if (from.startsWith("custom")) {
+    s.custom = s.custom.filter((x) => x.id !== from);
+    C.splice(C.indexOf(by[from]), 1);
+    delete by[from];
+    delete s.myPrices[from];
+    delete s.lock[from];
+  }
+  offerCache = {};
+  loadRecipes();
+  if (quiet) return;
+  save();
+  if (modal().open) modal().close();
+  render();
+  toast(`Rattaché à ${by[to].name.split(" · ")[0]}.`);
+}
+// Fiche d'un aliment du placard : quantité, nom, unité, rattachement, suppression.
+function editItem(id) {
+  const x = by[id],
+    custom = id.startsWith("custom"),
+    m = matchProduct(x.name).filter((c) => c.id !== id && !c.id.startsWith("custom")).slice(0, 5);
+  const codes = Object.entries(s.barcodes).filter(([, b]) => b.id === id).map(([c]) => c);
+  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>${esc(x.name.split(" · ")[0])}</h2>${custom ? '<p class="muted">Produit ajouté par vous, pas encore relié à un aliment de l’app.</p>' : `<p class="muted">${esc(x.name)}</p>`}<form onsubmit="saveItem(event,'${id}')">${custom ? `<label>Nom<input name="name" maxlength="70" value="${esc(x.name)}"></label>` : ""}<div class="row"><label>Quantité en stock<input name="qty" type="number" min="0" step="any" value="${Math.round((s.stock[id] || 0) * 100) / 100}"></label>${custom ? `<label>Unité<select name="unit">${["g", "ml", "pièce"].map((u) => `<option ${u === x.unit ? "selected" : ""}>${u}</option>`).join("")}</select></label>` : `<span class="muted">${x.unit}</span>`}</div><label>${custom ? "C’est en fait…" : "Déplacer ce stock vers un autre aliment"}<select name="link"><option value="">${custom ? "— Garder comme produit à part —" : "— Non —"}</option>${m.length ? `<optgroup label="Suggestions">${m.map((c) => `<option value="${c.id}" ${custom && c === m[0] ? "selected" : ""}>${esc(by[c.id].name)}</option>`).join("")}</optgroup>` : ""}<optgroup label="Tous les aliments">${C.filter((c) => c.id !== id && !m.some((y) => y.id === c.id)).map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join("")}</optgroup></select></label>${codes.length ? `<p class="muted">Code-barres associé${codes.length > 1 ? "s" : ""} : ${codes.join(", ")}</p>` : ""}<div class="row"><button type="submit">Enregistrer</button><button type="button" class="secondary" onclick="s.stock['${id}']=0;save();modal().close();render()">Vider</button>${custom ? `<button type="button" class="secondary" onclick="deleteItem('${id}')">Supprimer le produit</button>` : ""}</div></form>`;
+  modal().showModal();
+}
+function saveItem(ev, id) {
+  ev.preventDefault();
+  const f = ev.target,
+    x = by[id];
+  s.stock[id] = Math.max(0, +f.qty.value || 0);
+  if (f.name) x.name = f.name.value.trim().slice(0, 70) || x.name;
+  if (f.unit) x.unit = f.unit.value;
+  if (f.link.value) return mergeInto(id, f.link.value);
+  save();
+  modal().close();
+  render();
+  toast("Placard mis à jour.");
+}
+function deleteItem(id) {
+  if (!confirm(`Supprimer « ${by[id].name} » du placard ?`)) return;
+  delete s.stock[id];
+  s.custom = s.custom.filter((x) => x.id !== id);
+  for (const [c, b] of Object.entries(s.barcodes)) if (b.id === id) delete s.barcodes[c];
+  C.splice(C.indexOf(by[id]), 1);
+  delete by[id];
+  save();
+  modal().close();
+  render();
+}
+// Au lancement : rattache automatiquement les produits enregistrés à part quand la correspondance est sûre.
+function autoSync() {
+  let n = 0;
+  for (const x of [...s.custom]) {
+    const m = matchProduct(x.name).filter((c) => !c.id.startsWith("custom"));
+    if (sure(m)) {
+      mergeInto(x.id, m[0].id, true);
+      n++;
     }
   }
-  return best;
+  if (n) {
+    save();
+    setTimeout(() => toast(`${n} produit${n > 1 ? "s" : ""} du placard rattaché${n > 1 ? "s" : ""} automatiquement aux aliments de l’app.`), 600);
+  }
 }
 async function onCode(code) {
   if (!/^\d{6,14}$/.test(code)) return toast("Code-barres invalide.");
@@ -1157,14 +1374,16 @@ async function onCode(code) {
   out.innerHTML = '<p class="muted">Recherche du produit…</p>';
   let p = null;
   try {
-    const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}.json?fields=product_name,product_name_fr,product_name_ro,brands,quantity,image_small_url`);
+    const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}.json?fields=product_name,product_name_fr,product_name_ro,product_name_en,generic_name_fr,generic_name,brands,quantity,image_small_url,categories_tags`);
     const j = await res.json();
     if (j.status === 1) p = j.product;
   } catch {}
   const name = p ? [p.product_name_fr || p.product_name || p.product_name_ro, p.brands?.split(",")[0]].filter(Boolean).join(" · ") : "";
   const pq = parseQty(p?.quantity),
-    g = guess(name);
-  out.innerHTML = `${p ? `<div class="scan-product">${p.image_small_url ? `<img src="${esc(p.image_small_url)}" alt="" width="64">` : ""}<div><b>${esc(name || "Produit sans nom")}</b><br><small class="muted">${esc(p.quantity || "")} · code ${code}</small></div></div>` : `<div class="notice">Produit inconnu d’Open Food Facts (ou hors connexion). Donnez-lui un nom.</div>`}<form id="scan-form" onsubmit="saveScan(event,'${code}')"><label>Nom<input name="name" required maxlength="70" value="${esc(name)}"></label><label>Correspond à<select name="link" onchange="scanLinkChange(this.form)"><option value="new">— Nouveau produit du placard —</option>${C.map((x) => `<option value="${x.id}" ${x.id === g ? "selected" : ""}>${esc(x.name)}</option>`).join("")}</select></label><div class="row"><label>Contenu d’un paquet<input name="qty" type="number" min="0" step="any" value="${pq.qty}" data-scan="${pq.qty}" data-unit="${pq.unit}"></label><label>Unité<select name="unit">${["g", "ml", "pièce"].map((u) => `<option ${u === pq.unit ? "selected" : ""}>${u}</option>`).join("")}</select></label><label>Nombre de paquets<input name="n" type="number" min="1" value="1"></label></div><button type="submit">Ajouter au placard</button></form>`;
+    found = matchProduct([p?.product_name_fr, p?.product_name, p?.product_name_ro, p?.product_name_en, p?.generic_name_fr, p?.generic_name].filter(Boolean).join(" "), p?.categories_tags || []),
+    g = found[0] && found[0].score >= 13 ? found[0].id : null,
+    sugg = found.slice(0, 5).map((x) => x.id);
+  out.innerHTML = `${p ? `<div class="scan-product">${p.image_small_url ? `<img src="${esc(p.image_small_url)}" alt="" width="64">` : ""}<div><b>${esc(name || "Produit sans nom")}</b><br><small class="muted">${esc(p.quantity || "")} · code ${code}</small></div></div>` : `<div class="notice">Produit inconnu d’Open Food Facts (ou hors connexion). Donnez-lui un nom.</div>`}<form id="scan-form" onsubmit="saveScan(event,'${code}')"><label>Nom<input name="name" required maxlength="70" value="${esc(name)}"></label><label>Correspond à<select name="link" onchange="scanLinkChange(this.form)">${sugg.length ? `<optgroup label="Suggestions">${sugg.map((id) => `<option value="${id}" ${id === g ? "selected" : ""}>${esc(by[id].name)}</option>`).join("")}</optgroup>` : ""}<option value="new" ${g ? "" : "selected"}>— Nouveau produit du placard —</option><optgroup label="Tous les aliments">${C.filter((x) => !sugg.includes(x.id)).map((x) => `<option value="${x.id}">${esc(x.name)}</option>`).join("")}</optgroup></select></label>${g ? "" : '<p class="muted">Pas reconnu avec certitude : choisissez l’aliment pour que les recettes l’utilisent.</p>'}<div class="row"><label>Contenu d’un paquet<input name="qty" type="number" min="0" step="any" value="${pq.qty}" data-scan="${pq.qty}" data-unit="${pq.unit}"></label><label>Unité<select name="unit">${["g", "ml", "pièce"].map((u) => `<option ${u === pq.unit ? "selected" : ""}>${u}</option>`).join("")}</select></label><label>Nombre de paquets<input name="n" type="number" min="1" value="1"></label></div><button type="submit">Ajouter au placard</button></form>`;
   scanLinkChange(document.getElementById("scan-form"));
 }
 function scanLinkChange(f) {
@@ -1313,6 +1532,7 @@ async function updateRate() {
     } catch {}
   }
 }
+autoSync();
 sundayRoutine();
 updateRate();
 window.addEventListener("hashchange", () => location.hash === "#dimanche" && sundayRoutine());
