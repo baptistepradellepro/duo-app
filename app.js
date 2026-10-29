@@ -45,6 +45,7 @@ const initial = () => ({
   topupOn: true,
   topup: "protein_coffee",
   topupInBudget: false,
+  topupMax: 7,
   veg: false,
   exclude: [],
   plan: null,
@@ -250,7 +251,9 @@ function topupQty(plan = s.plan) {
   const x = by[s.topup];
   if (!s.topupOn || !x || !x.protein) return 0;
   const gap = proteinGap(plan);
-  return x.unit === "pièce" ? Math.ceil(gap / x.protein) : Math.ceil((gap / x.protein) * 100);
+  // Plafond hebdomadaire (7 cafés protéinés par défaut) ; pour un produit au poids, plafond en portions de 100 g.
+  const max = Math.max(0, +s.topupMax || 0);
+  return x.unit === "pièce" ? Math.min(max, Math.ceil(gap / x.protein)) : Math.min(max * 100, Math.ceil((gap / x.protein) * 100));
 }
 const topupCost = () => {
   const q = topupQty(),
@@ -1102,7 +1105,7 @@ function profiles() {
             })
             .join("")}</div>`
         : "<p>Générez une semaine pour afficher les apports prévus et les écarts.</p>"
-    }<div class="panel"><h2>💪 Compléter les protéines</h2><p class="muted">L’écart de la semaine est comblé avec un produit ajouté automatiquement à la liste de courses.</p><div class="row"><label class="inline"><input type="checkbox" ${s.topupOn ? "checked" : ""} onchange="s.topupOn=this.checked;save();render()"> Ajouter aux courses</label><label>Produit<select onchange="s.topup=this.value;save();render()">${["protein_coffee", "protein_pudding", "yogurt", "cottage", "cheese"].map((id) => `<option value="${id}" ${s.topup === id ? "selected" : ""}>${esc(by[id].name.split(" · ")[0])}</option>`).join("")}</select></label><label class="inline"><input type="checkbox" ${s.topupInBudget ? "checked" : ""} onchange="s.topupInBudget=this.checked;save();render()"> Compter dans le budget</label></div>${s.plan ? `<p>Cette semaine : <b>${Math.round(proteinGap())} g</b> à compléter → <b>${qtyLabel(topupQty(), by[s.topup].unit)}</b> (${eur(topupCost())}).</p>` : ""}<p class="muted">Ex. un café protéiné ≈ 25 g de protéines. Vérifiez l’étiquette de votre produit.</p></div><label>Protéines de votre poudre · g pour 100 g<input type="number" min="1" max="100" value="${s.powder}" onchange="s.powder=Math.max(1,Math.min(100,+this.value));save();render()"></label></div>`
+    }<div class="panel"><h2>💪 Compléter les protéines</h2><p class="muted">L’écart de la semaine est comblé avec un produit ajouté automatiquement à la liste de courses.</p><div class="row"><label class="inline"><input type="checkbox" ${s.topupOn ? "checked" : ""} onchange="s.topupOn=this.checked;save();render()"> Ajouter aux courses</label><label>Produit<select onchange="s.topup=this.value;save();render()">${["protein_coffee", "protein_pudding", "yogurt", "cottage", "cheese"].map((id) => `<option value="${id}" ${s.topup === id ? "selected" : ""}>${esc(by[id].name.split(" · ")[0])}</option>`).join("")}</select></label><label class="inline"><input type="checkbox" ${s.topupInBudget ? "checked" : ""} onchange="s.topupInBudget=this.checked;save();render()"> Compter dans le budget</label><label>Maximum par semaine<input type="number" min="0" max="50" step="1" value="${s.topupMax}" onchange="s.topupMax=Math.max(0,Math.round(+this.value||0));save();render()"></label></div>${s.plan ? `<p>Cette semaine : <b>${Math.round(proteinGap())} g</b> à compléter → <b>${qtyLabel(topupQty(), by[s.topup].unit)}</b> (${eur(topupCost())}).</p>` : ""}<p class="muted">Ex. un café protéiné ≈ 25 g de protéines. Vérifiez l’étiquette de votre produit.</p></div><label>Protéines de votre poudre · g pour 100 g<input type="number" min="1" max="100" value="${s.powder}" onchange="s.powder=Math.max(1,Math.min(100,+this.value));save();render()"></label></div>`
   );
 }
 function detail(id, i, j) {
