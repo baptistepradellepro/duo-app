@@ -302,6 +302,46 @@ const dayDate = (i) => {
   d.setDate(d.getDate() + i);
   return d.toLocaleDateString("fr-FR", { day: "numeric", month: "numeric" });
 };
+// ─── Équilibre des menus : base, protéine et légumes de chaque plat ───
+const BASES = { riz: "rice|sushi_rice", "pâtes": "pasta|noodles|rice_noodles|gnocchi", "pommes de terre": "potato|sweet_potato|frozen_fries", pain: "bread|baguette|tortilla|sandwich_bread|puff_pastry|rice_paper", "céréales": "couscous|bulgur|semolina|buckwheat|polenta", "légumineuses": "lentil|beans|chickpea" };
+const PROTEINS = { volaille: "chicken|chicken_thigh|whole_chicken|chicken_mince|turkey|ham|bacon", "bœuf": "beef_stew|beef_mince", porc: "pork_mince", poisson: "salmon|tuna", canard: "duck", "œufs": "egg", "végétal": "tofu|lentil|beans|chickpea|cheese|cottage|telemea" };
+const VEG = new Set([...Object.entries(window.GROUP_OF).filter(([, place]) => /^(Légumes|Surgelés)/.test(place) && !/Frites|Fruits/.test(place)).map(([id]) => id), "tomato", "passata", "sauerkraut", "corn"]);
+const grams = (r, id) => ((r.ingredients[id] || 0) * (by[id]?.unit === "pièce" ? window.PIECE_G?.[id] || 60 : 1));
+const featCache = {};
+function features(r) {
+  if (featCache[r.id]) return featCache[r.id];
+  const top = (groups) => {
+    let best = null,
+      max = 40;
+    for (const [k, ids] of Object.entries(groups)) {
+      const g = ids.split("|").reduce((a, id) => a + grams(r, id), 0);
+      if (g >= max) [best, max] = [k, g];
+    }
+    return best;
+  };
+  // Tous les féculents présents (≥ 40 g par personne) : un dahl « lentilles & riz » compte aussi comme du riz.
+  const starches = new Set(Object.entries(BASES).filter(([, ids]) => ids.split("|").reduce((a, id) => a + grams(r, id), 0) >= 40).map(([k]) => k));
+  const base = top(BASES) || "autre",
+    protein = top(PROTEINS) || "léger";
+  return (featCache[r.id] = { base, starches, protein, family: `${base}/${protein}`, veg: Object.keys(r.ingredients).filter((id) => VEG.has(id)).reduce((a, id) => a + grams(r, id), 0) });
+}
+// Deux plats trop proches : même base (riz et riz) ou même protéine (poulet et poulet).
+function tooClose(a, b) {
+  if (!a || !b) return false;
+  const x = features(a),
+    y = features(b);
+  return [...x.starches].some((b) => y.starches.has(b)) || (x.protein !== "léger" && x.protein === y.protein);
+}
+// Une recette à cette place du menu : différente de l'autre repas du jour et pas la même base que le repas d'avant ou d'après.
+function slotOk(days, i, j, r) {
+  if (j === 0) return true;
+  const other = byR[days[i][j === 1 ? 2 : 1]],
+    prev = byR[j === 2 ? days[i][1] : days[i - 1]?.[2]],
+    next = byR[j === 1 ? days[i][2] : days[i + 1]?.[1]],
+    f = features(r),
+    sameBase = (x) => x && [...f.starches].some((b) => features(x).starches.has(b));
+  return !tooClose(r, other) && !sameBase(prev) && !sameBase(next);
+}
 function generate(auto = false) {
   offerCache = {};
   if (!auto && s.plan && Object.keys(s.done).length && !confirm("Les repas déjà cuisinés restent déduits du stock. Remplacer le planning ?")) return;
@@ -330,9 +370,11 @@ function generate(auto = false) {
   for (let t = 0; t < 400; t++) {
     const picked = {};
     let pork = 0;
-    const pick = (arr) => {
+    const pick = (arr, fits = () => true) => {
       const pool = [...arr].sort((a, b) => costs[a.id] - tastes[a.id] * 6 - (costs[b.id] - tastes[b.id] * 6));
-      let cand = pool.filter((r) => (picked[r.id] || 0) < (r.type === "main" ? 1 : 3) && (!hasPork(r) || pork < s.porkMax));
+      const free = (r) => (picked[r.id] || 0) < (r.type === "main" ? 1 : 3) && (!hasPork(r) || pork < s.porkMax);
+      let cand = pool.filter((r) => free(r) && fits(r));
+      if (!cand.length) cand = pool.filter(free);
       if (!cand.length) cand = pool.filter((r) => !hasPork(r));
       if (!cand.length) cand = pool;
       const r = t === 0 ? cand[0] : cand[Math.floor(Math.pow(Math.random(), 1.5) * cand.length)];
@@ -340,12 +382,32 @@ function generate(auto = false) {
       if (hasPork(r)) pork++;
       return r.id;
     };
+    // Plats fixes d'abord (chirashi, ramen), puis chaque midi et soir en respectant l'équilibre.
+    const days = Array.from({ length: 7 }, (_, i) => [bakes.length ? bakes[i % bakes.length] : pick(breakfasts), null, fixedFor(i, 2)]);
+    const bases = {},
+      prots = {},
+      families = {};
+    const note = (id) => {
+      const f = features(byR[id]);
+      bases[f.base] = (bases[f.base] || 0) + 1;
+      prots[f.protein] = (prots[f.protein] || 0) + 1;
+      families[f.family] = (families[f.family] || 0) + 1;
+    };
+    days.forEach((d) => d[2] && note(d[2]));
+    const weekOk = (r) => {
+      const f = features(r);
+      // Une même famille (riz + poulet, pâtes + œufs…) une seule fois par semaine.
+      return (bases[f.base] || 0) < (f.base === "autre" ? 6 : 4) && (prots[f.protein] || 0) < (f.protein === "volaille" ? 5 : 3) && (f.family.includes("autre") || f.family.includes("léger") || !families[f.family]);
+    };
+    for (let i = 0; i < 7; i++)
+      for (const j of [1, 2]) {
+        if (days[i][j]) continue;
+        const id = pick(mains, (r) => slotOk(days, i, j, r) && weekOk(r));
+        days[i][j] = id;
+        note(id);
+      }
     const p = {
-      days: Array.from({ length: 7 }, (_, i) => [
-        bakes.length ? bakes[i % bakes.length] : pick(breakfasts),
-        pick(mains),
-        fixedFor(i, 2) || pick(mains),
-      ]),
+      days,
       freezerUse: {},
       created: new Date().toISOString(),
       weekStart: weekStartISO(),
@@ -363,7 +425,11 @@ function generate(auto = false) {
       avg = p.days.reduce((a, d) => a + dayMacro(d).kcal, 0) / 7,
       protGap = p.days.reduce((a, d) => a + s.profiles.reduce((v, pr) => v + Math.max(0, pr.protein - dayMacro(d).protein), 0), 0) / 7,
       liking = p.days.reduce((a, d) => a + d.slice(1).reduce((x, id) => x + tastes[id], 0), 0),
-      score = u * 0.2 + (c - u) * 0.05 - diversity * 5 - cuisines * 4 - liking * 8 + Math.abs(avg - target) * 0.015 + protGap * 0.6;
+      // Au moins ~200 g de légumes par personne et par jour sur le midi et le soir.
+      vegGap = p.days.reduce((a, d) => a + Math.max(0, 200 - d.slice(1).reduce((x, id) => x + features(byR[id]).veg, 0)), 0),
+      clashes = p.days.reduce((a, d, i) => a + (tooClose(byR[d[1]], byR[d[2]]) ? 1 : 0) + (i && [...features(byR[d[1]]).starches].some((b) => features(byR[p.days[i - 1][2]]).starches.has(b)) ? 1 : 0), 0),
+      repeats = Object.values(p.days.flatMap((d) => d.slice(1)).reduce((a, id) => ((a[features(byR[id]).family] = (a[features(byR[id]).family] || 0) + 1), a), {})).reduce((a, n) => a + Math.max(0, n - 1), 0),
+      score = u * 0.2 + (c - u) * 0.05 - diversity * 5 - cuisines * 4 - liking * 8 + Math.abs(avg - target) * 0.015 + protGap * 0.6 + vegGap * 0.05 + clashes * 25 + repeats * 6;
     if (u <= budget() && score < bestScore) {
       bestScore = score;
       best = p;
@@ -761,13 +827,13 @@ function pickRows(i, j) {
   const q = norm(pickQuery),
     cur = slot(i, j).r.id;
   const list = R.filter((r) => fitsSlot(r, j) && r.id !== cur && norm(r.name + " " + r.cuisine + " " + Object.keys(r.ingredients).map((id) => by[id]?.name || "").join(" ")).includes(q))
-    .map((r) => ({ r, ok: inPantry(r), like: s.ratings[r.id] === 1 }))
-    .sort((a, b) => b.ok - a.ok || b.like - a.like || a.r.name.localeCompare(b.r.name, "fr"));
+    .map((r) => ({ r, ok: inPantry(r), like: s.ratings[r.id] === 1, fit: slotOk(s.plan.days, i, j, r) }))
+    .sort((a, b) => b.fit - a.fit || b.ok - a.ok || b.like - a.like || a.r.name.localeCompare(b.r.name, "fr"));
   document.getElementById("pick-rows").innerHTML =
     list
-      .map(({ r, ok, like }) => {
+      .map(({ r, ok, like, fit }) => {
         const m = macro(r);
-        return `<button class="pick-row" onclick="setMeal(${i},${j},'${r.id}')"><span class="pick-emoji">${r.emoji}</span><span><b>${esc(r.name)}</b><small class="muted">${esc(r.cuisine)} · ${r.time} min · ${Math.round(m.kcal)} kcal · ${Math.round(m.protein)} g prot.${ok ? " · ✓ tout est au placard" : ""}${like ? " · 👍" : ""}</small></span></button>`;
+        return `<button class="pick-row" onclick="setMeal(${i},${j},'${r.id}')"><span class="pick-emoji">${r.emoji}</span><span><b>${esc(r.name)}</b><small class="muted">${esc(r.cuisine)} · ${r.time} min · ${Math.round(m.kcal)} kcal · ${Math.round(m.protein)} g prot.${ok ? " · ✓ tout est au placard" : ""}${like ? " · 👍" : ""}${j && !slotOk(s.plan.days, i, j, r) ? " · ⚠️ ressemble à un repas voisin" : ""}</small></span></button>`;
       })
       .join("") || '<p class="muted">Aucune recette trouvée.</p>';
 }
@@ -797,7 +863,9 @@ function swap(i, j) {
     j === 0
       ? [...s.batches.filter((id) => byR[id]?.meal === "breakfast").map((id) => byR[id]), ...R.filter((r) => r.type === "breakfast" && allowed(r))]
       : R.filter((r) => r.type === "main" && !r.fixed && allowed(r) && !hasPork(r));
-  const pool = opts.filter((r) => r.id !== cur);
+  const all = opts.filter((r) => r.id !== cur),
+    balanced = all.filter((r) => slotOk(s.plan.days, i, j, r)),
+    pool = balanced.length ? balanced : all;
   if (!pool.length) return toast("Aucune alternative avec ces exclusions.");
   s.plan.days[i][j] = pool[Math.floor(Math.random() * pool.length)].id;
   delete s.plan.freezerUse?.[i + "-" + j];

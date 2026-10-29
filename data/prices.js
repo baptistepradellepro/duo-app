@@ -1238,12 +1238,6 @@ window.PRICES = {
      "price": 18.49,
      "pack": 400,
      "url": "https://www.auchan.ro/taitei-din-orez-vermicelli-pantai-400-g/p"
-    },
-    {
-     "name": "Taitei instant de orez cu sos Tom Yum Glads, 65 g",
-     "price": 7.19,
-     "pack": 65,
-     "url": "https://www.auchan.ro/taitei-instant-de-orez-cu-sos-tom-yum-glads-65-g/p"
     }
    ],
    "rice_paper": [
@@ -1688,12 +1682,6 @@ window.PRICES = {
      "url": "https://www.auchan.ro/rosii-prunisoare-500-g/p"
     },
     {
-     "name": "Supa crema de rosii cu busuioc si crutoane Mozaic in bucate, 440 g",
-     "price": 10.99,
-     "pack": 440,
-     "url": "https://www.auchan.ro/supa-crema-de-rosii-cu-busuioc-si-crutoane-mozaic-in-bucate-440-g/p"
-    },
-    {
      "name": "Meniu Hipp Rosii si Cartofi cu carne de pui, de la 8 luni, 220 g",
      "price": 5.99,
      "pack": 220,
@@ -1714,12 +1702,6 @@ window.PRICES = {
      "price": 2.49,
      "pack": 1000,
      "url": "https://www.auchan.ro/sfecla-rosie-1-kg/p"
-    },
-    {
-     "name": "Sfecla rosie prefiarta, 500 g",
-     "price": 5.79,
-     "pack": 500,
-     "url": "https://www.auchan.ro/sfecla-rosie-prefiarta-500-g/p"
     },
     {
      "name": "Sfecla rosie cuburi Auchan, 200 g",
@@ -2422,14 +2404,6 @@ window.PRICES = {
      "url": "https://www.auchan.ro/so-de-stridii-blue-dragon-ml/p"
     }
    ],
-   "kimchi": [
-    {
-     "name": "Supa instant picanta Vifon Kimchi Premium, 80 g",
-     "price": 7.69,
-     "pack": 80,
-     "url": "https://www.auchan.ro/supa-instant-picanta-vifon-kimchi-premium-80-g/p"
-    }
-   ],
    "curry_paste": [
     {
      "name": "Desiam - Pasta de Curry rosu, 70 g",
@@ -2644,12 +2618,6 @@ window.PRICES = {
      "price": 9.69,
      "pack": 500,
      "url": "https://www.auchan.ro/cuscus-gyermelyi-cu-4-oua-500-g/p"
-    },
-    {
-     "name": "Paste fainoase CusCus Monte Banato, 250 g",
-     "price": 4.89,
-     "pack": 250,
-     "url": "https://www.auchan.ro/paste-fainoase-cuscus-monte-banato-250-g/p"
     }
    ],
    "bulgur": [
@@ -3370,28 +3338,12 @@ window.PRICES = {
      "url": "https://carrefour.ro/catalogsearch/result/?q=miez%20nuca"
     }
    ],
-   "beef_stew": [
-    {
-     "name": "Sos Bolognaise vita 400g",
-     "price": 26.99,
-     "pack": 400,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=pulpa%20vita"
-    }
-   ],
    "noodles": [
     {
      "name": "Taitei ramen Shan Shi 250g",
      "price": 7.99,
      "pack": 250,
      "url": "https://carrefour.ro/catalogsearch/result/?q=taitei%20ramen"
-    }
-   ],
-   "rice_noodles": [
-    {
-     "name": "Glads Discovery Taitei De Orez Cu Sos Tom Yum 65 G",
-     "price": 7.19,
-     "pack": 65,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=taitei%20de%20orez"
     }
    ],
    "rice_paper": [
@@ -3508,12 +3460,6 @@ window.PRICES = {
      "url": "https://carrefour.ro/catalogsearch/result/?q=tortilla%20grau"
     },
     {
-     "name": "Chio Tortillas Sos Picant 110G",
-     "price": 9.39,
-     "pack": 6,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=tortilla%20grau"
-    },
-    {
      "name": "Tortilla medie grau Santa Maria, 8 buc, 320g",
      "price": 17.99,
      "pack": 8,
@@ -3574,14 +3520,6 @@ window.PRICES = {
      "url": "https://carrefour.ro/catalogsearch/result/?q=pesmet%20panko"
     }
    ],
-   "avocado": [
-    {
-     "name": "Spray Belton Premium 400 ml 163 avocado",
-     "price": 24.9,
-     "pack": 1,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=avocado"
-    }
-   ],
    "ginger": [
     {
      "name": "Tonic Blend Kombucha Ghimbir si Citronela, 330ml",
@@ -3594,14 +3532,6 @@ window.PRICES = {
      "price": 11.19,
      "pack": 26,
      "url": "https://carrefour.ro/catalogsearch/result/?q=ghimbir"
-    }
-   ],
-   "zucchini": [
-    {
-     "name": "Supa cremoasa de dovlecei si busuioc Carrefour Bio, 1L",
-     "price": 11.99,
-     "pack": 1000,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=dovlecei"
     }
    ],
    "mushroom": [
@@ -3692,12 +3622,6 @@ window.PRICES = {
     {
      "name": "Bol salata Luminarc Diwali Paradise Green, sticla, 12.5 cm, Verde",
      "price": 19.9,
-     "pack": 1,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=salata%20verde"
-    },
-    {
-     "name": "Bol salata Diamond Ambition, portelan, 13 cm, 0.55 L, Verde menta",
-     "price": 39.9,
      "pack": 1,
      "url": "https://carrefour.ro/catalogsearch/result/?q=salata%20verde"
     },
@@ -4188,25 +4112,11 @@ window.PRICES = {
      "url": "https://carrefour.ro/catalogsearch/result/?q=sos%20de%20stridii"
     }
    ],
-   "curry_paste": [
-    {
-     "name": "Taitei Instant Curry Oyakata, 90g",
-     "price": 10.49,
-     "pack": 90,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=pasta%20de%20curry"
-    }
-   ],
    "curry_powder": [
     {
      "name": "Chio Curry Picant Stil Indian 120G",
      "price": 8.59,
      "pack": 120,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=curry%20pudra"
-    },
-    {
-     "name": "Taitei Instant Curry Oyakata, 90g",
-     "price": 10.49,
-     "pack": 90,
      "url": "https://carrefour.ro/catalogsearch/result/?q=curry%20pudra"
     }
    ],
@@ -4556,12 +4466,6 @@ window.PRICES = {
    ],
    "matcha": [
     {
-     "name": "Piure Nutrino Lab 180G Matcha Energy Boost Mix",
-     "price": 12.99,
-     "pack": 180,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=ceai%20matcha"
-    },
-    {
      "name": "Ceai Verde Matcha 25X1.5G Twinings",
      "price": 22.99,
      "pack": 37.5,
@@ -4661,15 +4565,6 @@ window.PRICES = {
      "name": "K-Classic Ulei de măsline 750 ml",
      "price": 23.99,
      "pack": 750,
-     "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
-     "promo": true
-    }
-   ],
-   "beef_stew": [
-    {
-     "name": "Burtă de vită prefiartă, fideluţă\n1 kg 1 kg",
-     "price": 17.49,
-     "pack": 1000,
      "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
      "promo": true
     }

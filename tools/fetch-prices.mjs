@@ -35,7 +35,7 @@ function parseSize(name, unit, refPack) {
 
 // Exclus partout (sauf si le mot fait partie des mots obligatoires de l'ingrédient) :
 // nourriture pour animaux, cosmétique, accessoires, plats déjà préparés.
-const GLOBAL_NOT = ["pisici", "caini", "hrana", "suport", "masca", "fata", "sampon", "gel", "sapun", "biscuiti", "bautura", "limonada", "suc", "sirop", "chips", "snacks", "preparat", "gatit", "gatita", "gratar", "asortat", "inghetata", "ciocolata", "bomboane", "napolitane", "bebelusi", "aroma", "balsam", "garnier", "dog", "cat", "adult", "puppy", "junior", "figurina", "figurine", "surpriza", "kinder", "sweet", "foietaj"];
+const GLOBAL_NOT = ["pisici", "caini", "hrana", "suport", "masca", "fata", "sampon", "gel", "sapun", "biscuiti", "bautura", "limonada", "suc", "sirop", "chips", "snacks", "preparat", "gatit", "gatita", "gratar", "asortat", "inghetata", "ciocolata", "bomboane", "napolitane", "bebelusi", "aroma", "balsam", "garnier", "dog", "cat", "adult", "puppy", "junior", "figurina", "figurine", "surpriza", "kinder", "sweet", "foietaj", "burta", "tripe", "ficat", "pipota", "inimi", "rinichi", "limba", "maruntaie", "creier", "splina", "oase", "copite", "prefiarta", "supa", "ciorba", "instant"];
 function matches(item, name) {
   const n = " " + norm(name) + " ";
   // Le mot principal doit être dans le nom du produit lui-même, pas après « cu », « și », « pentru »…
@@ -45,7 +45,7 @@ function matches(item, name) {
     must.every((w) => n.includes(w)) &&
     (!must.length || head.includes(" " + must[0])) &&
     !item.not.some((w) => n.includes(" " + norm(w))) &&
-    !GLOBAL_NOT.some((w) => !must.includes(w) && n.includes(" " + w))
+    !GLOBAL_NOT.some((w) => !must.includes(w) && !norm(item.query).includes(w) && n.includes(" " + w))
   );
 }
 
