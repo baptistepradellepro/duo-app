@@ -46,7 +46,7 @@ const initial = () => ({
   topup: "protein_coffee",
   topupInBudget: false,
   topupMax: 7,
-  morning: "juice",
+  morning: "orange",
   juiceMl: 150,
   breakfastShare: 1.5,
   veg: false,
@@ -2149,6 +2149,8 @@ async function updateRate() {
   }
 }
 for (const x of s.custom) if (x.confirmed && x.cat !== normCat(x.cat)) x.cat = normCat(x.cat);
+// Passage unique à l'orange entière le matin (plus de fibres que le jus) ; ensuite le réglage reste libre.
+if (s.morningV !== 2) Object.assign(s, { morning: "orange", morningV: 2 });
 autoSync();
 sundayRoutine();
 updateRate();
