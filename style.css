@@ -1111,3 +1111,6 @@ fieldset.standalone legend {
     grid-column: 1 / -1;
   }
 }
+.progress.fiber span {
+  background: #c9a14a;
+}

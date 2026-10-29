@@ -126,6 +126,8 @@ window.ALIASES = {
   sweet_potato: "patates douces|patate douce|cartofi dulci|sweet potato",
   green_beans: "haricots verts|haricot vert|fasole verde|green beans",
   matcha: "the matcha|matcha|ceai matcha|matcha powder",
+  orange_juice: "jus d orange|jus orange|pur jus orange|suc de portocale|suc portocale|orange juice",
+  orange: "oranges|orange|portocale|portocala",
 };
 window.CATS = {
   milk: "milks|laits",
@@ -195,7 +197,7 @@ window.CATS = {
 window.PIECE_G = {
   beef_stew: 150, beef_mince: 125, chicken: 150, chicken_thigh: 120, turkey: 130, duck: 300, salmon: 125, pork_mince: 125,
   onion: 150, carrot: 100, pepper: 150, zucchini: 250, eggplant: 300, potato: 150, sweet_potato: 300, fresh_tomato: 120,
-  cucumber: 300, apple: 150, banana: 120, lemon: 100, garlic: 5, ginger: 30, mushroom: 20, cabbage: 1200, cauliflower: 800,
+  cucumber: 300, apple: 150, orange: 180, banana: 120, lemon: 100, garlic: 5, ginger: 30, mushroom: 20, cabbage: 1200, cauliflower: 800,
   beetroot: 200, broccoli: 400, mozzarella: 125, tofu: 200, tuna: 140, beans: 240, chickpea: 240, corn: 285, tomato: 400,
 };
 // Rayons et sous-catégories du placard. Chaque aliment de l'app a sa place ;
@@ -205,14 +207,14 @@ window.TAXONOMY = {
   "Poissons & fruits de mer": { "Poissons frais": "salmon", "Conserves de poisson": "tuna", "Fruits de mer": "", Autre: "" },
   "Œufs & crèmerie": { "Œufs": "egg", "Lait & crèmes": "milk|cream|sour_cream", "Yaourts & fromages frais": "yogurt|cheese|cottage", Fromages: "mozzarella|grated_cheese|cheese_slices|telemea|parmesan|cream_cheese", Beurre: "butter", "Végétal": "tofu", Autre: "" },
   "Légumes": { "Légumes frais": "pepper|zucchini|eggplant|mushroom|cucumber|fresh_tomato|cauliflower|cabbage", "Racines & tubercules": "potato|sweet_potato|carrot|beetroot", "Oignons & aromates": "onion|garlic|ginger|spring_onion|chili|herbs", Salades: "lettuce", Autre: "" },
-  "Fruits": { "Fruits frais": "banana|apple|lemon|avocado", "Fruits secs": "nuts|peanuts", Autre: "" },
+  "Fruits": { "Fruits frais": "banana|apple|lemon|avocado|orange", "Fruits secs": "nuts|peanuts", Autre: "" },
   "Surgelés": { "Légumes surgelés": "broccoli|spinach|frozen_peas|green_beans|wok_veg", Frites: "frozen_fries", "Fruits surgelés": "berries", "Plats surgelés": "", Autre: "" },
   "Féculents & céréales": { Riz: "rice|sushi_rice", "Pâtes & nouilles": "pasta|noodles|rice_noodles|gnocchi", "Céréales & semoules": "oats|semolina|couscous|bulgur|buckwheat|polenta", "Légumineuses sèches": "lentil", "Pains & pâtes à cuire": "bread|sandwich_bread|baguette|tortilla|puff_pastry|rice_paper", "Farines & panure": "flour|panko", Autre: "" },
   "Conserves": { "Légumineuses": "beans|chickpea", Tomates: "tomato|passata|tomato_paste", "Légumes & fermentés": "corn|pickles|sauerkraut|kimchi", "Lait de coco": "coconut_milk", Autre: "" },
   "Sauces & condiments": { "Sauces asiatiques": "soy_sauce|fish_sauce|oyster_sauce|gochujang|miso|curry_paste", Condiments: "mustard|mayonnaise", "Huiles & vinaigres": "oil|oil_sun|sesame_oil|rice_vinegar", "Sauces froides & piquantes": "", Autre: "" },
   "Épices & aides culinaires": { "Épices & herbes séchées": "curry_powder|paprika|taco_spice|provence_herbs|cinnamon|sesame_seeds", Bouillons: "stock_cube", "Aides pâtisserie": "yeast|baking_powder|cornstarch", Autre: "" },
   "Sucré": { "Sucres & miel": "sugar|honey", "Pâtes à tartiner & confitures": "jam|peanut", "Chocolat & cacao": "cocoa|chocolate", "Desserts protéinés": "protein_pudding", Autre: "" },
-  "Boissons": { Sodas: "", Jus: "", Sirops: "", Eaux: "", "Café & thé": "matcha", "Boissons protéinées": "protein_coffee", "Vins & alcools": "red_wine", Autre: "" },
+  "Boissons": { Sodas: "", Jus: "orange_juice", Sirops: "", Eaux: "", "Café & thé": "matcha", "Boissons protéinées": "protein_coffee", "Vins & alcools": "red_wine", Autre: "" },
   "En-cas": { "Chips & salés": "", "Biscuits & gâteaux": "", Confiseries: "", "Barres": "", Autre: "" },
   "Autre": { Autre: "" },
 };

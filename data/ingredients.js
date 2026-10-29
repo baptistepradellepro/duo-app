@@ -137,6 +137,8 @@ window.CATALOG = [
   ["berries", "Fruits rouges surgelés · Fructe de pădure congelate", "g", 450, 12.99, 50, 1, "fructe de padure congelate", ["fructe", "padure"], ["ceai", "suc", "iaurt", "gem", "sirop"]],
   ["cauliflower", "Chou-fleur · Conopidă", "g", 1000, 7.99, 25, 2, "conopida", ["conopida"], ["congelata"]],
   ["sweet_potato", "Patates douces · Cartofi dulci", "g", 1000, 9.99, 86, 1.6, "cartofi dulci", ["cartofi", "dulci"], ["congelati", "chips"]],
+  ["orange_juice", "Jus d’orange 100 % pur jus · Suc de portocale 100%", "ml", 1000, 9.99, 45, 0.7, "suc portocale 100%", ["suc", "portocale"], ["nectar", "bautura", "sirop", "fructe", "morcovi", "mere"]],
+  ["orange", "Oranges · Portocale", "g", 1000, 6.99, 47, 0.9, "portocale", ["portocale"], ["suc", "nectar", "bautura", "sirop", "gem", "ciocolata", "biscuiti"]],
   ["matcha", "Thé matcha en poudre · Ceai matcha pudră", "g", 30, 29.99, 324, 30, "ceai matcha", ["matcha"], ["biscuiti", "ciocolata", "napolitane", "bautura", "latte"]],
   ["green_beans", "Haricots verts surgelés · Fasole verde congelată", "g", 450, 6.99, 31, 1.8, "fasole verde congelata", ["fasole", "verde"], []],
 ].map(([id, name, unit, pack, price, kcal, protein, query, must = [], not = [], store = "Lidl"]) => ({
@@ -152,3 +154,20 @@ window.CATALOG = [
   not,
   store,
 }));
+
+// Fibres (g pour 100 g ou 100 ml, ou par pièce pour les aliments comptés à la pièce). Valeurs moyennes, à affiner avec les étiquettes.
+window.FIBER = {
+  oats: 10, milk: 0, yogurt: 0, banana: 2.6, egg: 0, bread: 7, chicken: 0, rice: 1.3, pasta: 3, lentil: 11, beans: 6, chickpea: 7, tuna: 0, salmon: 0, tofu: 1,
+  potato: 2, broccoli: 2.6, spinach: 2.2, tomato: 1.2, carrot: 2.8, onion: 1.7, pepper: 1.7, oil: 0, cheese: 0, peanut: 6, apple: 2.4, nuts: 6.7,
+  whole_chicken: 0, chicken_thigh: 0, pork_mince: 0, beef_mince: 0, beef_stew: 0, bacon: 0, ham: 0, noodles: 2.5, rice_noodles: 1.6, rice_paper: 1,
+  sushi_rice: 1, flour: 3, buckwheat: 10, polenta: 5, tortilla: 2, sandwich_bread: 3, baguette: 7, panko: 3, frozen_fries: 3, avocado: 10, garlic: 2,
+  ginger: 2, spring_onion: 2.6, cabbage: 2.5, sauerkraut: 3, zucchini: 1, eggplant: 3, mushroom: 1, cucumber: 0.5, fresh_tomato: 1.2, lettuce: 4,
+  beetroot: 2.8, lemon: 0.3, herbs: 1, chili: 1.5, frozen_peas: 5, wok_veg: 2.5, corn: 2.5, pickles: 1, butter: 0, cream: 0, sour_cream: 0,
+  mozzarella: 0, grated_cheese: 0, cheese_slices: 0, telemea: 0, parmesan: 0, cream_cheese: 0, sugar: 0, yeast: 27, baking_powder: 0, cinnamon: 53,
+  honey: 0, oil_sun: 0, passata: 1.5, tomato_paste: 4, coconut_milk: 0, soy_sauce: 0.8, rice_vinegar: 0, sesame_oil: 0, sesame_seeds: 12,
+  fish_sauce: 0, oyster_sauce: 0, gochujang: 2, kimchi: 2.4, miso: 5, curry_paste: 3, curry_powder: 33, paprika: 35, taco_spice: 15,
+  provence_herbs: 30, stock_cube: 0, mustard: 3, mayonnaise: 0, cornstarch: 1, peanuts: 8.5, red_wine: 0, semolina: 3.9, couscous: 5, bulgur: 12,
+  gnocchi: 1.5, puff_pastry: 1.5, turkey: 0, chicken_mince: 0, duck: 0, protein_coffee: 0, protein_pudding: 0.5, cottage: 0, jam: 1, cocoa: 33,
+  chocolate: 10, berries: 5, cauliflower: 2, sweet_potato: 3, green_beans: 3, matcha: 38, orange_juice: 0.2, orange: 2.4,
+};
+window.CATALOG.forEach((x) => (x.fiber = window.FIBER[x.id] ?? 0));

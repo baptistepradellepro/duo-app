@@ -46,6 +46,9 @@ const initial = () => ({
   topup: "protein_coffee",
   topupInBudget: false,
   topupMax: 7,
+  morning: "juice",
+  juiceMl: 150,
+  breakfastShare: 1.5,
   veg: false,
   exclude: [],
   plan: null,
@@ -192,15 +195,29 @@ function macro(r) {
       const f = q / (x.unit === "pièce" ? 1 : 100);
       v.kcal += x.kcal * f;
       v.protein += x.protein * f;
+      v.fiber += (x.fiber || 0) * f;
       return v;
     },
-    { kcal: 0, protein: 0 },
+    { kcal: 0, protein: 0, fiber: 0 },
   );
   if (isTotal(r)) {
     v.kcal /= r.portions || 1;
     v.protein /= r.portions || 1;
+    v.fiber /= r.portions || 1;
   }
   return v;
+}
+// Le matin : un verre de jus d'orange ou une orange entière par personne (réglage de Ma semaine).
+function morningItem() {
+  if (s.morning === "juice") return { id: "orange_juice", qty: s.juiceMl, label: `verre de jus d’orange (${s.juiceMl} ml)` };
+  if (s.morning === "orange") return { id: "orange", qty: window.PIECE_G?.orange || 180, label: "orange entière" };
+  return null;
+}
+function morningMacro() {
+  const m = morningItem(),
+    x = m && by[m.id];
+  if (!x) return { kcal: 0, protein: 0, fiber: 0 };
+  return { kcal: (x.kcal * m.qty) / 100, protein: (x.protein * m.qty) / 100, fiber: ((x.fiber || 0) * m.qty) / 100 };
 }
 // Fournées et sauces : quantités pour la recette entière ; les autres recettes : par personne.
 const isTotal = (r) => r.type === "batch" || r.type === "sauce";
@@ -222,6 +239,11 @@ function demands(plan = s.plan, top = false) {
       }),
     );
     for (const b of s.batches) if (byR[b] && !s.batchDone[b]) add(byR[b], 1);
+    const mi = morningItem();
+    if (mi && by[mi.id]) {
+      const mornings = plan.days.filter((_, i) => !s.done[i + "-0"]).length;
+      d[mi.id] = (d[mi.id] || 0) + mi.qty * 2 * mornings;
+    }
     const q = top ? topupQty(plan) : 0;
     if (q) d[s.topup] = (d[s.topup] || 0) + q;
   }
@@ -305,6 +327,9 @@ const dayDate = (i) => {
   d.setDate(d.getDate() + i);
   return d.toLocaleDateString("fr-FR", { day: "numeric", month: "numeric" });
 };
+// Poids des fibres dans le choix des menus : classement des plats et écart au repère de 30 g par personne et par jour.
+const FIBER_WEIGHT = 1.5,
+  FIBER_PICK = 1.5;
 // ─── Équilibre des menus : base, protéine et légumes de chaque plat ───
 const BASES = { riz: "rice|sushi_rice", "pâtes": "pasta|noodles|rice_noodles|gnocchi", "pommes de terre": "potato|sweet_potato|frozen_fries", pain: "bread|baguette|tortilla|sandwich_bread|puff_pastry|rice_paper", "céréales": "couscous|bulgur|semolina|buckwheat|polenta", "légumineuses": "lentil|beans|chickpea" };
 const PROTEINS = { volaille: "chicken|chicken_thigh|whole_chicken|chicken_mince|turkey|ham|bacon", "bœuf": "beef_stew|beef_mince", porc: "pork_mince", poisson: "salmon|tuna", canard: "duck", "œufs": "egg", "végétal": "tofu|lentil|beans|chickpea|cheese|cottage|telemea" };
@@ -354,7 +379,7 @@ function generate(auto = false) {
   s.batches = autoBatches();
   s.batchDone = {};
   s.prepDone = {};
-  const frozenBreakfast = R.filter((r) => r.type === "batch" && r.meal === "breakfast" && (s.freezer[r.id] || 0) >= 2).map((r) => r.id);
+  const frozenBreakfast = R.filter((r) => r.type === "batch" && r.meal === "breakfast" && (s.freezer[r.id] || 0) >= s.breakfastShare).map((r) => r.id);
   const bakes = [...new Set([...s.batches.filter((id) => byR[id]?.meal === "breakfast"), ...frozenBreakfast])],
     breakfasts = R.filter((r) => r.type === "breakfast" && allowed(r)),
     mains = R.filter((r) => r.type === "main" && !r.fixed && allowed(r));
@@ -365,7 +390,9 @@ function generate(auto = false) {
   s.done = {};
   s.checked = {};
   const costs = Object.fromEntries(R.map((r) => [r.id, unitCost(r)])),
-    tastes = Object.fromEntries(R.map((r) => [r.id, taste(r)]));
+    tastes = Object.fromEntries(R.map((r) => [r.id, taste(r)])),
+    // Classement des plats : moins cher, plus apprécié, plus riche en fibres.
+    rank = Object.fromEntries(R.map((r) => [r.id, costs[r.id] - tastes[r.id] * 6 - macro(r).fiber * FIBER_PICK]));
   let best = null,
     bestScore = Infinity,
     cheapest = null,
@@ -374,7 +401,7 @@ function generate(auto = false) {
     const picked = {};
     let pork = 0;
     const pick = (arr, fits = () => true) => {
-      const pool = [...arr].sort((a, b) => costs[a.id] - tastes[a.id] * 6 - (costs[b.id] - tastes[b.id] * 6));
+      const pool = [...arr].sort((a, b) => rank[a.id] - rank[b.id]);
       const free = (r) => (picked[r.id] || 0) < (r.type === "main" ? 1 : 3) && (!hasPork(r) || pork < s.porkMax);
       let cand = pool.filter((r) => free(r) && fits(r));
       if (!cand.length) cand = pool.filter(free);
@@ -424,7 +451,8 @@ function generate(auto = false) {
     const diversity = new Set(p.days.flat()).size,
       cuisines = new Set(p.days.flat().map((id) => byR[id].cuisine)).size,
       target = s.profiles.reduce((a, b) => a + Number(b.kcal), 0) / 2,
-      dayMacro = (d) => d.reduce((x, id) => ({ kcal: x.kcal + macro(byR[id]).kcal, protein: x.protein + macro(byR[id]).protein }), { kcal: 0, protein: 0 }),
+      dayMacro = (d) => d.reduce((x, id) => ({ kcal: x.kcal + macro(byR[id]).kcal, protein: x.protein + macro(byR[id]).protein, fiber: x.fiber + macro(byR[id]).fiber }), { ...morningMacro() }),
+      fiberGap = p.days.reduce((a, d) => a + Math.max(0, 30 - dayMacro(d).fiber), 0),
       avg = p.days.reduce((a, d) => a + dayMacro(d).kcal, 0) / 7,
       protGap = p.days.reduce((a, d) => a + s.profiles.reduce((v, pr) => v + Math.max(0, pr.protein - dayMacro(d).protein), 0), 0) / 7,
       liking = p.days.reduce((a, d) => a + d.slice(1).reduce((x, id) => x + tastes[id], 0), 0),
@@ -432,7 +460,7 @@ function generate(auto = false) {
       vegGap = p.days.reduce((a, d) => a + Math.max(0, 200 - d.slice(1).reduce((x, id) => x + features(byR[id]).veg, 0)), 0),
       clashes = p.days.reduce((a, d, i) => a + (tooClose(byR[d[1]], byR[d[2]]) ? 1 : 0) + (i && [...features(byR[d[1]]).starches].some((b) => features(byR[p.days[i - 1][2]]).starches.has(b)) ? 1 : 0), 0),
       repeats = Object.values(p.days.flatMap((d) => d.slice(1)).reduce((a, id) => ((a[features(byR[id]).family] = (a[features(byR[id]).family] || 0) + 1), a), {})).reduce((a, n) => a + Math.max(0, n - 1), 0),
-      score = u * 0.2 + (c - u) * 0.05 - diversity * 5 - cuisines * 4 - liking * 8 + Math.abs(avg - target) * 0.015 + protGap * 0.6 + vegGap * 0.05 + clashes * 25 + repeats * 6;
+      score = u * 0.2 + (c - u) * 0.05 - diversity * 5 - cuisines * 4 - liking * 8 + Math.abs(avg - target) * 0.015 + protGap * 0.6 + vegGap * 0.05 + clashes * 25 + repeats * 6 + fiberGap * FIBER_WEIGHT;
     if (u <= budget() && score < bestScore) {
       bestScore = score;
       best = p;
@@ -461,7 +489,7 @@ function heading(k, title, desc, action = "") {
 function card(r, i = 0) {
   const m = macro(r);
   const tag = r.type === "sauce" ? "🥫 SAUCE" : r.type === "drink" ? "🥤 BOISSON" : r.type === "snack" || r.snack ? "🍿 EN-CAS" : r.type === "batch" ? (r.freezer ? "🧊 CONGÉLATION" : "FOURNÉE") : r.veg ? "VÉGÉTARIEN" : esc(r.cuisine).toUpperCase();
-  return `<article class="recipe" onclick="detail('${r.id}')" tabindex="0" onkeydown="if(event.key==='Enter')detail('${r.id}')"><div class="food ${i % 3 === 1 ? "b" : i % 3 === 2 ? "c" : ""}"><span class="tag">${tag} · ${r.time} MIN</span>${r.emoji}</div><div class="recipe-body"><h3>${esc(r.name)}</h3><p>${esc(r.cuisine)} · ${isTotal(r) ? `${r.portions} ${esc(r.unit)}` : "pour deux"}${r.source !== undefined ? " · ma recette" : ""}${s.ratings[r.id] !== undefined ? " · " + RATES.find(([v]) => v === s.ratings[r.id])[1] : ""}</p><div class="macros"><span>◉ <b>${Math.round(m.kcal)}</b> kcal</span><span>↗ <b>${Math.round(m.protein)}</b> g prot.</span></div></div></article>`;
+  return `<article class="recipe" onclick="detail('${r.id}')" tabindex="0" onkeydown="if(event.key==='Enter')detail('${r.id}')"><div class="food ${i % 3 === 1 ? "b" : i % 3 === 2 ? "c" : ""}"><span class="tag">${tag} · ${r.time} MIN</span>${r.emoji}</div><div class="recipe-body"><h3>${esc(r.name)}</h3><p>${esc(r.cuisine)} · ${isTotal(r) ? `${r.portions} ${esc(r.unit)}` : "pour deux"}${r.source !== undefined ? " · ma recette" : ""}${s.ratings[r.id] !== undefined ? " · " + RATES.find(([v]) => v === s.ratings[r.id])[1] : ""}</p><div class="macros"><span>◉ <b>${Math.round(m.kcal)}</b> kcal</span><span>↗ <b>${Math.round(m.protein)}</b> g prot.</span><span>🌾 <b>${Math.round(m.fiber)}</b> g fibres</span></div></div></article>`;
 }
 
 // ─── Pages ────────────────────────────────────────────────────────────────
@@ -498,7 +526,7 @@ function week() {
     (s.plan
       ? `<div class="notice ${c > budget() ? "warning" : ""}">${c > budget() ? "Budget dépassé pour la proposition la moins chère. Augmentez le budget ou ajoutez votre stock." : "Votre semaine tient dans le budget."} Consommé : <b>${eur(c)} / ${money(s.budgetEur)} €</b>. À payer en magasin : <b>${eur(pay)}</b>${pay - c > 1 ? ` (dont ${eur(pay - c)} de restes de paquets qui restent au placard)` : ""}. <button class="text-button" onclick="go('shopping')">Voir mes courses ↗</button></div>${topupNotice()}${extrasPanel()}<p class="muted">Touchez un repas pour sa recette détaillée. Mangé autre chose ? « Autre » le retire du placard.</p>${s.plan.days.map((day, i) => `<div class="day ${i === todayIndex() ? "is-today" : ""}"><div class="day-label">${DAYS[i].slice(0, 3)}.<br><small class="muted">${dayDate(i)}</small></div>${day.map((_, j) => mealCell(i, j)).join("")}</div>`).join("")}`
       : '<div class="panel"><h2>Le menu commence ici.</h2><p>Générez 21 repas pour vous deux : les fournées du dimanche sont choisies selon votre congélateur, et la liste de courses prend le magasin le moins cher.</p></div>') +
-    `<details class="panel"><summary>Réglages de la semaine</summary><div class="row"><label class="inline"><input type="checkbox" ${s.fixed.chirashi ? "checked" : ""} onchange="s.fixed.chirashi=this.checked;save()"> 🍣 Chirashi saumon & avocat le mardi soir</label><label>🍜 Ramen au bouillon<select onchange="s.fixed.ramen=+this.value;save()">${ramenSel}</select></label><label class="inline"><input type="checkbox" ${s.veg ? "checked" : ""} onchange="s.veg=this.checked;save()"> Menus végétariens</label><label>Garder au congélateur (portions de plats)<input type="number" min="0" max="40" value="${s.freezerTarget}" onchange="s.freezerTarget=Math.max(0,+this.value);save()"></label></div><p class="muted">Recomposez la semaine pour appliquer ces réglages. Le poulet entier est désossé chaque dimanche : ≈ 350 g de blancs et 400 g de cuisses pour la semaine, la carcasse et les ailes pour le bouillon du ramen.</p>${batchPanel()}</details>`
+    `<details class="panel"><summary>Réglages de la semaine</summary><div class="row"><label class="inline"><input type="checkbox" ${s.fixed.chirashi ? "checked" : ""} onchange="s.fixed.chirashi=this.checked;save()"> 🍣 Chirashi saumon & avocat le mardi soir</label><label>🍜 Ramen au bouillon<select onchange="s.fixed.ramen=+this.value;save()">${ramenSel}</select></label><label class="inline"><input type="checkbox" ${s.veg ? "checked" : ""} onchange="s.veg=this.checked;save()"> Menus végétariens</label><label>Le matin, en plus<select onchange="s.morning=this.value;s.checked={};save();render()">${[["juice", "Un verre de jus d’orange"], ["orange", "Une orange entière (plus de fibres)"], ["none", "Rien"]].map(([v, l]) => `<option value="${v}" ${s.morning === v ? "selected" : ""}>${l}</option>`).join("")}</select></label>${s.morning === "juice" ? `<label>Verre de jus (ml)<input type="number" min="50" max="400" step="25" value="${s.juiceMl}" onchange="s.juiceMl=Math.max(50,Math.min(400,+this.value||150));s.checked={};save();render()"></label>` : ""}<label>Gâteau, brioche… : portions par matin pour vous deux<input type="number" min="0.5" max="4" step="0.5" value="${s.breakfastShare}" onchange="s.breakfastShare=Math.max(0.5,Math.min(4,+this.value||1.5));save();render()"></label><label>Garder au congélateur (portions de plats)<input type="number" min="0" max="40" value="${s.freezerTarget}" onchange="s.freezerTarget=Math.max(0,+this.value);save()"></label></div><p class="muted">Recomposez la semaine pour appliquer ces réglages. Le poulet entier est désossé chaque dimanche : ≈ 350 g de blancs et 400 g de cuisses pour la semaine, la carcasse et les ailes pour le bouillon du ramen.</p>${batchPanel()}</details>`
   );
 }
 function topupNotice() {
@@ -523,7 +551,7 @@ function autoBatches() {
       .map((x) => x.r);
   const batches = R.filter((r) => r.type === "batch" && r.id !== "poulet_entier" && allowed(r) && frozen(r.id) === 0);
   // Petits-déjeuners et encas : 14 portions pour la semaine, moins ce qui reste au congélateur.
-  let need = 14 - R.filter((r) => r.type === "batch" && r.meal === "breakfast").reduce((a, r) => a + frozen(r.id), 0);
+  let need = 7 * s.breakfastShare - R.filter((r) => r.type === "batch" && r.meal === "breakfast").reduce((a, r) => a + frozen(r.id), 0);
   for (const r of rank(batches.filter((r) => r.meal === "breakfast"))) {
     if (need <= 0 || pick.length >= 4) break;
     pick.push(r.id);
@@ -712,7 +740,7 @@ function mealCell(i, j) {
     canFreeze = Object.entries(s.freezer).some(([id, n]) => n >= 2 && byR[id]?.meal === "main");
   if (ate) return `<div class="meal done"><div><small>${SLOTS[j]} · AUTRE CHOSE</small><b>🍽️ ${esc(ate)}</b><span class="muted">retiré du placard</span></div></div>`;
   const tag = done ? " · ✓" : fz ? " · 🧊 CONGÉLO" : r.fixed ? " · RITUEL" : r.type === "batch" ? (r.freezer ? " · CONGÉLO" : " · FOURNÉE") : "";
-  return `<div class="meal ${done ? "done" : ""} ${fz ? "frozen" : ""}"><div onclick="detail('${r.id}',${i},${j})" role="button" tabindex="0" onkeydown="if(event.key==='Enter')detail('${r.id}',${i},${j})"><small>${SLOTS[j]}${tag}</small><b>${r.emoji} ${esc(r.name)}</b><span class="muted">${Math.round(m.kcal)} kcal · ${Math.round(m.protein)} g prot.</span></div>${done ? "" : `<div class="meal-actions"><button class="text-button" onclick="pickMeal(${i},${j})">Choisir</button><button class="text-button" onclick="swap(${i},${j})">Au hasard ↻</button>${j > 0 && canFreeze ? `<button class="text-button" onclick="useFreezer(${i},${j})">🧊 Congélo</button>` : ""}<button class="text-button" onclick="ateOther(${i},${j})">Autre</button></div>`}</div>`;
+  return `<div class="meal ${done ? "done" : ""} ${fz ? "frozen" : ""}"><div onclick="detail('${r.id}',${i},${j})" role="button" tabindex="0" onkeydown="if(event.key==='Enter')detail('${r.id}',${i},${j})"><small>${SLOTS[j]}${tag}</small><b>${r.emoji} ${esc(r.name)}</b><span class="muted">${Math.round(m.kcal)} kcal · ${Math.round(m.protein)} g prot. · ${Math.round(m.fiber)} g fibres</span></div>${done ? "" : `<div class="meal-actions"><button class="text-button" onclick="pickMeal(${i},${j})">Choisir</button><button class="text-button" onclick="swap(${i},${j})">Au hasard ↻</button>${j > 0 && canFreeze ? `<button class="text-button" onclick="useFreezer(${i},${j})">🧊 Congélo</button>` : ""}<button class="text-button" onclick="ateOther(${i},${j})">Autre</button></div>`}</div>`;
 }
 function batchPanel() {
   const list = R.filter((r) => r.type === "batch");
@@ -1090,18 +1118,19 @@ function profiles() {
         const v = macro(r);
         a.kcal += v.kcal;
         a.protein += v.protein;
+        a.fiber += v.fiber;
         return a;
       },
-      { kcal: 0, protein: 0 },
+      { ...(s.plan ? morningMacro() : { kcal: 0, protein: 0, fiber: 0 }) },
     );
   return (
     heading("DES REPÈRES POUR CHACUN", "Profils & nutrition.", "Deux personnes, deux objectifs. Des portions identiques pour commencer.") +
     `<div class="notice">Saisissez votre propre objectif quotidien en protéines et calories. Les valeurs proposées sont des exemples à personnaliser, pas une prescription. Calculs alimentaires estimatifs à vérifier avec les étiquettes.</div><div class="profile-grid">${s.profiles.map((p, i) => `<section class="panel"><div class="eyebrow">PROFIL 0${i + 1}</div><label>Prénom<input type="text" maxlength="40" value="${esc(p.name)}" onchange="s.profiles[${i}].name=this.value;save()"></label><br><label>Objectif de protéines · g / jour<input type="number" min="1" max="500" value="${p.protein}" onchange="s.profiles[${i}].protein=Math.max(1,Math.min(500,+this.value));save();render()"></label><label>Objectif énergétique · kcal / jour<input type="number" min="500" max="6000" value="${p.kcal}" onchange="s.profiles[${i}].kcal=Math.max(500,Math.min(6000,+this.value));save();render()"></label></section>`).join("")}</div><div class="panel"><div class="row spread"><h2>Votre journée en chiffres</h2><select onchange="s.day=+this.value;save();render()">${DAYS.map((x, i) => `<option value="${i}" ${i === s.day ? "selected" : ""}>${x}</option>`).join("")}</select></div>${
       s.plan
-        ? `<p class="muted">Prévision des 3 repas du menu, par personne.</p><div class="profile-grid">${s.profiles
+        ? `<p class="muted">Prévision des 3 repas du menu par personne${morningItem() ? `, avec le ${morningItem().label} du matin` : ""}. Repère fibres : 30 g par jour.</p><div class="profile-grid">${s.profiles
             .map((p) => {
               const gap = Math.max(0, p.protein - m.protein);
-              return `<div><h3>${esc(p.name)}</h3><b>${Math.round(m.protein)} / ${p.protein} g de protéines</b><div class="progress"><span style="width:${Math.min(100, (m.protein / p.protein) * 100)}%"></span></div><p>${Math.round(m.kcal)} / ${p.kcal} kcal prévues<br><span class="muted">${m.kcal < p.kcal ? Math.round(p.kcal - m.kcal) + " kcal à couvrir selon vos besoins" : "Objectif énergétique atteint ou dépassé"}</span></p><div class="notice ${gap ? "warning" : ""}">${gap ? `Écart : <b>${Math.round(gap)} g de protéines</b>.<br>Équivalent théorique : <b>${Math.ceil(gap / (s.powder / 100))} g de poudre</b> à ${s.powder} % de protéines, ou environ ${Math.ceil((gap / 10) * 100)} g de yaourt protéiné.` : "Objectif protéique atteint par les repas prévus."}</div></div>`;
+              return `<div><h3>${esc(p.name)}</h3><b>${Math.round(m.protein)} / ${p.protein} g de protéines</b><div class="progress"><span style="width:${Math.min(100, (m.protein / p.protein) * 100)}%"></span></div><b>${Math.round(m.fiber)} / 30 g de fibres</b><div class="progress fiber"><span style="width:${Math.min(100, (m.fiber / 30) * 100)}%"></span></div><p>${Math.round(m.kcal)} / ${p.kcal} kcal prévues<br><span class="muted">${m.kcal < p.kcal ? Math.round(p.kcal - m.kcal) + " kcal à couvrir selon vos besoins" : "Objectif énergétique atteint ou dépassé"}</span></p><div class="notice ${gap ? "warning" : ""}">${gap ? `Écart : <b>${Math.round(gap)} g de protéines</b>.<br>Équivalent théorique : <b>${Math.ceil(gap / (s.powder / 100))} g de poudre</b> à ${s.powder} % de protéines, ou environ ${Math.ceil((gap / 10) * 100)} g de yaourt protéiné.` : "Objectif protéique atteint par les repas prévus."}</div></div>`;
             })
             .join("")}</div>`
         : "<p>Générez une semaine pour afficher les apports prévus et les écarts.</p>"
@@ -1118,7 +1147,7 @@ function detail(id, i, j) {
   if (key && !s.done[key]) action = `<button onclick="cook(${i},${j})">${fz ? "✓ Mangé : retirer 2 portions du congélateur" : r.type === "batch" ? "✓ Mangé" : "✓ Repas cuisiné : déduire du placard"}</button>`;
   else if (!key && (r.type === "main" || r.type === "breakfast") && s.plan) action = `<button onclick="addToMenu('${id}')">📅 Mettre au menu</button>`;
   else if (!key && r.type === "batch" && s.batches.includes(id) && !s.batchDone[id]) action = `<button onclick="cookBatch('${id}')">✓ Fournée préparée : déduire du placard${r.freezer ? " et ranger au congélateur" : ""}</button>`;
-  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><div style="font-size:50px">${r.emoji}</div><h2>${esc(r.name)}</h2><p>${esc(r.cuisine)} · ${r.time} min · <b>${isTotal(r) ? `${r.type === "sauce" ? "pour" : "fournée de"} ${r.portions} ${esc(r.unit)}` : "2 personnes"}</b>${r.freezer ? " · 🧊 se congèle" : ""}</p>${r.source ? `<p><a href="${esc(r.source)}" target="_blank" rel="noopener">Voir la recette d’origine ↗</a></p>` : ""}<div class="notice">Par ${isTotal(r) ? "portion" : "personne"} : ${Math.round(m.kcal)} kcal · ${Math.round(m.protein)} g de protéines</div>${tools(r)}<h3>Dans la cuisine</h3><table>${Object.entries(r.ingredients)
+  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><div style="font-size:50px">${r.emoji}</div><h2>${esc(r.name)}</h2><p>${esc(r.cuisine)} · ${r.time} min · <b>${isTotal(r) ? `${r.type === "sauce" ? "pour" : "fournée de"} ${r.portions} ${esc(r.unit)}` : "2 personnes"}</b>${r.freezer ? " · 🧊 se congèle" : ""}</p>${r.source ? `<p><a href="${esc(r.source)}" target="_blank" rel="noopener">Voir la recette d’origine ↗</a></p>` : ""}<div class="notice">Par ${isTotal(r) ? "portion" : "personne"} : ${Math.round(m.kcal)} kcal · ${Math.round(m.protein)} g de protéines · ${Math.round(m.fiber)} g de fibres</div>${tools(r)}<h3>Dans la cuisine</h3><table>${Object.entries(r.ingredients)
     .filter(([x]) => by[x])
     .map(([x, q]) => `<tr><td>${esc(by[x].name)}</td><td>${qtyLabel(q * f, by[x].unit)}</td></tr>`)
     .join("")}</table>${beforeCooking(r, i)}<h3>À vous de jouer</h3><ol class="steps rich">${richSteps(r, f)}</ol><p class="muted">Sel, poivre et eau selon vos préférences. Poids crus / secs / égouttés.</p>${action}${key ? "" : ` <button class="secondary" onclick="cookExtra('${id}')">🍳 Cuisiné en plus</button>`}${rateBlock(id)}${r.source !== undefined ? ` <button class="secondary" onclick="deleteRecipe('${id}')">Supprimer cette recette</button>` : ""}`;
@@ -1207,7 +1236,8 @@ function cook(i, j) {
   if (s.done[key]) return;
   // Repas du congélateur (plat ou petit-déjeuner congelé) : deux portions en moins.
   const fromFreezer = fz || (r.type === "batch" && r.freezer && (s.freezer[r.id] || 0) > 0);
-  if (fromFreezer) s.freezer[r.id] = Math.max(0, (s.freezer[r.id] || 0) - 2);
+  // Plat du congélateur : 2 portions ; petit-déjeuner en fournée : la part du matin (1,5 par défaut).
+  if (fromFreezer) s.freezer[r.id] = Math.max(0, Math.round(((s.freezer[r.id] || 0) - (fz ? 2 : r.meal === "breakfast" ? s.breakfastShare : 2)) * 10) / 10);
   else if (r.type !== "batch" && !takeStock(r.ingredients, 2, "Marquer cuisiné")) return;
   s.done[key] = true;
   save();
