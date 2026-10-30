@@ -482,20 +482,30 @@ function generate(auto = false, opts = {}) {
     N = Math.max(1, opts.days || 7),
     periodBudget = opts.budgetEur ?? Math.round((s.budgetEur * N) / 7);
   if (!auto && s.plan && Object.keys(s.done).length && !confirm("Les repas déjà cuisinés restent déduits du stock. Remplacer le planning ?")) return;
-  // Nouvelles fournées selon le congélateur ; les petits-déjeuners congelés restants sont aussi servis.
+  // Le batch cooking se fait le dimanche : ses plats arrivent au menu à partir du lundi qui suit.
+  // Période commencée en milieu de semaine : jusque-là, cuisine au jour le jour et congélateur.
+  const batchFrom = (7 - weekdayOf(start)) % 7,
+    batchDays = N - batchFrom;
   s.lastBatches = s.batches;
-  s.batches = ["poulet_entier"];
-  s.batches = autoBatches(N);
+  s.batches = batchDays > 0 ? autoBatches(batchDays, batchFrom) : [];
   s.batchDone = {};
   s.prepDone = {};
-  // Cinnamon rolls (fournée du dimanche + congélateur) tant qu'il y en a, puis petits-déjeuners simples.
+  // Cinnamon rolls : ceux du congélateur d'abord, ceux du dimanche à partir du lundi, puis petits-déjeuners simples.
   const bake = MORNING_BAKES.find((id) => byR[id] && (s.batches.includes(id) || (s.freezer[id] || 0) > 0)),
-    rollDays = bake ? Math.min(N, Math.floor(((s.freezer[bake] || 0) + (s.batches.includes(bake) ? byR[bake].portions : 0)) / s.breakfastShare + 1e-9)) : 0,
+    rolls = Array.from({ length: N }, () => false),
     bakes = bake ? [bake] : [],
     // Plats préparés le dimanche : servis au menu de la semaine (deux fois sur une longue période).
     menuBatches = s.batches.filter((id) => byR[id]?.type === "batch" && byR[id].meal === "main" && byR[id].freezer),
     breakfasts = R.filter((r) => r.type === "breakfast" && allowed(r)),
     mains = R.filter((r) => r.type === "main" && !r.fixed && !r.noPlan && allowed(r));
+  if (bake) {
+    let frozen = s.freezer[bake] || 0,
+      fresh = s.batches.includes(bake) ? byR[bake].portions : 0;
+    for (let i = 0; i < N; i++) {
+      if (i >= batchFrom) [frozen, fresh] = [frozen + fresh, 0];
+      if (frozen + 1e-9 >= s.breakfastShare) [rolls[i], frozen] = [true, frozen - s.breakfastShare];
+    }
+  }
   if ((!bakes.length && !breakfasts.length) || !mains.length) {
     toast("Vos exclusions ne permettent pas de composer les repas. Ajustez-les.");
     return;
@@ -529,7 +539,7 @@ function generate(auto = false, opts = {}) {
       return r.id;
     };
     // Plats fixes d'abord (chirashi, ramen), puis chaque midi et soir en respectant l'équilibre.
-    const days = Array.from({ length: N }, (_, i) => [i < rollDays ? bake : pick(breakfasts), null, fixedFor(i, 2, start)]);
+    const days = Array.from({ length: N }, (_, i) => [rolls[i] ? bake : pick(breakfasts), null, fixedFor(i, 2, start)]);
     const bases = {},
       prots = {},
       families = {};
@@ -541,10 +551,10 @@ function generate(auto = false, opts = {}) {
     };
     days.forEach((d) => d[2] && note(d[2]));
     for (const id of menuBatches) {
-      const times = Math.min(Math.floor(byR[id].portions / 2), N >= 10 ? 2 : 1);
+      const times = Math.min(Math.floor(byR[id].portions / 2), batchDays >= 10 ? 2 : 1);
       for (let k = 0; k < times; k++) {
         const free = [];
-        for (let i = 0; i < N; i++) for (const j of [1, 2]) if (!days[i][j] && slotOk(days, i, j, byR[id])) free.push([i, j]);
+        for (let i = batchFrom; i < N; i++) for (const j of [1, 2]) if (!days[i][j] && slotOk(days, i, j, byR[id])) free.push([i, j]);
         if (!free.length) break;
         const [i, j] = free[Math.floor(Math.random() * free.length)];
         days[i][j] = id;
@@ -571,6 +581,7 @@ function generate(auto = false, opts = {}) {
       created: new Date().toISOString(),
       weekStart: start,
       budgetEur: periodBudget,
+      batchFrom,
     };
     const c = cost(p),
       u = used(p);
@@ -697,7 +708,8 @@ function batchCost(r) {
 const MORNING_BAKES = ["cinnamon_rolls"],
   // Plats du dimanche servis au menu : deux sur une semaine, un seul sur une période courte.
   menuBatchCount = (N) => (N >= 6 ? 2 : 1);
-function autoBatches(N = 7) {
+// pre : matins avant le lundi du batch, servis avec les cinnamon rolls du congélateur.
+function autoBatches(N = 7, pre = 0) {
   const frozen = (id) => s.freezer[id] || 0,
     last = s.lastBatches || [],
     pick = byR.poulet_entier ? ["poulet_entier"] : [];
@@ -706,9 +718,9 @@ function autoBatches(N = 7) {
       .map((r) => ({ r, v: taste(r) * 3 - batchCost(r) * 0.4 - (last.includes(r.id) ? 1.5 : 0) + Math.random() * 1.5 }))
       .sort((a, b) => b.v - a.v)
       .map((x) => x.r);
-  const batches = R.filter((r) => r.type === "batch" && r.id !== "poulet_entier" && !r.noPlan && allowed(r) && frozen(r.id) === 0);
+  const batches = R.filter((r) => r.type === "batch" && r.id !== "poulet_entier" && !r.noPlan && allowed(r) && (frozen(r.id) === 0 || MORNING_BAKES.includes(r.id)));
   // Petit-déjeuner : seulement les cinnamon rolls, s'il n'en reste plus assez au congélateur.
-  let need = N * s.breakfastShare - MORNING_BAKES.reduce((a, id) => a + frozen(id), 0);
+  let need = N * s.breakfastShare - Math.max(0, MORNING_BAKES.reduce((a, id) => a + frozen(id), 0) - pre * s.breakfastShare);
   for (const r of rank(batches.filter((r) => MORNING_BAKES.includes(r.id)))) {
     if (need <= 0 || pick.length >= 4) break;
     pick.push(r.id);
@@ -787,7 +799,8 @@ function sundayTasks() {
     tasks.push({ key: "b:" + id, batch: id, done: !!s.batchDone[id], html: `${r.emoji} <b>${esc(r.name)}</b> · ${r.time} min<br><small class="muted">Donne ${what}. Touchez « Recette » pour les étapes.</small>` });
   }
 
-  const early = meals(0, 3);
+  const from = s.plan.batchFrom || 0,
+    early = meals(from, from + 3);
   // 2. Le riz des 3 premiers jours au rice cooker (pas le riz rond du chirashi : il se cuit le jour même).
   const rice = early.filter((m) => m.r.ingredients.rice);
   if (rice.length) {
@@ -827,7 +840,7 @@ function sundayTasks() {
   // 4. La viande des deux premiers jours, prête au frigo ; le reste attend au congélateur.
   const MEATS = ["chicken", "chicken_thigh", "turkey", "chicken_mince", "pork_mince", "beef_stew", "beef_mince", "duck"];
   const meatOf = (m) => MEATS.filter((id) => m.r.ingredients[id]);
-  const soon = meals(0, 2).filter((m) => meatOf(m).length);
+  const soon = meals(from, from + 2).filter((m) => meatOf(m).length);
   if (soon.length)
     tasks.push({
       key: "meat",
@@ -836,7 +849,7 @@ function sundayTasks() {
         `🥩 <b>Viande de lundi et mardi</b> : la couper comme dans la recette et la mettre en boîte fermée au réfrigérateur (2 jours maximum).` +
         list(soon.map((m) => `<b>${when(m)}</b> · ${esc(m.r.name)} : ${meatOf(m).map((id) => `${qtyLabel(m.r.ingredients[id] * 2, "g")} de ${short(id)}`).join(", ")}${/marin/i.test(m.r.steps.join(" ")) ? " · on peut déjà la mariner, voir la recette" : ""}`)),
     });
-  const later = meals(2, s.plan.days.length).filter((m) => meatOf(m).length);
+  const later = meals(from + 2, s.plan.days.length).filter((m) => meatOf(m).length);
   if (later.length)
     tasks.push({
       key: "freeze",
@@ -848,10 +861,14 @@ function sundayTasks() {
   return tasks;
 }
 function sundayPanel() {
+  const from = s.plan.batchFrom || 0;
+  // Période qui s'arrête avant le prochain dimanche de batch : rien à préparer à l'avance.
+  if (from >= s.plan.days.length) return "";
   const all = sundayTasks(),
-    todo = all.filter((x) => !x.done);
+    todo = all.filter((x) => !x.done),
+    sunday = from ? ` · ${new Date(isoAdd(s.plan.weekStart, from - 1) + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "numeric" })}` : "";
   if (!todo.length) return `<div class="panel sunday done-all" id="sunday"><h2>🧑‍🍳 Batch cooking terminé ✓</h2><p class="muted">Tout est prêt pour la semaine. <button class="text-button" onclick="shareWeek()">📤 Renvoyer le programme</button></p></div>`;
-  return `<section class="panel sunday" id="sunday"><div class="row spread"><h2>🧑‍🍳 Batch cooking du dimanche</h2><span class="muted">${all.length - todo.length} / ${all.length} fait</span></div><p class="muted">À faire en premier : lundi démarre presque tout prêt. Chaque étape disparaît quand elle est faite.</p><ol class="tasks">${todo
+  return `<section class="panel sunday" id="sunday"><div class="row spread"><h2>🧑‍🍳 Batch cooking du dimanche${sunday}</h2><span class="muted">${all.length - todo.length} / ${all.length} fait</span></div><p class="muted">${from ? `À faire dimanche, pas avant : les plats du batch arrivent au menu à partir de lundi. D’ici là, cuisine au jour le jour.` : "À faire en premier : lundi démarre presque tout prêt."} Chaque étape disparaît quand elle est faite.</p><ol class="tasks">${todo
     .map((x) => `<li><span>${x.html}</span><span class="row">${x.batch ? `<button class="text-button" onclick="detail('${x.batch}')">Recette</button><button class="small" onclick="cookBatch('${x.batch}')">✓ Fait</button>` : `<button class="small" onclick="prepDone('${x.key}')">✓ Fait</button>`}</span></li>`)
     .join("")}</ol><div class="row"><button onclick="shareWeek()">📤 Envoyer le programme & la liste</button><button class="secondary" onclick="go('shopping')">Voir les courses</button></div></section>`;
 }
