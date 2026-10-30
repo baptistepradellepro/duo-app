@@ -110,11 +110,10 @@ for (const x of s.custom || []) {
   }
 }
 function loadRecipes() {
-  R = [...window.RECIPES, ...(s.myRecipes || [])];
+  for (const k of Object.keys(featCache)) delete featCache[k];
+  R = [...window.RECIPES, ...(s.myRecipes || [])].map(balance);
   byR = Object.fromEntries(R.map((r) => [r.id, r]));
 }
-loadRecipes();
-if (s.plan && !s.plan.days?.every((d) => d.every((id) => byR[id]))) s.plan = null;
 
 const save = () => {
   try {
@@ -215,6 +214,15 @@ function macro(r) {
     v.protein /= r.portions || 1;
     v.fiber /= r.portions || 1;
   }
+  // Accompagnement d'un plat du congélateur, par personne.
+  for (const [id, q] of Object.entries(r.serve || {})) {
+    const x = by[id];
+    if (!x) continue;
+    const f = q / (x.unit === "pièce" ? 1 : 100);
+    v.kcal += x.kcal * f;
+    v.protein += x.protein * f;
+    v.fiber += (x.fiber || 0) * f;
+  }
   return v;
 }
 // Le matin : un verre de jus d'orange ou une orange entière par personne (réglage de Ma semaine).
@@ -239,13 +247,14 @@ function slot(i, j, plan = s.plan) {
 }
 function demands(plan = s.plan, top = false) {
   const d = {};
-  const add = (r, f) =>
-    Object.entries(r.ingredients).forEach(([id, q]) => by[id] && (d[id] = (d[id] || 0) + q * f));
+  const add = (r, f, ings = r.ingredients) => Object.entries(ings).forEach(([id, q]) => by[id] && (d[id] = (d[id] || 0) + q * f));
   if (plan) {
     plan.days.forEach((day, i) =>
       day.forEach((_, j) => {
         const { key, fz, r } = slot(i, j, plan);
-        if (!s.done[key] && !fz && r && r.type !== "batch") add(r, 2);
+        if (s.done[key] || !r) return;
+        if (!fz && r.type !== "batch") add(r, 2);
+        else if (r.serve) add(r, 2, r.serve);
       }),
     );
     for (const b of s.batches) if (byR[b] && !s.batchDone[b]) add(byR[b], 1);
@@ -359,7 +368,7 @@ const PROTEINS = { volaille: "chicken|chicken_thigh|whole_chicken|chicken_mince|
 const PROTEIN_MIN = { "œufs": 55, "légumineuses": 60, fromage: 40 };
 const VEG = new Set([...Object.entries(window.GROUP_OF).filter(([, place]) => /^(Légumes|Surgelés)/.test(place) && !/Frites|Fruits/.test(place)).map(([id]) => id), "tomato", "passata", "sauerkraut", "corn"]);
 // Grammes par personne (les fournées et sauces sont rapportées à une portion).
-const grams = (r, id) => ((r.ingredients[id] || 0) * (by[id]?.unit === "pièce" ? window.PIECE_G?.[id] || 60 : 1)) / (isTotal(r) ? r.portions || 1 : 1);
+const grams = (r, id) => ((r.ingredients[id] || 0) / (isTotal(r) ? r.portions || 1 : 1) + (r.serve?.[id] || 0)) * (by[id]?.unit === "pièce" ? window.PIECE_G?.[id] || 60 : 1);
 const featCache = {};
 function features(r) {
   if (featCache[r.id]) return featCache[r.id];
@@ -375,7 +384,7 @@ function features(r) {
   const proteins = new Set(Object.entries(PROTEINS).filter(([k, ids]) => amount(ids) >= (PROTEIN_MIN[k] || 40)).map(([k]) => k));
   const base = top(BASES) || "autre",
     protein = top(PROTEINS) || "léger";
-  return (featCache[r.id] = { base, starches, protein, proteins, family: `${base}/${protein}`, veg: Object.keys(r.ingredients).filter((id) => VEG.has(id)).reduce((a, id) => a + grams(r, id), 0) });
+  return (featCache[r.id] = { base, starches, protein, proteins, family: `${base}/${protein}`, veg: [...new Set([...Object.keys(r.ingredients), ...Object.keys(r.serve || {})])].filter((id) => VEG.has(id)).reduce((a, id) => a + grams(r, id), 0) });
 }
 // Deux plats trop proches : un glucide en commun (riz et riz) ou une protéine en commun (œufs et œufs).
 function tooClose(a, b) {
@@ -398,6 +407,74 @@ function slotOk(days, i, j, r) {
     sameBase = (x) => x && [...f.starches].some((k) => features(x).starches.has(k));
   return !sameBase(prev) && !sameBase(next);
 }
+// ─── Repas équilibrés ─────────────────────────────────────────────────────
+// Un plat du menu doit être un vrai repas du quotidien (par personne) : assez de légumes, de protéines
+// et d'énergie, sans excès. Sinon on ajoute un accompagnement simple, adapté à la cuisine du plat.
+const MEAL = { kcalMin: 600, kcalMax: 1000, protein: 30, veg: 120 };
+// Plats de fête, entrées, apéritifs et desserts : gardés dans le carnet, jamais proposés comme repas.
+const NOT_A_MEAL = /\b(foie gras|caviar|truffe|homard|langouste|huitres?|saint jacques|verrines?|amuse bouche|aperitif|apero|canapes?|entree|dessert|buche|tiramisu|mousse au chocolat|fondant|gateau|brownies?|cookies?|creme brulee|panna cotta|cocktail|smoothie|biscuits?|muffins?)\b/;
+const SIDE_ASIA = /Japonaise|Chinoise|Coréenne|Thaïlandaise|Vietnamienne/,
+  SIDE_SALAD = /Indienne|Maghrébine|Libanaise|Grecque|Méditerranéenne|Turque/,
+  SIDE_BEANS = /Française|Basiques|Russe|Maison/;
+const round5 = (q) => Math.max(5, Math.round(q / 5) * 5);
+function balance(r) {
+  if (r.fixed || !(r.type === "main" || (r.type === "batch" && r.meal === "main"))) return r;
+  const out = { ...r, ingredients: { ...r.ingredients }, steps: [...r.steps] };
+  if (NOT_A_MEAL.test(" " + norm(r.name) + " ")) return { ...out, noPlan: true };
+  const batch = r.type === "batch",
+    // Accompagnement : ajouté aux ingrédients d'un plat, servi à part pour un plat du congélateur.
+    side = batch ? (out.serve = {}) : out.ingredients,
+    notes = [],
+    look = () => {
+      delete featCache[out.id];
+      const f = features(out),
+        m = macro(out);
+      delete featCache[out.id];
+      return { f, m };
+    },
+    add = (ings, text) => {
+      for (const [id, q] of Object.entries(ings)) if (by[id] && q > 0) side[id] = (side[id] || 0) + q;
+      notes.push(text);
+    };
+  let { f, m } = look();
+  if (f.veg < MEAL.veg) {
+    const q = Math.min(200, Math.max(100, round5(150 - f.veg)));
+    if (SIDE_ASIA.test(r.cuisine)) add({ broccoli: q }, `${q} g de brocolis vapeur par personne (8 minutes à la vapeur, ou 4 minutes au micro-ondes couverts avec un fond d’eau), un trait de sauce soja`);
+    else if (SIDE_SALAD.test(r.cuisine)) add({ cucumber: round5(q / 2), fresh_tomato: round5(q / 2), lemon: 5 }, `une salade concombre-tomate au citron (${q} g par personne)`);
+    else if (SIDE_BEANS.test(r.cuisine)) add({ green_beans: q }, `${q} g de haricots verts par personne (8 minutes à l’eau bouillante salée)`);
+    else add({ lettuce: 0.2, fresh_tomato: round5(Math.max(60, q - 50)) }, "une salade verte et des tomates, vinaigrette légère");
+    ({ f, m } = look());
+  }
+  if (!f.proteins.size) {
+    add({ egg: 2 }, "2 œufs au plat ou mollets par personne (6 minutes 30 dans l’eau bouillante)");
+    ({ f, m } = look());
+  } else if (m.protein < MEAL.protein) {
+    const q = Math.min(200, Math.max(100, Math.ceil((MEAL.protein - m.protein) / 0.1 / 50) * 50));
+    add({ yogurt: q }, `en dessert, ${q} g de yaourt protéiné nature par personne`);
+    ({ f, m } = look());
+  }
+  if (m.kcal < MEAL.kcalMin && !f.starches.size) {
+    const q = Math.min(100, Math.max(50, round5((MEAL.kcalMin - m.kcal) / (batch ? 3.6 : 2.5))));
+    add(batch ? { rice: q } : { bread: q }, batch ? `${q} g de riz cru par personne (rice cooker)` : `${q} g de pain complet par personne`);
+    ({ f, m } = look());
+  }
+  if (batch) {
+    // Une portion = une personne : on recoupe la fournée pour que chaque part, accompagnement compris, fasse un vrai repas.
+    const total = macro({ ...r, portions: 1 }).kcal,
+      sideKcal = m.kcal - total / r.portions;
+    if (m.kcal > MEAL.kcalMax || m.kcal < MEAL.kcalMin) out.portions = Math.max(1, Math.round(total / Math.max(250, 750 - sideKcal)));
+    if (out.portions !== r.portions) out.steps.push(`Cette fournée fait ${out.portions} parts d’un repas complet (une part par personne).`);
+  } else if (m.kcal > MEAL.kcalMax || m.kcal < MEAL.kcalMin) {
+    // Plat trop léger ou trop copieux : on ajuste ses quantités (pas celles de l'accompagnement).
+    const k = Math.min(1.5, Math.max(0.6, (m.kcal > MEAL.kcalMax ? 900 : 650) / m.kcal));
+    for (const [id, q] of Object.entries(r.ingredients)) out.ingredients[id] = (out.ingredients[id] - q) + (by[id]?.unit === "pièce" ? Math.max(0.25, Math.round(q * k * 4) / 4) : round5(q * k));
+  }
+  if (notes.length) out.steps.push((batch ? "Au moment de servir, ajouter " : "Pour un repas complet, servir avec ") + notes.join(" ; ") + ".");
+  if (batch && !Object.keys(out.serve).length) delete out.serve;
+  return out;
+}
+loadRecipes();
+if (s.plan && !s.plan.days?.every((d) => d.every((id) => byR[id]))) s.plan = null;
 // opts : { start: "AAAA-MM-JJ", days: nombre de jours, budgetEur: budget de la période }.
 function generate(auto = false, opts = {}) {
   offerCache = {};
@@ -418,7 +495,7 @@ function generate(auto = false, opts = {}) {
     // Plats préparés le dimanche : servis au menu de la semaine (deux fois sur une longue période).
     menuBatches = s.batches.filter((id) => byR[id]?.type === "batch" && byR[id].meal === "main" && byR[id].freezer),
     breakfasts = R.filter((r) => r.type === "breakfast" && allowed(r)),
-    mains = R.filter((r) => r.type === "main" && !r.fixed && allowed(r));
+    mains = R.filter((r) => r.type === "main" && !r.fixed && !r.noPlan && allowed(r));
   if ((!bakes.length && !breakfasts.length) || !mains.length) {
     toast("Vos exclusions ne permettent pas de composer les repas. Ajustez-les.");
     return;
@@ -618,7 +695,8 @@ function batchCost(r) {
 }
 // Seule fournée du matin ; les autres matins, un petit-déjeuner simple.
 const MORNING_BAKES = ["cinnamon_rolls"],
-  MENU_BATCHES = 2;
+  // Plats du dimanche servis au menu : deux sur une semaine, un seul sur une période courte.
+  menuBatchCount = (N) => (N >= 6 ? 2 : 1);
 function autoBatches(N = 7) {
   const frozen = (id) => s.freezer[id] || 0,
     last = s.lastBatches || [],
@@ -628,7 +706,7 @@ function autoBatches(N = 7) {
       .map((r) => ({ r, v: taste(r) * 3 - batchCost(r) * 0.4 - (last.includes(r.id) ? 1.5 : 0) + Math.random() * 1.5 }))
       .sort((a, b) => b.v - a.v)
       .map((x) => x.r);
-  const batches = R.filter((r) => r.type === "batch" && r.id !== "poulet_entier" && allowed(r) && frozen(r.id) === 0);
+  const batches = R.filter((r) => r.type === "batch" && r.id !== "poulet_entier" && !r.noPlan && allowed(r) && frozen(r.id) === 0);
   // Petit-déjeuner : seulement les cinnamon rolls, s'il n'en reste plus assez au congélateur.
   let need = N * s.breakfastShare - MORNING_BAKES.reduce((a, id) => a + frozen(id), 0);
   for (const r of rank(batches.filter((r) => MORNING_BAKES.includes(r.id)))) {
@@ -636,12 +714,12 @@ function autoBatches(N = 7) {
     pick.push(r.id);
     need -= r.portions;
   }
-  // Plats du dimanche : au moins MENU_BATCHES pour le menu de la semaine, puis on complète le congélateur
+  // Plats du dimanche : au moins menuBatchCount(N) pour le menu de la semaine, puis on complète le congélateur
   // (chaque plat servi au menu en consomme deux portions).
   let meals = R.filter((r) => r.type === "batch" && r.freezer && r.meal === "main").reduce((a, r) => a + frozen(r.id), 0),
     cooked = 0;
   for (const r of rank(batches.filter((r) => r.freezer && r.meal === "main"))) {
-    if ((cooked >= MENU_BATCHES && meals >= s.freezerTarget) || pick.length >= 6) break;
+    if ((cooked >= menuBatchCount(N) && (N < 6 || meals >= s.freezerTarget)) || pick.length >= 6) break;
     if (hasPork(r) && pick.some((id) => hasPork(byR[id]))) continue;
     pick.push(r.id);
     meals += r.portions - 2;
@@ -1300,6 +1378,7 @@ function tools(r) {
   const ing = r.ingredients,
     text = norm(r.name + " " + r.steps.join(" ")),
     t = [];
+  if (r.noPlan) t.push("🎉 Plat de fête, entrée ou dessert : jamais proposé comme repas du menu");
   if (ing.rice || ing.sushi_rice || ing.buckwheat) t.push("🍚 Rice cooker pour la céréale");
   if (/air fryer/.test(text)) t.push("💨 Air fryer");
   else if (ing.frozen_fries || ing.panko || ing.chicken_thigh) t.push("💨 Air fryer possible pour dorer sans friture");
@@ -1322,6 +1401,7 @@ function cook(i, j) {
   // Repas du congélateur (plat ou petit-déjeuner congelé) : deux portions en moins.
   const fromFreezer = fz || (r.type === "batch" && r.freezer && (s.freezer[r.id] || 0) > 0);
   // Plat du congélateur : 2 portions ; petit-déjeuner en fournée : la part du matin (1,5 par défaut).
+  if (fromFreezer && r.serve && !takeStock(r.serve, 2, "Marquer mangé")) return;
   if (fromFreezer) s.freezer[r.id] = Math.max(0, Math.round(((s.freezer[r.id] || 0) - (fz ? 2 : r.meal === "breakfast" ? s.breakfastShare : 2)) * 10) / 10);
   else if (r.type !== "batch" && !takeStock(r.ingredients, 2, "Marquer cuisiné")) return;
   s.done[key] = true;
@@ -1400,6 +1480,7 @@ function importPrompt() {
     "- name des ingrédients : nom simple en français (« blanc de poulet », « riz », « sauce soja »), sans marque.",
     "- steps : étapes réécrites clairement, avec températures et temps de cuisson. J’ai four, air fryer, plaques, rice cooker, soup maker, robot batteur, mixeur et hachoir.",
     "- freezer : true si le plat se congèle bien. veg : true si végétarien.",
+    "- type \"main\" seulement pour un vrai repas du quotidien (une protéine, des légumes, un féculent). Entrées, apéritifs, plats de fête (foie gras…) et desserts : type \"snack\".",
   ].join("\n");
 }
 function recipeImport() {

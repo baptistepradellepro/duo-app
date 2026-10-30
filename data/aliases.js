@@ -199,7 +199,7 @@ window.CATS = {
   broccoli: "broccoli|brocolis",
 };
 window.PIECE_G = {
-  pita: 70, buns: 60,
+  pita: 70, buns: 60, lettuce: 250,
   beef_stew: 150, beef_mince: 125, chicken: 150, chicken_thigh: 120, turkey: 130, duck: 300, salmon: 125, pork_mince: 125,
   onion: 150, carrot: 100, pepper: 150, zucchini: 250, eggplant: 300, potato: 150, sweet_potato: 300, fresh_tomato: 120,
   cucumber: 300, apple: 150, orange: 180, banana: 120, lemon: 100, garlic: 5, ginger: 30, mushroom: 20, cabbage: 1200, cauliflower: 800,

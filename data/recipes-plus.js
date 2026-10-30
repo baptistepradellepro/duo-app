@@ -205,7 +205,7 @@ r("nuoc_cham", "Nước chấm (sauce vietnamienne)", "🥢", "Vietnamienne", "s
 
 // ─── Libanaises ───────────────────────────────────────────────────────────
 r("kebab_libanais", "Kebab libanais au poulet (pita, toum & pickles)", "🥙", "Libanaise", "main", 35,
-  { chicken_thigh: 170, pita: 1.5, yogurt: 50, garlic: 6, lemon: 20, paprika: 2, curry_powder: 2, cinnamon: 0.5, lettuce: 40, fresh_tomato: 80, pickles: 30, oil: 10 },
+  { chicken_thigh: 170, pita: 1.5, yogurt: 50, garlic: 6, lemon: 20, paprika: 2, curry_powder: 2, cinnamon: 0.5, lettuce: 0.15, fresh_tomato: 80, pickles: 30, oil: 10 },
   ["Couper les hauts de cuisse en lanières d’1 cm. Mariner 20 minutes (ou la veille) avec la moitié du citron, l’huile, le paprika, le curry, la cannelle, la moitié de l’ail râpé, sel et poivre.", "Saisir 8 à 10 minutes à la poêle bien chaude, ou 12 minutes à l’air fryer à 200 °C en secouant à mi-cuisson : les bords doivent caraméliser.", "Sauce façon toum : yaourt + reste d’ail râpé + reste de citron + sel.", "Réchauffer les pitas 1 minute à la poêle. Garnir de sauce, poulet, salade, tomate en rondelles et pickles, rouler serré dans du papier."]);
 r("chich_taouk", "Chich taouk, riz & salade concombre", "🍢", "Libanaise", "main", 35,
   { chicken: 160, yogurt: 40, tomato_paste: 10, garlic: 5, lemon: 20, paprika: 2, rice: 80, cucumber: 100, herbs: 0.3, oil: 10 },
@@ -217,7 +217,7 @@ r("moujaddara", "Moujaddara (lentilles, riz & oignons frits)", "🧅", "Libanais
   { lentil: 70, rice: 50, onion: 150, oil: 20, curry_powder: 2, yogurt: 80, cucumber: 80, lemon: 10 },
   ["Rincer les lentilles, les cuire 10 minutes dans l’eau. Égoutter.", "Mettre lentilles + riz + curry + sel au rice cooker avec 1,5 volume d’eau pour le volume total, lancer la cuisson.", "Pendant ce temps, émincer les oignons en fines lamelles et les faire dorer 20 minutes dans l’huile, feu moyen, jusqu’à ce qu’ils soient bruns et croustillants.", "Servir le riz-lentilles couvert d’oignons, avec yaourt et concombre au citron."], { veg: true });
 r("fattouche", "Fattouche & pois chiches rôtis", "🥗", "Libanaise", "main", 20,
-  { lettuce: 80, fresh_tomato: 120, cucumber: 100, pita: 1, chickpea: 120, lemon: 20, oil: 15, herbs: 0.3, paprika: 2, telemea: 40 },
+  { lettuce: 0.3, fresh_tomato: 120, cucumber: 100, pita: 1, chickpea: 120, lemon: 20, oil: 15, herbs: 0.3, paprika: 2, telemea: 40 },
   ["Pois chiches égouttés et séchés + paprika + un filet d’huile : 12 minutes à l’air fryer à 200 °C.", "Pita coupée en carrés de 3 cm, 4 minutes à l’air fryer : bien croustillante.", "Salade, tomate et concombre en morceaux, persil haché.", "Vinaigrette citron-huile-sel, mélanger au dernier moment avec la pita, les pois chiches et la telemea émiettée."], { veg: true });
 r("manakish", "Manakich zaatar & fromage, crudités", "🫓", "Libanaise", "main", 90,
   { flour: 120, yeast: 2, oil: 20, provence_herbs: 4, sesame_seeds: 8, telemea: 50, mozzarella: 40, fresh_tomato: 100, cucumber: 80 },
@@ -290,16 +290,16 @@ r("gnocchis_poeles_courgette", "Gnocchis poêlés, courgette, tomate & mozzarell
   { gnocchi: 200, zucchini: 150, fresh_tomato: 120, mozzarella: 60, garlic: 5, oil: 10, provence_herbs: 1 },
   ["Dorer les gnocchis 6 minutes dans l’huile sans les cuire avant : ils deviennent croustillants.", "Ajouter la courgette en demi-rondelles et l’ail, 5 minutes.", "Ajouter les tomates en dés et les herbes 2 minutes, puis la mozzarella déchirée, couvrir 1 minute."], { veg: true });
 r("clafoutis_sale_courgette", "Clafoutis salé courgette-feta & salade", "🥧", "Française", "main", 40,
-  { egg: 2, milk: 100, flour: 25, zucchini: 200, telemea: 50, provence_herbs: 1, oil: 5, lettuce: 60, bread: 60 },
+  { egg: 2, milk: 100, flour: 25, zucchini: 200, telemea: 50, provence_herbs: 1, oil: 5, lettuce: 0.25, bread: 60 },
   ["Courgette en fines rondelles, revenue 5 minutes à la poêle.", "Fouetter œufs, farine, lait, herbes, poivre.", "Plat huilé : courgette, telemea émiettée, appareil. Four 180 °C 30 minutes.", "Servir tiède avec la salade et le pain."], { veg: true });
 r("riz_cremeux_poulet_champi", "Riz crémeux poulet & champignons (one pot)", "🍄", "Française", "main", 30,
   { rice: 80, chicken: 140, mushroom: 120, onion: 50, cream: 40, stock_cube: 0.5, parmesan: 10, frozen_peas: 60, oil: 5 },
   ["Saisir le poulet en dés 4 minutes, réserver. Faire revenir oignon et champignons émincés 5 minutes.", "Ajouter le riz 1 minute, puis 250 ml de bouillon par personne. Couvrir, feu doux 15 minutes.", "Remettre le poulet, les petits pois, la crème et le parmesan, 3 minutes."]);
 r("tarte_fine_tomate_moutarde", "Tarte fine tomates-moutarde & salade", "🍅", "Française", "main", 35,
-  { puff_pastry: 115, fresh_tomato: 200, mustard: 15, grated_cheese: 30, egg: 1, lettuce: 60, provence_herbs: 1 },
+  { puff_pastry: 115, fresh_tomato: 200, mustard: 15, grated_cheese: 30, egg: 1, lettuce: 0.25, provence_herbs: 1 },
   ["Étaler la pâte, piquer à la fourchette, badigeonner de moutarde.", "Fromage, tomates en rondelles fines, herbes, sel.", "Four 200 °C 25 minutes. Servir avec un œuf mollet (6 minutes) et la salade."], { veg: true });
 r("bowl_lentilles_carottes", "Bowl lentilles, carottes rôties & œuf mollet", "🥕", "Française", "main", 35,
-  { lentil: 70, carrot: 150, egg: 2, yogurt: 50, curry_powder: 2, lemon: 10, oil: 10, lettuce: 40 },
+  { lentil: 70, carrot: 150, egg: 2, yogurt: 50, curry_powder: 2, lemon: 10, oil: 10, lettuce: 0.15 },
   ["Carottes en bâtonnets, huile, curry, sel : 20 minutes à l’air fryer à 190 °C.", "Lentilles 20 minutes dans l’eau frémissante, saler en fin de cuisson.", "Œufs mollets : 6 minutes 30 dans l’eau bouillante puis eau froide.", "Sauce : yaourt, citron, sel. Assembler sur la salade."], { veg: true });
 r("poulet_moutarde_puree", "Poulet crème-moutarde, purée & haricots verts", "🍗", "Française", "main", 35,
   { chicken: 150, mustard: 15, cream: 40, green_beans: 150, potato: 250, milk: 50, butter: 8 },
@@ -332,10 +332,10 @@ r("chorba_frik", "Chorba au poulet & vermicelles de riz", "🍜", "Maghrébine",
 
 // ─── Snacks maison façon fast-food (versions maison) ──────────────────────
 r("burger_poulet_croustillant", "Crispy chicken burger & frites air fryer", "🍔", "Américaine", "main", 35,
-  { chicken: 150, panko: 30, egg: 0.5, paprika: 2, buns: 1, lettuce: 30, fresh_tomato: 50, cheese_slices: 20, mayonnaise: 15, frozen_fries: 150, oil: 8 },
+  { chicken: 150, panko: 30, egg: 0.5, paprika: 2, buns: 1, lettuce: 0.1, fresh_tomato: 50, cheese_slices: 20, mayonnaise: 15, frozen_fries: 150, oil: 8 },
   ["Couper le blanc en deux dans l’épaisseur, saler, paprika. Passer dans l’œuf battu puis dans le panko en appuyant.", "Air fryer 200 °C : frites 18 minutes, puis le poulet huilé au spray 10 minutes en retournant à mi-cuisson (même panier si la place le permet).", "Sauce : mayonnaise + une pincée de paprika.", "Toaster les pains 1 minute, monter : sauce, salade, poulet, cheddar (qui fond sur le poulet chaud), tomate."]);
 r("loaded_fries", "Loaded fries poulet, cheddar & crème", "🍟", "Américaine", "main", 30,
-  { frozen_fries: 200, chicken: 120, paprika: 2, garlic: 3, cheese_slices: 30, sour_cream: 40, spring_onion: 0.2, lettuce: 50, fresh_tomato: 80 },
+  { frozen_fries: 200, chicken: 120, paprika: 2, garlic: 3, cheese_slices: 30, sour_cream: 40, spring_onion: 0.2, lettuce: 0.2, fresh_tomato: 80 },
   ["Frites 18 minutes à l’air fryer à 200 °C.", "Poulet en petits dés, paprika, ail, sel : 6 minutes à la poêle.", "Sur les frites : poulet et cheddar en morceaux, 2 minutes à l’air fryer pour faire fondre.", "Crème fraîche, oignon vert ciselé. Salade-tomate à côté pour l’équilibre."]);
 r("cheese_naan_tikka", "Cheese naan & poulet tikka", "🫓", "Indienne", "main", 45,
   { flour: 100, yogurt: 90, baking_powder: 2, cream_cheese: 25, mozzarella: 30, chicken: 140, curry_powder: 4, garlic: 4, lemon: 10, cucumber: 80 },
