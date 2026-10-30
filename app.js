@@ -37,7 +37,7 @@ const initial = () => ({
     { name: "Personne 1", protein: 120, kcal: 2200 },
     { name: "Personne 2", protein: 100, kcal: 2000 },
   ],
-  budgetEur: 60,
+  budgetEur: 70,
   rate: 5.1,
   cards: true,
   lidlMargin: 8,
@@ -46,7 +46,7 @@ const initial = () => ({
   topup: "protein_coffee",
   topupInBudget: true,
   topupMax: 7,
-  morning: "orange",
+  morning: "none",
   juiceMl: 150,
   breakfastShare: 1.5,
   veg: false,
@@ -2371,6 +2371,8 @@ for (const x of s.custom) if (x.confirmed && x.cat !== normCat(x.cat)) x.cat = n
 if (s.morningV !== 2) Object.assign(s, { morning: "orange", morningV: 2 });
 // Le budget couvre tout le ticket de caisse, cafés protéinés compris.
 if (s.budgetV !== 2) Object.assign(s, { topupInBudget: true, budgetV: 2 });
+// 70 € par semaine pour manger équilibré, plus d'orange le matin.
+if (s.budgetV !== 3) Object.assign(s, { budgetEur: 70, morning: "none", checked: {}, budgetV: 3 });
 autoSync();
 sundayRoutine();
 updateRate();
