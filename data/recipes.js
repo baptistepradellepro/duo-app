@@ -77,6 +77,10 @@ r("gateau_yaourt", "Gâteau au yaourt tout simple", "🍰", "Française", "batch
     "Verser dans un moule beurré, cuire 35 minutes à 180 °C : la lame doit ressortir sèche.",
     "Se garde 4 jours sous cloche, se congèle en parts.",
   ], { veg: true, portions: 8, unit: "parts", meal: "breakfast" });
+// Matin sans cinnamon rolls (il n'en reste plus) : juste le café protéiné, compté dans les courses à part.
+r("matin_cafe", "Café protéiné Lidl (plus de cinnamon rolls)", "☕", "Basiques", "breakfast", 1,
+  {},
+  ["Un café protéiné Lidl bien frais. Il est déjà sur la liste de courses : un par matin."]);
 r("cinnamon_rolls", "Cinnamon rolls", "🌀", "Américaine", "batch", 180,
   { flour: 450, milk: 200, egg: 1, butter: 120, sugar: 130, yeast: 7, cinnamon: 10, cream_cheese: 100 },
   [
@@ -138,7 +142,7 @@ r("pelmeni", "Pelmeni (raviolis russes, ≈60 pièces)", "🥟", "Russe", "batch
     "Étaler finement, découper des ronds de 6 cm, garnir, plier en demi-lune puis joindre les deux pointes.",
     "Congeler à plat puis en sachet. Cuire 8 minutes dans l’eau bouillante salée depuis congelé, servir avec la smântână.",
   ], { freezer: true, portions: 5 });
-r("bolognaise", "Sauce bolognaise", "🍝", "Italienne", "batch", 120,
+r("bolognaise", "Pâtes bolognaise (sauce à congeler)", "🍝", "Italienne", "batch", 120,
   { beef_mince: 500, passata: 500, tomato: 400, onion: 150, carrot: 150, garlic: 10, oil: 20, red_wine: 150 },
   [
     "Faire revenir oignon, carotte et ail hachés finement dans l’huile, 10 minutes.",

@@ -233,9 +233,15 @@ function morningItem() {
 }
 function morningMacro() {
   const m = morningItem(),
-    x = m && by[m.id];
-  if (!x) return { kcal: 0, protein: 0, fiber: 0 };
-  return { kcal: (x.kcal * m.qty) / 100, protein: (x.protein * m.qty) / 100, fiber: ((x.fiber || 0) * m.qty) / 100 };
+    x = m && by[m.id],
+    v = x ? { kcal: (x.kcal * m.qty) / 100, protein: (x.protein * m.qty) / 100, fiber: ((x.fiber || 0) * m.qty) / 100 } : { kcal: 0, protein: 0, fiber: 0 },
+    c = by.protein_coffee;
+  // Café protéiné du matin : une personne sur deux, soit un demi-café par personne en moyenne.
+  if (s.topupOn && s.topup === "protein_coffee" && c && +s.topupMax > 0) {
+    v.kcal += c.kcal / 2;
+    v.protein += c.protein / 2;
+  }
+  return v;
 }
 // Fournées et sauces : quantités pour la recette entière ; les autres recettes : par personne.
 const isTotal = (r) => r.type === "batch" || r.type === "sauce";
@@ -291,9 +297,11 @@ function proteinGap(plan = s.plan) {
 function topupQty(plan = s.plan) {
   const x = by[s.topup];
   if (!s.topupOn || !x || !x.protein) return 0;
-  const gap = proteinGap(plan);
   // Plafond hebdomadaire (7 cafés protéinés par défaut) ; pour un produit au poids, plafond en portions de 100 g.
   const max = Math.round((Math.max(0, +s.topupMax || 0) * (plan?.days.length || 7)) / 7);
+  // Le café protéiné est pris chaque matin, quoi qu'apportent les repas.
+  if (s.topup === "protein_coffee") return max;
+  const gap = proteinGap(plan);
   return x.unit === "pièce" ? Math.min(max, Math.ceil(gap / x.protein)) : Math.min(max * 100, Math.ceil((gap / x.protein) * 100));
 }
 const topupCost = () => {
@@ -364,6 +372,22 @@ const VEG = new Set([...Object.entries(window.GROUP_OF).filter(([, place]) => /^
 // Grammes par personne (les fournées et sauces sont rapportées à une portion).
 const grams = (r, id) => ((r.ingredients[id] || 0) / (isTotal(r) ? r.portions || 1 : 1) + (r.serve?.[id] || 0)) * (by[id]?.unit === "pièce" ? window.PIECE_G?.[id] || 60 : 1);
 const featCache = {};
+// Forme du plat, lue dans son nom : deux plats de même forme le même jour se ressemblent trop (deux farcis, deux soupes…).
+const FORMS = [
+  ["farci", /farci|gemista|dolma/],
+  ["soupe", /soupe|veloute|chorba|harira|ramen|pho\b|fasolada|bortsch|borscht|bouillon|minestrone|potage|tom kha/],
+  ["gratin", /gratin|moussaka|pastitsio|lasagne|hachis|parmentier|tian/],
+  ["sandwich", /wrap|tacos|burrito|pita|kebab|souvlaki|gyros|sandwich|burger|sando|quesadilla|croque|panini|naan|flatbread|manakich/],
+  ["curry", /curry|dal\b|tikka|butter chicken|massaman|korma/],
+  ["salade", /salade|fattouche|taboule|poke/],
+  ["tarte", /pizza|tarte|quiche|clafoutis|tourte|spanakopita|pastilla/],
+  ["oeufs", /omelette|shakshuka|frittata|oeufs? (brouilles|au plat|cocotte)/],
+  ["boulettes", /boulette|keftedes|kafta|falafel|nuggets|meatball|kefta/],
+  ["wok", /wok|saute|kra pao|riz cantonais|riz frit|nouilles sautees/],
+  ["bowl", /bowl|buddha/],
+  ["raviolis", /gyoza|nems|pelmeni|raviol|dumpling/],
+];
+const formOf = (r) => FORMS.find(([, re]) => re.test(norm(r.name)))?.[0] || null;
 function features(r) {
   if (featCache[r.id]) return featCache[r.id];
   const amount = (ids) => ids.split("|").reduce((a, id) => a + grams(r, id), 0);
@@ -378,14 +402,18 @@ function features(r) {
   const proteins = new Set(Object.entries(PROTEINS).filter(([k, ids]) => amount(ids) >= (PROTEIN_MIN[k] || 40)).map(([k]) => k));
   const base = top(BASES) || "autre",
     protein = top(PROTEINS) || "léger";
-  return (featCache[r.id] = { base, starches, protein, proteins, family: `${base}/${protein}`, veg: [...new Set([...Object.keys(r.ingredients), ...Object.keys(r.serve || {})])].filter((id) => VEG.has(id)).reduce((a, id) => a + grams(r, id), 0) });
+  const vegIds = [...new Set([...Object.keys(r.ingredients), ...Object.keys(r.serve || {})])].filter((id) => VEG.has(id)),
+    // Légume vedette : celui qui pèse le plus, s'il fait au moins 120 g par personne (poivrons farcis, ratatouille…).
+    star = vegIds.reduce((a, id) => (grams(r, id) >= 120 && (!a || grams(r, id) > grams(r, a)) ? id : a), null);
+  return (featCache[r.id] = { base, starches, protein, proteins, family: `${base}/${protein}`, form: formOf(r), star, veg: vegIds.reduce((a, id) => a + grams(r, id), 0) });
 }
-// Deux plats trop proches : un glucide en commun (riz et riz) ou une protéine en commun (œufs et œufs).
+// Deux plats trop proches : un glucide en commun (riz et riz), une protéine en commun (œufs et œufs),
+// la même forme (deux farcis, deux soupes) ou le même légume vedette (poivrons et poivrons).
 function tooClose(a, b) {
   if (!a || !b) return false;
   const x = features(a),
     y = features(b);
-  return [...x.starches].some((k) => y.starches.has(k)) || [...x.proteins].some((k) => y.proteins.has(k));
+  return [...x.starches].some((k) => y.starches.has(k)) || [...x.proteins].some((k) => y.proteins.has(k)) || (!!x.form && x.form === y.form) || (!!x.star && x.star === y.star);
 }
 // Même journée : petit-déjeuner, midi et soir sans glucide ni protéine en commun.
 function dayOk(days, i, j, r) {
@@ -406,7 +434,9 @@ function slotOk(days, i, j, r) {
 // et d'énergie, sans excès. Sinon on ajoute un accompagnement simple, adapté à la cuisine du plat.
 const MEAL = { kcalMin: 600, kcalMax: 1000, protein: 30, veg: 120 };
 // Plats de fête, entrées, apéritifs et desserts : gardés dans le carnet, jamais proposés comme repas.
-const NOT_A_MEAL = /\b(foie gras|caviar|truffe|homard|langouste|huitres?|saint jacques|verrines?|amuse bouche|aperitif|apero|canapes?|entree|dessert|buche|tiramisu|mousse au chocolat|fondant|gateau|brownies?|cookies?|creme brulee|panna cotta|cocktail|smoothie|biscuits?|muffins?)\b/;
+const NOT_A_MEAL = /\b(foie gras|caviar|truffe|homard|langouste|huitres?|saint jacques|verrines?|amuse bouche|aperitif|apero|canapes?|entree|dessert|buche|tiramisu|mousse au chocolat|fondant au chocolat|gateau|brownies?|cookies?|creme brulee|panna cotta|cocktail|smoothie|biscuits?|muffins?)\b/;
+// Préparations de base (pâte à pizza, sauce, bouillon, pain…) : des ingrédients d'une recette, pas un repas.
+const COMPONENT = /^\s*(pate (a|de|brisee|feuilletee|sablee)|pates? maison|sauce|bouillon|fond|vinaigrette|marinade|pain|base|glacage|coulis|pesto|levain|garniture|farce|bechamel|mayonnaise|ketchup|confiture)\b/;
 const SIDE_ASIA = /Japonaise|Chinoise|Coréenne|Thaïlandaise|Vietnamienne/,
   SIDE_SALAD = /Indienne|Maghrébine|Libanaise|Grecque|Méditerranéenne|Turque/,
   SIDE_BEANS = /Française|Basiques|Russe|Maison/;
@@ -414,7 +444,7 @@ const round5 = (q) => Math.max(5, Math.round(q / 5) * 5);
 function balance(r) {
   if (r.fixed || !(r.type === "main" || (r.type === "batch" && r.meal === "main"))) return r;
   const out = { ...r, ingredients: { ...r.ingredients }, steps: [...r.steps] };
-  if (NOT_A_MEAL.test(" " + norm(r.name) + " ")) return { ...out, noPlan: true };
+  if (NOT_A_MEAL.test(" " + norm(r.name) + " ") || COMPONENT.test(norm(r.name))) return { ...out, noPlan: true };
   const batch = r.type === "batch",
     // Accompagnement : ajouté aux ingrédients d'un plat, servi à part pour un plat du congélateur.
     side = batch ? (out.serve = {}) : out.ingredients,
@@ -431,6 +461,9 @@ function balance(r) {
       notes.push(text);
     };
   let { f, m } = look();
+  // Ni protéine ni légumes (une pâte, un féculent nature, une douceur) : ce n'est pas un repas, on ne le rafistole pas.
+  // Protéines : une source reconnue, ou au moins 4 g pour 100 kcal (jambon-fromage d'un croque, par exemple).
+  if (!f.proteins.size && m.protein < m.kcal * 0.04 && f.veg < 80) return { ...out, noPlan: true };
   if (f.veg < MEAL.veg) {
     const q = Math.min(200, Math.max(100, round5(150 - f.veg)));
     if (SIDE_ASIA.test(r.cuisine)) add({ broccoli: q }, `${q} g de brocolis vapeur par personne (8 minutes à la vapeur, ou 4 minutes au micro-ondes couverts avec un fond d’eau), un trait de sauce soja`);
@@ -448,8 +481,13 @@ function balance(r) {
     ({ f, m } = look());
   }
   if (m.kcal < MEAL.kcalMin && !f.starches.size) {
-    const q = Math.min(100, Math.max(50, round5((MEAL.kcalMin - m.kcal) / (batch ? 3.6 : 2.5))));
-    add(batch ? { rice: q } : { bread: q }, batch ? `${q} g de riz cru par personne (rice cooker)` : `${q} g de pain complet par personne`);
+    const g = Math.min(100, Math.max(50, round5((MEAL.kcalMin - m.kcal) / 3.5)));
+    if (/Italienne/.test(r.cuisine)) add({ pasta: g }, `${g} g de pâtes par personne`);
+    else if (SIDE_ASIA.test(r.cuisine) || /Indienne|Tex-Mex/.test(r.cuisine)) add({ rice: g }, `${g} g de riz cru par personne (rice cooker)`);
+    else if (/Maghrébine/.test(r.cuisine)) add({ couscous: g }, `${g} g de semoule par personne`);
+    else if (/Libanaise|Grecque|Méditerranéenne|Turque/.test(r.cuisine)) add({ pita: 1 }, "une pita par personne");
+    else if (/Russe/.test(r.cuisine)) add({ potato: round5(g * 3.5) }, `${round5(g * 3.5)} g de pommes de terre vapeur par personne`);
+    else add({ bread: round5(g * 1.3) }, `${round5(g * 1.3)} g de pain complet par personne`);
     ({ f, m } = look());
   }
   if (batch) {
@@ -494,7 +532,6 @@ function generate(auto = false, opts = {}) {
     bakes = bake ? [bake] : [],
     // Plats préparés le dimanche : servis au menu de la semaine (deux fois sur une longue période).
     menuBatches = s.batches.filter((id) => byR[id]?.type === "batch" && byR[id].meal === "main" && byR[id].freezer),
-    breakfasts = R.filter((r) => r.type === "breakfast" && allowed(r)),
     mains = R.filter((r) => r.type === "main" && !r.fixed && !r.noPlan && allowed(r));
   if (bake) {
     let frozen = s.freezer[bake] || 0,
@@ -504,7 +541,7 @@ function generate(auto = false, opts = {}) {
       if (frozen + 1e-9 >= s.breakfastShare) [rolls[i], frozen] = [true, frozen - s.breakfastShare];
     }
   }
-  if ((!bakes.length && !breakfasts.length) || !mains.length) {
+  if (!mains.length) {
     toast("Vos exclusions ne permettent pas de composer les repas. Ajustez-les.");
     return;
   }
@@ -566,16 +603,19 @@ function generate(auto = false, opts = {}) {
       return r.id;
     };
     // Plats fixes d'abord (chirashi, ramen), puis chaque midi et soir en respectant l'équilibre.
-    const days = Array.from({ length: N }, (_, i) => [rolls[i] ? bake : pick(breakfasts), null, fixedFor(i, 2, start)]);
+    // Le matin : cinnamon rolls seulement ; sans rolls, juste le café protéiné.
+    const days = Array.from({ length: N }, (_, i) => [rolls[i] ? bake : "matin_cafe", null, fixedFor(i, 2, start)]);
     days.forEach((d) => d[2] && take(byR[d[2]].ingredients, 2));
     const bases = {},
       prots = {},
-      families = {};
+      families = {},
+      forms = {};
     const note = (id) => {
       const f = features(byR[id]);
       bases[f.base] = (bases[f.base] || 0) + 1;
       prots[f.protein] = (prots[f.protein] || 0) + 1;
       families[f.family] = (families[f.family] || 0) + 1;
+      if (f.form) forms[f.form] = (forms[f.form] || 0) + 1;
     };
     days.forEach((d) => d[2] && note(d[2]));
     for (const id of menuBatches) {
@@ -594,8 +634,8 @@ function generate(auto = false, opts = {}) {
     }
     const weekOk = (r) => {
       const f = features(r);
-      // Une même famille (riz + poulet, pâtes + œufs…) une seule fois par semaine.
-      return (bases[f.base] || 0) < (f.base === "autre" ? 6 : 4) && (prots[f.protein] || 0) < (f.protein === "volaille" ? 5 : 3) && (f.family.includes("autre") || f.family.includes("léger") || !families[f.family]);
+      // Une même famille (riz + poulet, pâtes + œufs…) une seule fois par semaine, une même forme (soupe, gratin…) deux fois.
+      return (!f.form || (forms[f.form] || 0) < 2) && (bases[f.base] || 0) < (f.base === "autre" ? 6 : 4) && (prots[f.protein] || 0) < (f.protein === "volaille" ? 5 : 3) && (f.family.includes("autre") || f.family.includes("léger") || !families[f.family]);
     };
     for (let i = 0; i < N; i++)
       for (const j of [1, 2]) {
@@ -2373,6 +2413,11 @@ if (s.morningV !== 2) Object.assign(s, { morning: "orange", morningV: 2 });
 if (s.budgetV !== 2) Object.assign(s, { topupInBudget: true, budgetV: 2 });
 // 70 € par semaine pour manger équilibré, plus d'orange le matin.
 if (s.budgetV !== 3) Object.assign(s, { budgetEur: 70, morning: "none", checked: {}, budgetV: 3 });
+// Le matin : cinnamon rolls et un café protéiné Lidl par jour.
+if (s.coffeeV !== 1) {
+  Object.assign(s, { topupOn: true, topup: "protein_coffee", topupMax: 7, coffeeV: 1 });
+  s.lock = { ...s.lock, protein_coffee: "Lidl" };
+}
 autoSync();
 sundayRoutine();
 updateRate();
