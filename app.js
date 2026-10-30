@@ -518,11 +518,12 @@ function generate(auto = false, opts = {}) {
   const batchFrom = (7 - weekdayOf(start)) % 7,
     batchDays = N - batchFrom;
   s.lastBatches = s.batches;
-  const chosen = batchDays > 0 ? autoBatches(batchDays, batchFrom) : [],
+  const chosen = batchDays > 0 ? autoBatches(batchDays, batchFrom, !!opts.pantryFirst) : [],
     isMeal = (id) => byR[id]?.type === "batch" && byR[id].meal === "main" && byR[id].freezer,
     // Au-delà des plats servis au menu, les fournées pour remplir le congélateur attendent de voir s'il reste du budget.
     extras = chosen.filter(isMeal).slice(menuBatchCount(batchDays));
   s.batches = chosen.filter((id) => !extras.includes(id));
+  const pantry = !!opts.pantryFirst;
   s.batchDone = {};
   s.prepDone = {};
   // Cinnamon rolls : ceux du congélateur d'abord, ceux du dimanche à partir du lundi, puis petits-déjeuners simples.
@@ -546,7 +547,8 @@ function generate(auto = false, opts = {}) {
   }
   s.done = {};
   s.checked = {};
-  s.shopped = false;
+  // Courses déjà faites : le menu se compose avec le placard, la liste ne garde que ce qui manque encore.
+  s.shopped = !!opts.pantryFirst;
   // Classement des plats : ce qu'ils obligent à acheter, puis les goûts et les fibres.
   const tastes = Object.fromEntries(R.map((r) => [r.id, taste(r)])),
     fiberOf = Object.fromEntries(R.map((r) => [r.id, macro(r).fiber])),
@@ -669,8 +671,8 @@ function generate(auto = false, opts = {}) {
       vegGap = p.days.reduce((a, d) => a + Math.max(0, 200 - d.slice(1).reduce((x, id) => x + features(byR[id]).veg, 0)), 0),
       clashes = p.days.reduce((a, d, i) => a + [[0, 1], [0, 2], [1, 2]].filter(([x, y]) => tooClose(byR[d[x]], byR[d[y]])).length + (i && [...features(byR[d[1]]).starches].some((b) => features(byR[p.days[i - 1][2]]).starches.has(b)) ? 1 : 0), 0),
       repeats = Object.values(p.days.flatMap((d) => d.slice(1)).reduce((a, id) => ((a[features(byR[id]).family] = (a[features(byR[id]).family] || 0) + 1), a), {})).reduce((a, n) => a + Math.max(0, n - 1), 0),
-      score = c * 0.2 + u * 0.05 - diversity * 5 - cuisines * 4 - liking * 8 + Math.abs(avg - target) * 0.015 + protGap * 0.6 + vegGap * 0.05 + clashes * 25 + repeats * 6 + fiberGap * FIBER_WEIGHT;
-    if (c <= periodBudget * s.rate && score < bestScore) {
+      score = c * (pantry ? 2 : 0.2) + u * 0.05 - diversity * 5 - cuisines * 4 - liking * 8 + Math.abs(avg - target) * 0.015 + protGap * 0.6 + vegGap * 0.05 + clashes * 25 + repeats * 6 + fiberGap * FIBER_WEIGHT;
+    if ((pantry || c <= periodBudget * s.rate) && score < bestScore) {
       bestScore = score;
       best = p;
     }
@@ -678,12 +680,14 @@ function generate(auto = false, opts = {}) {
   s.plan = best || cheapest;
   // Fournées en plus pour le congélateur, tant que le ticket reste dans le budget.
   for (const id of extras) {
+    // Courses déjà faites : une fournée en plus seulement si tout est déjà au placard.
+    if (pantry && batchCost(byR[id]) > 0.01) continue;
     s.batches.push(id);
     if (cost(s.plan) > periodBudget * s.rate) s.batches.pop();
   }
   save();
   go("week");
-  toast(best ? (N === 7 ? "Votre semaine est prête !" : `Vos ${N} jours sont prêts !`) : `Budget trop serré : au mieux ${eur(cost(s.plan))} à payer pour ${money(periodBudget)} €. Augmentez le budget ou remplissez le placard.`);
+  toast(pantry ? `Menu composé avec votre placard : ${cost(s.plan) > 0.5 ? `il manque encore ${eur(cost(s.plan))} de courses.` : "rien à racheter."}` : best ? (N === 7 ? "Votre semaine est prête !" : `Vos ${N} jours sont prêts !`) : `Budget trop serré : au mieux ${eur(cost(s.plan))} à payer pour ${money(periodBudget)} €. Augmentez le budget ou remplissez le placard.`);
 }
 // Menus précédents : les 6 derniers, avec leur état (cuisiné, courses faites, batch), pour revenir en arrière.
 const HISTORY_KEYS = ["plan", "done", "checked", "shopped", "batches", "batchDone", "prepDone", "lastBatches"];
@@ -770,13 +774,13 @@ function recompose() {
     eurFor = (k) => Math.round((s.budgetEur * periods[k].days) / 7 / 5) * 5;
   modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>↻ Composer les menus</h2><p class="muted">${s.shopped ? "Les courses de la période actuelle sont faites." : "Courses pas encore faites : la période peut couvrir la fin de cette semaine et la suivante, pour un seul passage en magasin."}</p><form onsubmit="event.preventDefault();recomposeGo(this)"><div class="choice-list">${periods
     .map((pr, k) => `<label class="period"><input type="radio" name="period" value="${k}" ${k === rec ? "checked" : ""} onchange="this.form.budget.value=${eurFor(k)}"> <span><b>${pr.label}</b>${k === rec && k === 1 ? " · conseillé" : ""}<br><small class="muted">${fmt(pr.start)} → ${fmt(isoAdd(pr.start, pr.days - 1))} · ${pr.days} jours</small></span></label>`)
-    .join("")}</div><label>Budget courses pour la période (€)<input name="budget" type="number" min="0" step="5" value="${eurFor(rec)}"></label><p class="muted">Base : ${money(s.budgetEur)} € par semaine, au prorata des jours. Modifiable.</p><button type="submit">Composer</button></form>`;
+    .join("")}</div><label class="inline"><input type="checkbox" name="pantry"> Courses déjà faites : composer d’abord avec ce qu’il y a au placard</label><label>Budget courses pour la période (€)<input name="budget" type="number" min="0" step="5" value="${eurFor(rec)}"></label><p class="muted">Base : ${money(s.budgetEur)} € par semaine, au prorata des jours. Modifiable.</p><button type="submit">Composer</button></form>`;
   modal().showModal();
 }
 function recomposeGo(f) {
   const pr = periods[+f.period.value];
   modal().close();
-  generate(false, { start: pr.start, days: pr.days, budgetEur: Math.max(0, +f.budget.value || 0) });
+  generate(false, { start: pr.start, days: pr.days, budgetEur: Math.max(0, +f.budget.value || 0), pantryFirst: f.pantry.checked });
 }
 function go(t) {
   tab = t;
@@ -852,13 +856,14 @@ const MORNING_BAKES = ["cinnamon_rolls"],
   // Plats du dimanche servis au menu : deux sur une semaine, un seul sur une période courte.
   menuBatchCount = (N) => (N >= 6 ? 2 : 1);
 // pre : matins avant le lundi du batch, servis avec les cinnamon rolls du congélateur.
-function autoBatches(N = 7, pre = 0) {
+// pantry : courses déjà faites, on choisit d'abord les fournées que le placard permet.
+function autoBatches(N = 7, pre = 0, pantry = false) {
   const frozen = (id) => s.freezer[id] || 0,
     last = s.lastBatches || [],
     pick = byR.poulet_entier ? ["poulet_entier"] : [];
   const rank = (list) =>
     list
-      .map((r) => ({ r, v: taste(r) * 3 - batchCost(r) * 0.4 - (last.includes(r.id) ? 1.5 : 0) + Math.random() * 1.5 }))
+      .map((r) => ({ r, v: pantry ? taste(r) - batchCost(r) * (r.portions || 1) + Math.random() * 0.5 : taste(r) * 3 - batchCost(r) * 0.4 - (last.includes(r.id) ? 1.5 : 0) + Math.random() * 1.5 }))
       .sort((a, b) => b.v - a.v)
       .map((x) => x.r);
   const batches = R.filter((r) => r.type === "batch" && r.id !== "poulet_entier" && !r.noPlan && allowed(r) && (frozen(r.id) === 0 || MORNING_BAKES.includes(r.id)));
