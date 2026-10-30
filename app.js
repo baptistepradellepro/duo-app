@@ -88,6 +88,14 @@ try {
   s = null;
 }
 s = { ...initial(), ...(s || migrate()) };
+// Recettes retirées du carnet (spécialités roumaines…) : on oublie le planning et le congélateur qui les citaient.
+{
+  const known = new Set(window.RECIPES.map((r) => r.id));
+  if (s.plan && s.plan.days.flat().some((id) => id && !known.has(id))) s.plan = null;
+  s.batches = (s.batches || []).filter((id) => known.has(id));
+  s.lastBatches = (s.lastBatches || []).filter((id) => known.has(id));
+  for (const id of Object.keys(s.freezer || {})) if (!known.has(id)) delete s.freezer[id];
+}
 let tab = "home",
   query = "",
   category = "all",
@@ -345,7 +353,7 @@ const dayDate = (i) => new Date(isoAdd(planStart(), i) + "T12:00:00").toLocaleDa
 const FIBER_WEIGHT = 1.5,
   FIBER_PICK = 1.5;
 // ─── Équilibre des menus : base, protéine et légumes de chaque plat ───
-const BASES = { riz: "rice|sushi_rice", "pâtes": "pasta|noodles|rice_noodles|gnocchi", "pommes de terre": "potato|sweet_potato|frozen_fries", pain: "bread|baguette|tortilla|sandwich_bread|puff_pastry|rice_paper", "céréales": "couscous|bulgur|semolina|buckwheat|polenta", "légumineuses": "lentil|beans|chickpea" };
+const BASES = { riz: "rice|sushi_rice", "pâtes": "pasta|noodles|rice_noodles|gnocchi", "pommes de terre": "potato|sweet_potato|frozen_fries", pain: "bread|baguette|tortilla|pita|buns|sandwich_bread|puff_pastry|rice_paper", "céréales": "couscous|bulgur|semolina|buckwheat|polenta", "légumineuses": "lentil|beans|chickpea" };
 const PROTEINS = { volaille: "chicken|chicken_thigh|whole_chicken|chicken_mince|turkey|ham|bacon", "bœuf": "beef_stew|beef_mince", porc: "pork_mince", poisson: "salmon|tuna", canard: "duck", "œufs": "egg", "légumineuses": "lentil|beans|chickpea", tofu: "tofu", fromage: "cheese|cottage|telemea|mozzarella|grated_cheese|cheese_slices|cream_cheese" };
 // Quantité à partir de laquelle une source compte (g par personne) : un œuf de panure ne compte pas, deux œufs oui.
 const PROTEIN_MIN = { "œufs": 55, "légumineuses": 60, fromage: 40 };
@@ -403,8 +411,12 @@ function generate(auto = false, opts = {}) {
   s.batches = autoBatches(N);
   s.batchDone = {};
   s.prepDone = {};
-  const frozenBreakfast = R.filter((r) => r.type === "batch" && r.meal === "breakfast" && (s.freezer[r.id] || 0) >= s.breakfastShare).map((r) => r.id);
-  const bakes = [...new Set([...s.batches.filter((id) => byR[id]?.meal === "breakfast"), ...frozenBreakfast])],
+  // Cinnamon rolls (fournée du dimanche + congélateur) tant qu'il y en a, puis petits-déjeuners simples.
+  const bake = MORNING_BAKES.find((id) => byR[id] && (s.batches.includes(id) || (s.freezer[id] || 0) > 0)),
+    rollDays = bake ? Math.min(N, Math.floor(((s.freezer[bake] || 0) + (s.batches.includes(bake) ? byR[bake].portions : 0)) / s.breakfastShare + 1e-9)) : 0,
+    bakes = bake ? [bake] : [],
+    // Plats préparés le dimanche : servis au menu de la semaine (deux fois sur une longue période).
+    menuBatches = s.batches.filter((id) => byR[id]?.type === "batch" && byR[id].meal === "main" && byR[id].freezer),
     breakfasts = R.filter((r) => r.type === "breakfast" && allowed(r)),
     mains = R.filter((r) => r.type === "main" && !r.fixed && allowed(r));
   if ((!bakes.length && !breakfasts.length) || !mains.length) {
@@ -440,7 +452,7 @@ function generate(auto = false, opts = {}) {
       return r.id;
     };
     // Plats fixes d'abord (chirashi, ramen), puis chaque midi et soir en respectant l'équilibre.
-    const days = Array.from({ length: N }, (_, i) => [bakes.length ? bakes[i % bakes.length] : pick(breakfasts), null, fixedFor(i, 2, start)]);
+    const days = Array.from({ length: N }, (_, i) => [i < rollDays ? bake : pick(breakfasts), null, fixedFor(i, 2, start)]);
     const bases = {},
       prots = {},
       families = {};
@@ -451,6 +463,19 @@ function generate(auto = false, opts = {}) {
       families[f.family] = (families[f.family] || 0) + 1;
     };
     days.forEach((d) => d[2] && note(d[2]));
+    for (const id of menuBatches) {
+      const times = Math.min(Math.floor(byR[id].portions / 2), N >= 10 ? 2 : 1);
+      for (let k = 0; k < times; k++) {
+        const free = [];
+        for (let i = 0; i < N; i++) for (const j of [1, 2]) if (!days[i][j] && slotOk(days, i, j, byR[id])) free.push([i, j]);
+        if (!free.length) break;
+        const [i, j] = free[Math.floor(Math.random() * free.length)];
+        days[i][j] = id;
+        picked[id] = (picked[id] || 0) + 1;
+        if (hasPork(byR[id])) pork++;
+        note(id);
+      }
+    }
     const weekOk = (r) => {
       const f = features(r);
       // Une même famille (riz + poulet, pâtes + œufs…) une seule fois par semaine.
@@ -577,7 +602,7 @@ function week() {
     (s.plan
       ? `<div class="notice ${c > budget() ? "warning" : ""}">${c > budget() ? "Budget dépassé pour la proposition la moins chère. Augmentez le budget ou ajoutez votre stock." : "Votre semaine tient dans le budget."} Consommé : <b>${eur(c)} / ${money(periodEur())} €</b>. À payer en magasin : <b>${eur(pay)}</b>${pay - c > 1 ? ` (dont ${eur(pay - c)} de restes de paquets qui restent au placard)` : ""}. <button class="text-button" onclick="go('shopping')">Voir mes courses ↗</button></div>${topupNotice()}${extrasPanel()}<p class="muted">Touchez un repas pour sa recette détaillée. Mangé autre chose ? « Autre » le retire du placard.</p>${s.plan.days.map((day, i) => `<div class="day ${i === todayIndex() ? "is-today" : ""}"><div class="day-label">${dayName(i).slice(0, 3)}.<br><small class="muted">${dayDate(i)}</small></div>${day.map((_, j) => mealCell(i, j)).join("")}</div>`).join("")}`
       : '<div class="panel"><h2>Le menu commence ici.</h2><p>Générez 21 repas pour vous deux : les fournées du dimanche sont choisies selon votre congélateur, et la liste de courses prend le magasin le moins cher.</p></div>') +
-    `<details class="panel"><summary>Réglages de la semaine</summary><div class="row"><label class="inline"><input type="checkbox" ${s.fixed.chirashi ? "checked" : ""} onchange="s.fixed.chirashi=this.checked;save()"> 🍣 Chirashi saumon & avocat le mardi soir</label><label>🍜 Ramen au bouillon<select onchange="s.fixed.ramen=+this.value;save()">${ramenSel}</select></label><label class="inline"><input type="checkbox" ${s.veg ? "checked" : ""} onchange="s.veg=this.checked;save()"> Menus végétariens</label><label>Budget de base · € par semaine<input type="number" min="0" step="5" value="${s.budgetEur}" onchange="s.budgetEur=Math.max(0,+this.value);save();render()"></label><label>Le matin, en plus<select onchange="s.morning=this.value;s.checked={};save();render()">${[["juice", "Un verre de jus d’orange"], ["orange", "Une orange entière (plus de fibres)"], ["none", "Rien"]].map(([v, l]) => `<option value="${v}" ${s.morning === v ? "selected" : ""}>${l}</option>`).join("")}</select></label>${s.morning === "juice" ? `<label>Verre de jus (ml)<input type="number" min="50" max="400" step="25" value="${s.juiceMl}" onchange="s.juiceMl=Math.max(50,Math.min(400,+this.value||150));s.checked={};save();render()"></label>` : ""}<label>Gâteau, brioche… : portions par matin pour vous deux<input type="number" min="0.5" max="4" step="0.5" value="${s.breakfastShare}" onchange="s.breakfastShare=Math.max(0.5,Math.min(4,+this.value||1.5));save();render()"></label><label>Garder au congélateur (portions de plats)<input type="number" min="0" max="40" value="${s.freezerTarget}" onchange="s.freezerTarget=Math.max(0,+this.value);save()"></label></div><p class="muted">Recomposez la semaine pour appliquer ces réglages. Le poulet entier est désossé chaque dimanche : ≈ 350 g de blancs et 400 g de cuisses pour la semaine, la carcasse et les ailes pour le bouillon du ramen.</p>${batchPanel()}</details>`
+    `<details class="panel"><summary>Réglages de la semaine</summary><div class="row"><label class="inline"><input type="checkbox" ${s.fixed.chirashi ? "checked" : ""} onchange="s.fixed.chirashi=this.checked;save()"> 🍣 Chirashi saumon & avocat le mardi soir</label><label>🍜 Ramen au bouillon<select onchange="s.fixed.ramen=+this.value;save()">${ramenSel}</select></label><label class="inline"><input type="checkbox" ${s.veg ? "checked" : ""} onchange="s.veg=this.checked;save()"> Menus végétariens</label><label>Budget de base · € par semaine<input type="number" min="0" step="5" value="${s.budgetEur}" onchange="s.budgetEur=Math.max(0,+this.value);save();render()"></label><label>Le matin, en plus<select onchange="s.morning=this.value;s.checked={};save();render()">${[["juice", "Un verre de jus d’orange"], ["orange", "Une orange entière (plus de fibres)"], ["none", "Rien"]].map(([v, l]) => `<option value="${v}" ${s.morning === v ? "selected" : ""}>${l}</option>`).join("")}</select></label>${s.morning === "juice" ? `<label>Verre de jus (ml)<input type="number" min="50" max="400" step="25" value="${s.juiceMl}" onchange="s.juiceMl=Math.max(50,Math.min(400,+this.value||150));s.checked={};save();render()"></label>` : ""}<label>Cinnamon rolls : portions par matin pour vous deux<input type="number" min="0.5" max="4" step="0.5" value="${s.breakfastShare}" onchange="s.breakfastShare=Math.max(0.5,Math.min(4,+this.value||1.5));save();render()"></label><label>Garder au congélateur (portions de plats)<input type="number" min="0" max="40" value="${s.freezerTarget}" onchange="s.freezerTarget=Math.max(0,+this.value);save()"></label></div><p class="muted">Recomposez la semaine pour appliquer ces réglages. Le poulet entier est désossé chaque dimanche : ≈ 350 g de blancs et 400 g de cuisses pour la semaine, la carcasse et les ailes pour le bouillon du ramen.</p>${batchPanel()}</details>`
   );
 }
 function topupNotice() {
@@ -591,6 +616,9 @@ function topupNotice() {
 function batchCost(r) {
   return Object.entries(r.ingredients).reduce((a, [id, q]) => a + Math.max(0, q - avail(id)) * unitPrice(id), 0) / (r.portions || 1);
 }
+// Seule fournée du matin ; les autres matins, un petit-déjeuner simple.
+const MORNING_BAKES = ["cinnamon_rolls"],
+  MENU_BATCHES = 2;
 function autoBatches(N = 7) {
   const frozen = (id) => s.freezer[id] || 0,
     last = s.lastBatches || [],
@@ -601,20 +629,23 @@ function autoBatches(N = 7) {
       .sort((a, b) => b.v - a.v)
       .map((x) => x.r);
   const batches = R.filter((r) => r.type === "batch" && r.id !== "poulet_entier" && allowed(r) && frozen(r.id) === 0);
-  // Petits-déjeuners et encas : 14 portions pour la semaine, moins ce qui reste au congélateur.
-  let need = N * s.breakfastShare - R.filter((r) => r.type === "batch" && r.meal === "breakfast").reduce((a, r) => a + frozen(r.id), 0);
-  for (const r of rank(batches.filter((r) => r.meal === "breakfast"))) {
+  // Petit-déjeuner : seulement les cinnamon rolls, s'il n'en reste plus assez au congélateur.
+  let need = N * s.breakfastShare - MORNING_BAKES.reduce((a, id) => a + frozen(id), 0);
+  for (const r of rank(batches.filter((r) => MORNING_BAKES.includes(r.id)))) {
     if (need <= 0 || pick.length >= 4) break;
     pick.push(r.id);
     need -= r.portions;
   }
-  // Plats du congélateur pour les soirs de flemme : on complète jusqu'à l'objectif.
-  let meals = R.filter((r) => r.type === "batch" && r.freezer && r.meal === "main").reduce((a, r) => a + frozen(r.id), 0);
+  // Plats du dimanche : au moins MENU_BATCHES pour le menu de la semaine, puis on complète le congélateur
+  // (chaque plat servi au menu en consomme deux portions).
+  let meals = R.filter((r) => r.type === "batch" && r.freezer && r.meal === "main").reduce((a, r) => a + frozen(r.id), 0),
+    cooked = 0;
   for (const r of rank(batches.filter((r) => r.freezer && r.meal === "main"))) {
-    if (meals >= s.freezerTarget || pick.length >= 6) break;
+    if ((cooked >= MENU_BATCHES && meals >= s.freezerTarget) || pick.length >= 6) break;
     if (hasPork(r) && pick.some((id) => hasPork(byR[id]))) continue;
     pick.push(r.id);
-    meals += r.portions;
+    meals += r.portions - 2;
+    cooked++;
   }
   return pick;
 }

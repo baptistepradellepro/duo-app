@@ -125,6 +125,10 @@ window.CATALOG = [
   ["bulgur", "Boulgour · Bulgur", "g", 500, 8.99, 350, 12, "bulgur", ["bulgur"], []],
   ["gnocchi", "Gnocchi", "g", 500, 7.99, 160, 4, "gnocchi", ["gnocchi"], ["sos", "barilla", "paste", "nr", "n85"]],
   ["puff_pastry", "Pâte feuilletée · Aluat foietaj", "g", 400, 7.99, 400, 6, "aluat foietaj", ["foietaj"], ["telemea", "branza", "mere", "cirese", "placinta", "croissant", "umplut"]],
+  ["buns", "Pains à burger · Chifle burger", "pièce", 4, 6.99, 150, 5, "chifle burger", ["chifle"], ["hot dog", "hotdog", "crenvursti"]],
+  ["pita", "Pains pita · Lipie", "pièce", 5, 6.99, 165, 5.5, "lipie", ["lipie"], ["chips", "crackers", "umpluta", "pizza"]],
+  ["tahini", "Tahini (crème de sésame) · Tahini", "g", 300, 16.99, 600, 17, "tahini", ["tahini"], ["halva", "halvita", "baton"]],
+  ["olives", "Olives noires dénoyautées · Măsline negre", "g", 160, 7.99, 145, 1, "masline negre fara samburi", ["masline"], ["ulei", "pasta", "pate", "tapenade", "umplute"]],
   ["turkey", "Escalopes de dinde · Piept de curcan", "g", 500, 19.99, 110, 24, "piept de curcan", ["piept", "curcan"], ["afumat", "feliat", "sunca", "crenvursti", "parizer", "sos", "bolognese", "bolognaise"]],
   ["chicken_mince", "Poulet haché · Carne tocată de pui", "g", 500, 12.99, 150, 18, "carne tocata pui", ["tocata", "pui"], ["porc", "vita", "sos", "bolognese", "bolognaise"]],
   ["duck", "Canard (magret ou cuisses) · Rață", "g", 500, 39.99, 200, 19, "piept de rata", ["rata"], ["mancare", "terina", "afumat", "pate", "conserva", "sos", "bolognese", "bolognaise"], "METRO"],
@@ -157,6 +161,7 @@ window.CATALOG = [
 
 // Fibres (g pour 100 g ou 100 ml, ou par pièce pour les aliments comptés à la pièce). Valeurs moyennes, à affiner avec les étiquettes.
 window.FIBER = {
+  buns: 1.2, pita: 1.5, tahini: 9, olives: 3,
   oats: 10, milk: 0, yogurt: 0, banana: 2.6, egg: 0, bread: 7, chicken: 0, rice: 1.3, pasta: 3, lentil: 11, beans: 6, chickpea: 7, tuna: 0, salmon: 0, tofu: 1,
   potato: 2, broccoli: 2.6, spinach: 2.2, tomato: 1.2, carrot: 2.8, onion: 1.7, pepper: 1.7, oil: 0, cheese: 0, peanut: 6, apple: 2.4, nuts: 6.7,
   whole_chicken: 0, chicken_thigh: 0, pork_mince: 0, beef_mince: 0, beef_stew: 0, bacon: 0, ham: 0, noodles: 2.5, rice_noodles: 1.6, rice_paper: 1,
