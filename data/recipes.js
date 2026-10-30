@@ -23,6 +23,7 @@ function r(id, name, emoji, cuisine, type, time, ingredients, steps, o = {}) {
     fixed: o.fixed || null,
     yields: o.yields || null,
     snack: !!o.snack,
+    retired: !!o.retired,
   });
 }
 

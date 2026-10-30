@@ -26,6 +26,7 @@ const initial = () => ({
   barcodes: {},
   freezer: {},
   myRecipes: [],
+  history: [],
   creators: [],
   ratings: {},
   extras: [],
@@ -88,14 +89,6 @@ try {
   s = null;
 }
 s = { ...initial(), ...(s || migrate()) };
-// Recettes retirées du carnet (spécialités roumaines…) : on oublie le planning et le congélateur qui les citaient.
-{
-  const known = new Set(window.RECIPES.map((r) => r.id));
-  if (s.plan && s.plan.days.flat().some((id) => id && !known.has(id))) s.plan = null;
-  s.batches = (s.batches || []).filter((id) => known.has(id));
-  s.lastBatches = (s.lastBatches || []).filter((id) => known.has(id));
-  for (const id of Object.keys(s.freezer || {})) if (!known.has(id)) delete s.freezer[id];
-}
 let tab = "home",
   query = "",
   category = "all",
@@ -111,8 +104,13 @@ for (const x of s.custom || []) {
 }
 function loadRecipes() {
   for (const k of Object.keys(featCache)) delete featCache[k];
-  R = [...window.RECIPES, ...(s.myRecipes || [])].map(balance);
-  byR = Object.fromEntries(R.map((r) => [r.id, r]));
+  const all = [...window.RECIPES, ...(s.myRecipes || [])].map(balance);
+  // Recettes retirées : jamais proposées ni listées, mais un ancien menu qui les cite s'affiche encore.
+  R = all.filter((r) => !r.retired);
+  byR = Object.fromEntries(all.map((r) => [r.id, r]));
+  // Un menu n'est jamais effacé : une recette introuvable (supprimée du carnet) devient une fiche à remplacer.
+  const ids = [s.plan, ...(s.history || []).map((h) => h.plan)].filter(Boolean).flatMap((p) => p.days.flat());
+  for (const id of ids) if (id && !byR[id]) byR[id] = { id, name: id.startsWith("missing:") ? `${id.slice(8)} (introuvable)` : "Recette introuvable", emoji: "❔", cuisine: "Maison", type: "main", time: 0, ingredients: {}, steps: ["Cette recette n’est plus dans le carnet. Touchez « Choisir » pour la remplacer."], veg: true, freezer: false, portions: 0, unit: "portions", meal: "main", fixed: null, retired: true, noPlan: true };
 }
 
 const save = () => {
@@ -314,6 +312,7 @@ const topupCost = () => {
 // Bœuf et canard : achetés rarement, cuisinés seulement s'il y en a au placard ou au congélateur.
 const RARE = ["beef_stew", "beef_mince", "duck"];
 const allowed = (r) =>
+  !r.retired &&
   (!s.veg || r.veg) &&
   !Object.keys(r.ingredients).some((id) => s.exclude.includes(id)) &&
   RARE.every((id) => !r.ingredients[id] || avail(id) >= r.ingredients[id] * factor(r)) &&
@@ -506,14 +505,14 @@ function balance(r) {
   return out;
 }
 loadRecipes();
-if (s.plan && !s.plan.days?.every((d) => d.every((id) => byR[id]))) s.plan = null;
 // opts : { start: "AAAA-MM-JJ", days: nombre de jours, budgetEur: budget de la période }.
 function generate(auto = false, opts = {}) {
   offerCache = {};
   const start = opts.start || weekStartISO(),
     N = Math.max(1, opts.days || 7),
     periodBudget = opts.budgetEur ?? Math.round((s.budgetEur * N) / 7);
-  if (!auto && s.plan && Object.keys(s.done).length && !confirm("Les repas déjà cuisinés restent déduits du stock. Remplacer le planning ?")) return;
+  if (!auto && s.plan && (s.shopped || Object.keys(s.done).length) && !confirm(`${s.shopped ? "Les courses de ce menu sont faites." : "Des repas de ce menu sont déjà cuisinés."} Le remplacer ? (Il reste récupérable dans « Menus précédents ».)`)) return;
+  keepHistory();
   // Le batch cooking se fait le dimanche : ses plats arrivent au menu à partir du lundi qui suit.
   // Période commencée en milieu de semaine : jusque-là, cuisine au jour le jour et congélateur.
   const batchFrom = (7 - weekdayOf(start)) % 7,
@@ -686,6 +685,76 @@ function generate(auto = false, opts = {}) {
   go("week");
   toast(best ? (N === 7 ? "Votre semaine est prête !" : `Vos ${N} jours sont prêts !`) : `Budget trop serré : au mieux ${eur(cost(s.plan))} à payer pour ${money(periodBudget)} €. Augmentez le budget ou remplissez le placard.`);
 }
+// Menus précédents : les 6 derniers, avec leur état (cuisiné, courses faites, batch), pour revenir en arrière.
+const HISTORY_KEYS = ["plan", "done", "checked", "shopped", "batches", "batchDone", "prepDone", "lastBatches"];
+function keepHistory() {
+  if (!s.plan) return;
+  s.history = [{ savedAt: new Date().toISOString(), ...Object.fromEntries(HISTORY_KEYS.map((k) => [k, structuredClone(s[k])])) }, ...(s.history || [])].slice(0, 6);
+}
+function menuHistory() {
+  const fmt = (iso) => new Date(iso + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "numeric" }),
+    list = s.history || [];
+  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>↺ Menus précédents</h2><p class="muted">Le menu en cours est gardé ici quand vous en restaurez un autre.</p>${
+    list.length
+      ? `<div class="choice-list">${list
+          .map((h, k) => {
+            const p = h.plan,
+              first = p.days[0].slice(1).map((id) => byR[id]?.name || "?").join(" / ");
+            return `<div class="panel"><b>${fmt(p.weekStart)} → ${fmt(isoAdd(p.weekStart, p.days.length - 1))}</b> · ${p.days.length} jours${h.shopped ? " · courses faites" : ""}<br><small class="muted">Remplacé le ${new Date(h.savedAt).toLocaleString("fr-FR", { day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" })} · 1er jour : ${esc(first)}</small><br><button class="small" onclick="restoreHistory(${k})">Restaurer ce menu</button></div>`;
+          })
+          .join("")}</div>`
+      : '<p class="muted">Aucun menu précédent enregistré pour l’instant.</p>'
+  }<details class="panel"><summary>Restaurer depuis un programme partagé</summary><p class="muted">Collez le programme envoyé par l’app (« 📤 Envoyer le programme ») depuis WhatsApp ou Messages : les menus sont reconstruits jour par jour.</p><form onsubmit="event.preventDefault();restoreFromText(this.text.value)"><textarea name="text" rows="8" required placeholder="DUO — du vendredi 30/10 au …"></textarea><button type="submit">Reconstruire le menu</button></form></details>`;
+  modal().showModal();
+}
+function restoreHistory(k) {
+  const h = s.history[k];
+  if (!h) return;
+  s.history.splice(k, 1);
+  keepHistory();
+  for (const key of HISTORY_KEYS) if (key in h) s[key] = h[key];
+  offerCache = {};
+  loadRecipes();
+  save();
+  modal().close();
+  go("week");
+  toast("Menu restauré.");
+}
+// Programme partagé : « DUO — du vendredi 30/10 au … » puis une ligne par jour « Vendredi 30/10 : matin / midi / soir ».
+function restoreFromText(text) {
+  const byName = Object.fromEntries(Object.values(byR).map((r) => [norm(r.name), r.id])),
+    lines = text.split("\n").map((l) => l.match(/^\s*\S+\s+(\d{1,2})\/(\d{1,2})\s*:\s*(.+)$/)).filter(Boolean),
+    missing = [];
+  if (!lines.length) return toast("Aucune ligne de menu trouvée (format « Lundi 2/11 : … / … / … »).");
+  const find = (name) => byName[norm(name)] || Object.entries(byName).find(([n]) => n.startsWith(norm(name)) || norm(name).startsWith(n))?.[1];
+  const days = lines.map(([, , , meals]) => {
+    let parts = meals.split(" / ");
+    // Un nom de recette peut contenir « / » : on recolle tant que les morceaux ne sont pas reconnus.
+    while (parts.length > 3) {
+      const k = parts.findIndex((x, i) => i < parts.length - 1 && !find(x));
+      parts.splice(k < 0 ? 0 : k, 2, parts[k < 0 ? 0 : k] + " / " + parts[(k < 0 ? 0 : k) + 1]);
+    }
+    return parts.map((x) => {
+      const id = find(x.trim());
+      if (!id) missing.push(x.trim());
+      return id || "missing:" + x.trim().slice(0, 60);
+    });
+  });
+  const [, d, m] = lines[0],
+    today = new Date(),
+    year = +m > today.getMonth() + 7 ? today.getFullYear() - 1 : today.getFullYear(),
+    start = `${year}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  keepHistory();
+  s.plan = { days, freezerUse: {}, created: new Date().toISOString(), weekStart: start, budgetEur: Math.round((s.budgetEur * days.length) / 7), batchFrom: (7 - weekdayOf(start)) % 7 };
+  s.done = {};
+  s.checked = {};
+  s.shopped = true;
+  loadRecipes();
+  save();
+  modal().close();
+  go("week");
+  toast(missing.length ? `Menu reconstruit. Introuvables : ${missing.slice(0, 3).join(", ")}${missing.length > 3 ? "…" : ""}` : "Menu reconstruit, courses considérées comme faites.");
+}
 // Recomposer : d'aujourd'hui à dimanche, jusqu'à dimanche prochain (si les courses ne sont pas encore faites), ou la semaine prochaine.
 let periods = [];
 function recompose() {
@@ -758,11 +827,11 @@ function week() {
     .map(([v, l]) => `<option value="${v}" ${String(s.fixed.ramen) === v ? "selected" : ""}>${l}</option>`)
     .join("");
   return (
-    heading("VOTRE MENU SUR MESURE", "La semaine à table.", s.plan ? `Du ${dayName(0).toLowerCase()} ${dayDate(0)} au ${dayName(nDays() - 1).toLowerCase()} ${dayDate(nDays() - 1)} · ${nDays()} jours · 2 personnes` : "7 jours · 3 repas par jour · 2 personnes", `<span class="row"><button class="secondary" onclick="extraPicker()">🍳 Cuisiné en plus</button><button onclick="recompose()">${s.plan ? "↻ Recomposer" : "✦ Générer ma semaine"}</button></span>`) +
+    heading("VOTRE MENU SUR MESURE", "La semaine à table.", s.plan ? `Du ${dayName(0).toLowerCase()} ${dayDate(0)} au ${dayName(nDays() - 1).toLowerCase()} ${dayDate(nDays() - 1)} · ${nDays()} jours · 2 personnes` : "7 jours · 3 repas par jour · 2 personnes", `<span class="row"><button class="secondary" onclick="extraPicker()">🍳 Cuisiné en plus</button><button class="secondary" onclick="menuHistory()">↺ Menus précédents</button><button onclick="recompose()">${s.plan ? "↻ Recomposer" : "✦ Générer ma semaine"}</button></span>`) +
     (s.plan ? sundayPanel() : "") +
     `<div class="panel row spread">${s.plan ? `<label>Budget courses · € pour ces ${nDays()} jours<input type="number" min="0" step="5" value="${Math.round(periodEur())}" onchange="s.plan.budgetEur=Math.max(0,+this.value);save();render()"></label>` : `<label>Budget courses · € par semaine pour deux<input type="number" min="0" step="5" value="${s.budgetEur}" onchange="s.budgetEur=Math.max(0,+this.value);save();render()"></label>`}<label>Taux Revolut · 1 € = RON<input type="number" min="1" step="0.01" value="${s.rate}" onchange="setRate(this.value)"></label><span class="muted">${s.rateManual ? `Votre taux, gardé tel quel. <button class="text-button" onclick="s.rateManual=false;s.rateDate=null;save();updateRate()">Revenir au taux automatique</button>` : s.rateDate ? `Taux du marché du ${new Date(s.rateDate).toLocaleDateString("fr-FR")}, corrigez-le si Revolut affiche autre chose.` : ""} · ≈ ${money(budget())} RON</span></div>` +
     (s.plan
-      ? `<div class="notice ${c > budget() ? "warning" : ""}">${c > budget() ? "Budget dépassé pour la proposition la moins chère. Augmentez le budget ou ajoutez votre stock." : "Votre semaine tient dans le budget."} Consommé : <b>${eur(c)} / ${money(periodEur())} €</b>. À payer en magasin : <b>${eur(pay)}</b>${pay - c > 1 ? ` (dont ${eur(pay - c)} de restes de paquets qui restent au placard)` : ""}. <button class="text-button" onclick="go('shopping')">Voir mes courses ↗</button></div>${topupNotice()}${extrasPanel()}<p class="muted">Touchez un repas pour sa recette détaillée. Mangé autre chose ? « Autre » le retire du placard.</p>${s.plan.days.map((day, i) => `<div class="day ${i === todayIndex() ? "is-today" : ""}"><div class="day-label">${dayName(i).slice(0, 3)}.<br><small class="muted">${dayDate(i)}</small></div>${day.map((_, j) => mealCell(i, j)).join("")}</div>`).join("")}`
+      ? `<div class="notice ${pay > budget() + 0.5 ? "warning" : ""}">${pay > budget() + 0.5 ? "Budget dépassé pour la proposition la moins chère. Augmentez le budget ou ajoutez votre stock." : "Vos courses tiennent dans le budget."} À payer en magasin : <b>${eur(pay)} / ${money(periodEur())} €</b>${pay - c > 1 ? ` (dont ${eur(pay - c)} de restes de paquets qui restent au placard)` : ""}. <button class="text-button" onclick="go('shopping')">Voir mes courses ↗</button></div>${topupNotice()}${extrasPanel()}<p class="muted">Touchez un repas pour sa recette détaillée. Mangé autre chose ? « Autre » le retire du placard.</p>${s.plan.days.map((day, i) => `<div class="day ${i === todayIndex() ? "is-today" : ""}"><div class="day-label">${dayName(i).slice(0, 3)}.<br><small class="muted">${dayDate(i)}</small></div>${day.map((_, j) => mealCell(i, j)).join("")}</div>`).join("")}`
       : '<div class="panel"><h2>Le menu commence ici.</h2><p>Générez 21 repas pour vous deux : les fournées du dimanche sont choisies selon votre congélateur, et la liste de courses prend le magasin le moins cher.</p></div>') +
     `<details class="panel"><summary>Réglages de la semaine</summary><div class="row"><label class="inline"><input type="checkbox" ${s.fixed.chirashi ? "checked" : ""} onchange="s.fixed.chirashi=this.checked;save()"> 🍣 Chirashi saumon & avocat le mardi soir</label><label>🍜 Ramen au bouillon<select onchange="s.fixed.ramen=+this.value;save()">${ramenSel}</select></label><label class="inline"><input type="checkbox" ${s.veg ? "checked" : ""} onchange="s.veg=this.checked;save()"> Menus végétariens</label><label>Budget de base · € par semaine<input type="number" min="0" step="5" value="${s.budgetEur}" onchange="s.budgetEur=Math.max(0,+this.value);save();render()"></label><label>Le matin, en plus<select onchange="s.morning=this.value;s.checked={};save();render()">${[["juice", "Un verre de jus d’orange"], ["orange", "Une orange entière (plus de fibres)"], ["none", "Rien"]].map(([v, l]) => `<option value="${v}" ${s.morning === v ? "selected" : ""}>${l}</option>`).join("")}</select></label>${s.morning === "juice" ? `<label>Verre de jus (ml)<input type="number" min="50" max="400" step="25" value="${s.juiceMl}" onchange="s.juiceMl=Math.max(50,Math.min(400,+this.value||150));s.checked={};save();render()"></label>` : ""}<label>Cinnamon rolls : portions par matin pour vous deux<input type="number" min="0.5" max="4" step="0.5" value="${s.breakfastShare}" onchange="s.breakfastShare=Math.max(0.5,Math.min(4,+this.value||1.5));save();render()"></label><label>Garder au congélateur (portions de plats)<input type="number" min="0" max="40" value="${s.freezerTarget}" onchange="s.freezerTarget=Math.max(0,+this.value);save()"></label></div><p class="muted">Recomposez la semaine pour appliquer ces réglages. Le poulet entier est désossé chaque dimanche : ≈ 350 g de blancs et 400 g de cuisses pour la semaine, la carcasse et les ailes pour le bouillon du ramen.</p>${batchPanel()}</details>`
   );
@@ -1704,7 +1773,6 @@ function deleteRecipe(id) {
   s.myRecipes = s.myRecipes.filter((r) => r.id !== id);
   s.batches = s.batches.filter((x) => x !== id);
   loadRecipes();
-  if (s.plan && !s.plan.days.every((d) => d.every((x) => byR[x]))) s.plan = null;
   save();
   modal().close();
   render();
@@ -2327,7 +2395,6 @@ async function restore(ev) {
     s = { ...initial(), ...n, custom, myRecipes };
     offerCache = {};
     loadRecipes();
-    if (s.plan && !s.plan.days?.every((d) => d.every((id) => byR[id]))) s.plan = null;
     save();
     render();
     toast("Sauvegarde restaurée.");
