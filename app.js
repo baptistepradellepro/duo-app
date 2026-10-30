@@ -120,7 +120,9 @@ const esc = (x) =>
 const money = (n) => n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const norm = (x) =>
   String(x).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-const budget = () => s.budgetEur * s.rate;
+// Budget de la période en € : celui choisi en composant, sinon la base hebdomadaire au prorata des jours.
+const periodEur = (plan = s.plan) => plan?.budgetEur ?? (s.budgetEur * (plan?.days.length || 7)) / 7;
+const budget = () => periodEur() * s.rate;
 const eur = (ron) => money(ron / s.rate) + " €";
 const qtyLabel = (q, unit) => `${Math.round(q * 100) / 100} ${unit}`;
 const perUnit = (o, unit) =>
@@ -274,7 +276,7 @@ function topupQty(plan = s.plan) {
   if (!s.topupOn || !x || !x.protein) return 0;
   const gap = proteinGap(plan);
   // Plafond hebdomadaire (7 cafés protéinés par défaut) ; pour un produit au poids, plafond en portions de 100 g.
-  const max = Math.max(0, +s.topupMax || 0);
+  const max = Math.round((Math.max(0, +s.topupMax || 0) * (plan?.days.length || 7)) / 7);
   return x.unit === "pièce" ? Math.min(max, Math.ceil(gap / x.protein)) : Math.min(max * 100, Math.ceil((gap / x.protein) * 100));
 }
 const topupCost = () => {
@@ -309,10 +311,11 @@ function unitCost(r) {
     0,
   );
 }
-function fixedFor(i, j) {
+function fixedFor(i, j, start = planStart()) {
   if (j !== 2) return null;
-  if (i === 1 && s.fixed.chirashi) return "chirashi";
-  if (i === +s.fixed.ramen) return "ramen";
+  const wd = weekdayOf(isoAdd(start, i));
+  if (wd === 1 && s.fixed.chirashi) return "chirashi";
+  if (wd === +s.fixed.ramen) return "ramen";
   return null;
 }
 // Lundi de la semaine planifiée : demain si on est dimanche, sinon lundi de cette semaine.
@@ -322,11 +325,22 @@ function weekStartISO(d = new Date()) {
   m.setDate(m.getDate() + (m.getDay() === 0 ? 1 : 1 - m.getDay()));
   return m.toISOString().slice(0, 10);
 }
-const dayDate = (i) => {
-  const d = new Date((s.plan?.weekStart || weekStartISO()) + "T12:00:00");
-  d.setDate(d.getDate() + i);
-  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "numeric" });
+// Dates du planning : le jour 0 est plan.weekStart (aujourd'hui, ou le lundi d'une semaine pleine).
+const isoAdd = (iso, n) => {
+  const d = new Date(iso + "T12:00:00");
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
 };
+const todayISO = () => {
+  const d = new Date();
+  d.setHours(12, 0, 0, 0);
+  return d.toISOString().slice(0, 10);
+};
+const weekdayOf = (iso) => (new Date(iso + "T12:00:00").getDay() + 6) % 7; // 0 = lundi
+const planStart = () => s.plan?.weekStart || weekStartISO();
+const nDays = () => s.plan?.days.length || 7;
+const dayName = (i) => DAYS[weekdayOf(isoAdd(planStart(), i))];
+const dayDate = (i) => new Date(isoAdd(planStart(), i) + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "numeric" });
 // Poids des fibres dans le choix des menus : classement des plats et écart au repère de 30 g par personne et par jour.
 const FIBER_WEIGHT = 1.5,
   FIBER_PICK = 1.5;
@@ -370,13 +384,17 @@ function slotOk(days, i, j, r) {
     sameBase = (x) => x && [...f.starches].some((b) => features(x).starches.has(b));
   return !tooClose(r, other) && !sameBase(prev) && !sameBase(next);
 }
-function generate(auto = false) {
+// opts : { start: "AAAA-MM-JJ", days: nombre de jours, budgetEur: budget de la période }.
+function generate(auto = false, opts = {}) {
   offerCache = {};
+  const start = opts.start || weekStartISO(),
+    N = Math.max(1, opts.days || 7),
+    periodBudget = opts.budgetEur ?? Math.round((s.budgetEur * N) / 7);
   if (!auto && s.plan && Object.keys(s.done).length && !confirm("Les repas déjà cuisinés restent déduits du stock. Remplacer le planning ?")) return;
   // Nouvelles fournées selon le congélateur ; les petits-déjeuners congelés restants sont aussi servis.
   s.lastBatches = s.batches;
   s.batches = ["poulet_entier"];
-  s.batches = autoBatches();
+  s.batches = autoBatches(N);
   s.batchDone = {};
   s.prepDone = {};
   const frozenBreakfast = R.filter((r) => r.type === "batch" && r.meal === "breakfast" && (s.freezer[r.id] || 0) >= s.breakfastShare).map((r) => r.id);
@@ -389,6 +407,7 @@ function generate(auto = false) {
   }
   s.done = {};
   s.checked = {};
+  s.shopped = false;
   const costs = Object.fromEntries(R.map((r) => [r.id, unitCost(r)])),
     tastes = Object.fromEntries(R.map((r) => [r.id, taste(r)])),
     // Classement des plats : moins cher, plus apprécié, plus riche en fibres.
@@ -413,7 +432,7 @@ function generate(auto = false) {
       return r.id;
     };
     // Plats fixes d'abord (chirashi, ramen), puis chaque midi et soir en respectant l'équilibre.
-    const days = Array.from({ length: 7 }, (_, i) => [bakes.length ? bakes[i % bakes.length] : pick(breakfasts), null, fixedFor(i, 2)]);
+    const days = Array.from({ length: N }, (_, i) => [bakes.length ? bakes[i % bakes.length] : pick(breakfasts), null, fixedFor(i, 2, start)]);
     const bases = {},
       prots = {},
       families = {};
@@ -429,7 +448,7 @@ function generate(auto = false) {
       // Une même famille (riz + poulet, pâtes + œufs…) une seule fois par semaine.
       return (bases[f.base] || 0) < (f.base === "autre" ? 6 : 4) && (prots[f.protein] || 0) < (f.protein === "volaille" ? 5 : 3) && (f.family.includes("autre") || f.family.includes("léger") || !families[f.family]);
     };
-    for (let i = 0; i < 7; i++)
+    for (let i = 0; i < N; i++)
       for (const j of [1, 2]) {
         if (days[i][j]) continue;
         const id = pick(mains, (r) => slotOk(days, i, j, r) && weekOk(r));
@@ -440,7 +459,8 @@ function generate(auto = false) {
       days,
       freezerUse: {},
       created: new Date().toISOString(),
-      weekStart: weekStartISO(),
+      weekStart: start,
+      budgetEur: periodBudget,
     };
     const c = cost(p),
       u = used(p);
@@ -453,15 +473,15 @@ function generate(auto = false) {
       target = s.profiles.reduce((a, b) => a + Number(b.kcal), 0) / 2,
       dayMacro = (d) => d.reduce((x, id) => ({ kcal: x.kcal + macro(byR[id]).kcal, protein: x.protein + macro(byR[id]).protein, fiber: x.fiber + macro(byR[id]).fiber }), { ...morningMacro() }),
       fiberGap = p.days.reduce((a, d) => a + Math.max(0, 30 - dayMacro(d).fiber), 0),
-      avg = p.days.reduce((a, d) => a + dayMacro(d).kcal, 0) / 7,
-      protGap = p.days.reduce((a, d) => a + s.profiles.reduce((v, pr) => v + Math.max(0, pr.protein - dayMacro(d).protein), 0), 0) / 7,
+      avg = p.days.reduce((a, d) => a + dayMacro(d).kcal, 0) / N,
+      protGap = p.days.reduce((a, d) => a + s.profiles.reduce((v, pr) => v + Math.max(0, pr.protein - dayMacro(d).protein), 0), 0) / N,
       liking = p.days.reduce((a, d) => a + d.slice(1).reduce((x, id) => x + tastes[id], 0), 0),
       // Au moins ~200 g de légumes par personne et par jour sur le midi et le soir.
       vegGap = p.days.reduce((a, d) => a + Math.max(0, 200 - d.slice(1).reduce((x, id) => x + features(byR[id]).veg, 0)), 0),
       clashes = p.days.reduce((a, d, i) => a + (tooClose(byR[d[1]], byR[d[2]]) ? 1 : 0) + (i && [...features(byR[d[1]]).starches].some((b) => features(byR[p.days[i - 1][2]]).starches.has(b)) ? 1 : 0), 0),
       repeats = Object.values(p.days.flatMap((d) => d.slice(1)).reduce((a, id) => ((a[features(byR[id]).family] = (a[features(byR[id]).family] || 0) + 1), a), {})).reduce((a, n) => a + Math.max(0, n - 1), 0),
       score = u * 0.2 + (c - u) * 0.05 - diversity * 5 - cuisines * 4 - liking * 8 + Math.abs(avg - target) * 0.015 + protGap * 0.6 + vegGap * 0.05 + clashes * 25 + repeats * 6 + fiberGap * FIBER_WEIGHT;
-    if (u <= budget() && score < bestScore) {
+    if (u <= periodBudget * s.rate && score < bestScore) {
       bestScore = score;
       best = p;
     }
@@ -469,7 +489,30 @@ function generate(auto = false) {
   s.plan = best || cheapest;
   save();
   go("week");
-  toast(best ? "Votre semaine est prête !" : "Budget trop serré : proposition la moins chère trouvée.");
+  toast(best ? (N === 7 ? "Votre semaine est prête !" : `Vos ${N} jours sont prêts !`) : "Budget trop serré : proposition la moins chère trouvée.");
+}
+// Recomposer : d'aujourd'hui à dimanche, jusqu'à dimanche prochain (si les courses ne sont pas encore faites), ou la semaine prochaine.
+let periods = [];
+function recompose() {
+  const today = todayISO(),
+    left = 7 - weekdayOf(today);
+  periods = [
+    { start: today, days: left, label: "D’aujourd’hui à dimanche" },
+    { start: today, days: left + 7, label: "D’aujourd’hui à dimanche prochain" },
+    { start: isoAdd(today, left), days: 7, label: "La semaine prochaine seulement" },
+  ];
+  const rec = !s.shopped && left <= 4 ? 1 : 0,
+    fmt = (iso) => new Date(iso + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "numeric" }),
+    eurFor = (k) => Math.round((s.budgetEur * periods[k].days) / 7 / 5) * 5;
+  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>↻ Composer les menus</h2><p class="muted">${s.shopped ? "Les courses de la période actuelle sont faites." : "Courses pas encore faites : la période peut couvrir la fin de cette semaine et la suivante, pour un seul passage en magasin."}</p><form onsubmit="event.preventDefault();recomposeGo(this)"><div class="choice-list">${periods
+    .map((pr, k) => `<label class="period"><input type="radio" name="period" value="${k}" ${k === rec ? "checked" : ""} onchange="this.form.budget.value=${eurFor(k)}"> <span><b>${pr.label}</b>${k === rec && k === 1 ? " · conseillé" : ""}<br><small class="muted">${fmt(pr.start)} → ${fmt(isoAdd(pr.start, pr.days - 1))} · ${pr.days} jours</small></span></label>`)
+    .join("")}</div><label>Budget courses pour la période (€)<input name="budget" type="number" min="0" step="5" value="${eurFor(rec)}"></label><p class="muted">Base : ${money(s.budgetEur)} € par semaine, au prorata des jours. Modifiable.</p><button type="submit">Composer</button></form>`;
+  modal().showModal();
+}
+function recomposeGo(f) {
+  const pr = periods[+f.period.value];
+  modal().close();
+  generate(false, { start: pr.start, days: pr.days, budgetEur: Math.max(0, +f.budget.value || 0) });
 }
 function go(t) {
   tab = t;
@@ -496,7 +539,7 @@ function card(r, i = 0) {
 function todayIndex() {
   if (!s.plan) return -1;
   const i = Math.round((new Date().setHours(12, 0, 0, 0) - new Date(s.plan.weekStart + "T12:00:00")) / 864e5);
-  return i >= 0 && i < 7 ? i : -1;
+  return i >= 0 && i < s.plan.days.length ? i : -1;
 }
 function home() {
   const frozen = Object.entries(s.freezer).filter(([id, n]) => n > 0 && byR[id]),
@@ -508,7 +551,7 @@ function home() {
   return (
     heading(new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }).toUpperCase(), "Bonjour à vous deux 👋", s.plan ? `Semaine du ${dayDate(0)} au ${dayDate(6)}.` : "Commencez par générer votre semaine.") +
     (i >= 0
-      ? `<div class="panel"><div class="row spread"><h2>Aujourd’hui · ${DAYS[i]}</h2><span class="row"><button class="secondary small" onclick="extraPicker()">🍳 Cuisiné en plus</button><button class="text-button" onclick="go('week')">Toute la semaine ↗</button></span></div><div class="today">${[0, 1, 2].map((j) => mealCell(i, j)).join("")}</div></div>`
+      ? `<div class="panel"><div class="row spread"><h2>Aujourd’hui · ${dayName(i)}</h2><span class="row"><button class="secondary small" onclick="extraPicker()">🍳 Cuisiné en plus</button><button class="text-button" onclick="go('week')">Toute la semaine ↗</button></span></div><div class="today">${[0, 1, 2].map((j) => mealCell(i, j)).join("")}</div></div>`
       : `<div class="panel"><h2>${s.plan ? "Semaine terminée" : "Pas encore de semaine"}</h2><p>${s.plan ? "Dimanche, la semaine suivante se prépare toute seule." : "Générez votre première semaine : repas, batch cooking et liste de courses."}</p><button onclick="go('week');${s.plan ? "" : "generate()"}">${s.plan ? "Voir la semaine" : "✦ Générer ma semaine"}</button></div>`) +
     `<div class="stats home-stats"><div class="stat" onclick="go('stock')" role="button" tabindex="0"><small>🧊 Au congélateur</small><strong>${total} <span style="font-size:13px">portions</span></strong><em>${frozen.length ? frozen.slice(0, 3).map(([id, n]) => `${byR[id].emoji} ${n}`).join(" · ") : "prêtes pour les soirs de flemme"}</em></div><div class="stat" onclick="go('week')" role="button" tabindex="0"><small>🧑‍🍳 Batch cooking</small><strong>${!s.plan ? "—" : tasks.length ? `${tasks.length} <span style="font-size:13px">à faire</span>` : "✓"}</strong><em>${!s.plan ? "après la première semaine" : tasks.length ? "à faire dimanche" : "terminé pour cette semaine"}</em></div><div class="stat" onclick="go('shopping')" role="button" tabindex="0"><small>🛒 Courses</small><strong>${!s.plan ? "—" : left.length ? `${left.length} <span style="font-size:13px">articles</span>` : "✓"}</strong><em>${!s.plan ? "liste générée avec la semaine" : left.length ? `≈ ${eur(left.reduce((a, x) => a + x.total, 0))} à acheter` : "tout est acheté"}</em></div></div>${!s.setup ? '<div class="notice">👋 Première visite ? Scannez ou saisissez ce que vous avez dans « Mon placard ».</div>' : ""}`
   );
@@ -520,13 +563,13 @@ function week() {
     .map(([v, l]) => `<option value="${v}" ${String(s.fixed.ramen) === v ? "selected" : ""}>${l}</option>`)
     .join("");
   return (
-    heading("VOTRE MENU SUR MESURE", "La semaine à table.", s.plan ? `Du ${dayDate(0)} au ${dayDate(6)} · 2 personnes` : "7 jours · 3 repas par jour · 2 personnes", `<span class="row"><button class="secondary" onclick="extraPicker()">🍳 Cuisiné en plus</button><button onclick="generate()">${s.plan ? "↻ Recomposer" : "✦ Générer ma semaine"}</button></span>`) +
+    heading("VOTRE MENU SUR MESURE", "La semaine à table.", s.plan ? `Du ${dayName(0).toLowerCase()} ${dayDate(0)} au ${dayName(nDays() - 1).toLowerCase()} ${dayDate(nDays() - 1)} · ${nDays()} jours · 2 personnes` : "7 jours · 3 repas par jour · 2 personnes", `<span class="row"><button class="secondary" onclick="extraPicker()">🍳 Cuisiné en plus</button><button onclick="recompose()">${s.plan ? "↻ Recomposer" : "✦ Générer ma semaine"}</button></span>`) +
     (s.plan ? sundayPanel() : "") +
-    `<div class="panel row spread"><label>Budget courses · € par semaine pour deux<input type="number" min="0" step="5" value="${s.budgetEur}" onchange="s.budgetEur=Math.max(0,+this.value);save();render()"></label><label>Taux Revolut · 1 € = RON<input type="number" min="1" step="0.01" value="${s.rate}" onchange="setRate(this.value)"></label><span class="muted">${s.rateManual ? `Votre taux, gardé tel quel. <button class="text-button" onclick="s.rateManual=false;s.rateDate=null;save();updateRate()">Revenir au taux automatique</button>` : s.rateDate ? `Taux du marché du ${new Date(s.rateDate).toLocaleDateString("fr-FR")}, corrigez-le si Revolut affiche autre chose.` : ""} · ≈ ${money(budget())} RON</span></div>` +
+    `<div class="panel row spread">${s.plan ? `<label>Budget courses · € pour ces ${nDays()} jours<input type="number" min="0" step="5" value="${Math.round(periodEur())}" onchange="s.plan.budgetEur=Math.max(0,+this.value);save();render()"></label>` : `<label>Budget courses · € par semaine pour deux<input type="number" min="0" step="5" value="${s.budgetEur}" onchange="s.budgetEur=Math.max(0,+this.value);save();render()"></label>`}<label>Taux Revolut · 1 € = RON<input type="number" min="1" step="0.01" value="${s.rate}" onchange="setRate(this.value)"></label><span class="muted">${s.rateManual ? `Votre taux, gardé tel quel. <button class="text-button" onclick="s.rateManual=false;s.rateDate=null;save();updateRate()">Revenir au taux automatique</button>` : s.rateDate ? `Taux du marché du ${new Date(s.rateDate).toLocaleDateString("fr-FR")}, corrigez-le si Revolut affiche autre chose.` : ""} · ≈ ${money(budget())} RON</span></div>` +
     (s.plan
-      ? `<div class="notice ${c > budget() ? "warning" : ""}">${c > budget() ? "Budget dépassé pour la proposition la moins chère. Augmentez le budget ou ajoutez votre stock." : "Votre semaine tient dans le budget."} Consommé : <b>${eur(c)} / ${money(s.budgetEur)} €</b>. À payer en magasin : <b>${eur(pay)}</b>${pay - c > 1 ? ` (dont ${eur(pay - c)} de restes de paquets qui restent au placard)` : ""}. <button class="text-button" onclick="go('shopping')">Voir mes courses ↗</button></div>${topupNotice()}${extrasPanel()}<p class="muted">Touchez un repas pour sa recette détaillée. Mangé autre chose ? « Autre » le retire du placard.</p>${s.plan.days.map((day, i) => `<div class="day ${i === todayIndex() ? "is-today" : ""}"><div class="day-label">${DAYS[i].slice(0, 3)}.<br><small class="muted">${dayDate(i)}</small></div>${day.map((_, j) => mealCell(i, j)).join("")}</div>`).join("")}`
+      ? `<div class="notice ${c > budget() ? "warning" : ""}">${c > budget() ? "Budget dépassé pour la proposition la moins chère. Augmentez le budget ou ajoutez votre stock." : "Votre semaine tient dans le budget."} Consommé : <b>${eur(c)} / ${money(periodEur())} €</b>. À payer en magasin : <b>${eur(pay)}</b>${pay - c > 1 ? ` (dont ${eur(pay - c)} de restes de paquets qui restent au placard)` : ""}. <button class="text-button" onclick="go('shopping')">Voir mes courses ↗</button></div>${topupNotice()}${extrasPanel()}<p class="muted">Touchez un repas pour sa recette détaillée. Mangé autre chose ? « Autre » le retire du placard.</p>${s.plan.days.map((day, i) => `<div class="day ${i === todayIndex() ? "is-today" : ""}"><div class="day-label">${dayName(i).slice(0, 3)}.<br><small class="muted">${dayDate(i)}</small></div>${day.map((_, j) => mealCell(i, j)).join("")}</div>`).join("")}`
       : '<div class="panel"><h2>Le menu commence ici.</h2><p>Générez 21 repas pour vous deux : les fournées du dimanche sont choisies selon votre congélateur, et la liste de courses prend le magasin le moins cher.</p></div>') +
-    `<details class="panel"><summary>Réglages de la semaine</summary><div class="row"><label class="inline"><input type="checkbox" ${s.fixed.chirashi ? "checked" : ""} onchange="s.fixed.chirashi=this.checked;save()"> 🍣 Chirashi saumon & avocat le mardi soir</label><label>🍜 Ramen au bouillon<select onchange="s.fixed.ramen=+this.value;save()">${ramenSel}</select></label><label class="inline"><input type="checkbox" ${s.veg ? "checked" : ""} onchange="s.veg=this.checked;save()"> Menus végétariens</label><label>Le matin, en plus<select onchange="s.morning=this.value;s.checked={};save();render()">${[["juice", "Un verre de jus d’orange"], ["orange", "Une orange entière (plus de fibres)"], ["none", "Rien"]].map(([v, l]) => `<option value="${v}" ${s.morning === v ? "selected" : ""}>${l}</option>`).join("")}</select></label>${s.morning === "juice" ? `<label>Verre de jus (ml)<input type="number" min="50" max="400" step="25" value="${s.juiceMl}" onchange="s.juiceMl=Math.max(50,Math.min(400,+this.value||150));s.checked={};save();render()"></label>` : ""}<label>Gâteau, brioche… : portions par matin pour vous deux<input type="number" min="0.5" max="4" step="0.5" value="${s.breakfastShare}" onchange="s.breakfastShare=Math.max(0.5,Math.min(4,+this.value||1.5));save();render()"></label><label>Garder au congélateur (portions de plats)<input type="number" min="0" max="40" value="${s.freezerTarget}" onchange="s.freezerTarget=Math.max(0,+this.value);save()"></label></div><p class="muted">Recomposez la semaine pour appliquer ces réglages. Le poulet entier est désossé chaque dimanche : ≈ 350 g de blancs et 400 g de cuisses pour la semaine, la carcasse et les ailes pour le bouillon du ramen.</p>${batchPanel()}</details>`
+    `<details class="panel"><summary>Réglages de la semaine</summary><div class="row"><label class="inline"><input type="checkbox" ${s.fixed.chirashi ? "checked" : ""} onchange="s.fixed.chirashi=this.checked;save()"> 🍣 Chirashi saumon & avocat le mardi soir</label><label>🍜 Ramen au bouillon<select onchange="s.fixed.ramen=+this.value;save()">${ramenSel}</select></label><label class="inline"><input type="checkbox" ${s.veg ? "checked" : ""} onchange="s.veg=this.checked;save()"> Menus végétariens</label><label>Budget de base · € par semaine<input type="number" min="0" step="5" value="${s.budgetEur}" onchange="s.budgetEur=Math.max(0,+this.value);save();render()"></label><label>Le matin, en plus<select onchange="s.morning=this.value;s.checked={};save();render()">${[["juice", "Un verre de jus d’orange"], ["orange", "Une orange entière (plus de fibres)"], ["none", "Rien"]].map(([v, l]) => `<option value="${v}" ${s.morning === v ? "selected" : ""}>${l}</option>`).join("")}</select></label>${s.morning === "juice" ? `<label>Verre de jus (ml)<input type="number" min="50" max="400" step="25" value="${s.juiceMl}" onchange="s.juiceMl=Math.max(50,Math.min(400,+this.value||150));s.checked={};save();render()"></label>` : ""}<label>Gâteau, brioche… : portions par matin pour vous deux<input type="number" min="0.5" max="4" step="0.5" value="${s.breakfastShare}" onchange="s.breakfastShare=Math.max(0.5,Math.min(4,+this.value||1.5));save();render()"></label><label>Garder au congélateur (portions de plats)<input type="number" min="0" max="40" value="${s.freezerTarget}" onchange="s.freezerTarget=Math.max(0,+this.value);save()"></label></div><p class="muted">Recomposez la semaine pour appliquer ces réglages. Le poulet entier est désossé chaque dimanche : ≈ 350 g de blancs et 400 g de cuisses pour la semaine, la carcasse et les ailes pour le bouillon du ramen.</p>${batchPanel()}</details>`
   );
 }
 function topupNotice() {
@@ -540,7 +583,7 @@ function topupNotice() {
 function batchCost(r) {
   return Object.entries(r.ingredients).reduce((a, [id, q]) => a + Math.max(0, q - avail(id)) * unitPrice(id), 0) / (r.portions || 1);
 }
-function autoBatches() {
+function autoBatches(N = 7) {
   const frozen = (id) => s.freezer[id] || 0,
     last = s.lastBatches || [],
     pick = byR.poulet_entier ? ["poulet_entier"] : [];
@@ -551,7 +594,7 @@ function autoBatches() {
       .map((x) => x.r);
   const batches = R.filter((r) => r.type === "batch" && r.id !== "poulet_entier" && allowed(r) && frozen(r.id) === 0);
   // Petits-déjeuners et encas : 14 portions pour la semaine, moins ce qui reste au congélateur.
-  let need = 7 * s.breakfastShare - R.filter((r) => r.type === "batch" && r.meal === "breakfast").reduce((a, r) => a + frozen(r.id), 0);
+  let need = N * s.breakfastShare - R.filter((r) => r.type === "batch" && r.meal === "breakfast").reduce((a, r) => a + frozen(r.id), 0);
   for (const r of rank(batches.filter((r) => r.meal === "breakfast"))) {
     if (need <= 0 || pick.length >= 4) break;
     pick.push(r.id);
@@ -614,7 +657,7 @@ function sundayTasks() {
   const tasks = [],
     done = (key) => !!s.prepDone?.[key],
     short = (id) => esc(by[id].name.split(" · ")[0].replace(/\(.*?\)/g, "").trim().toLowerCase()),
-    when = (m) => `${DAYS[m.i]} ${m.j === 1 ? "midi" : "soir"}`;
+    when = (m) => `${dayName(m.i)} ${m.j === 1 ? "midi" : "soir"}`;
   const meals = (from, to) =>
     s.plan.days.slice(from, to).flatMap((d, k) => d.map((_, j) => ({ i: from + k, j, ...slot(from + k, j) })).filter((m) => m.j > 0 && !m.fz && m.r.type !== "batch" && !s.done[m.i + "-" + m.j]));
   const list = (items) => `<ul class="sub">${items.map((x) => `<li>${x}</li>`).join("")}</ul>`;
@@ -676,14 +719,14 @@ function sundayTasks() {
         `🥩 <b>Viande de lundi et mardi</b> : la couper comme dans la recette et la mettre en boîte fermée au réfrigérateur (2 jours maximum).` +
         list(soon.map((m) => `<b>${when(m)}</b> · ${esc(m.r.name)} : ${meatOf(m).map((id) => `${qtyLabel(m.r.ingredients[id] * 2, "g")} de ${short(id)}`).join(", ")}${/marin/i.test(m.r.steps.join(" ")) ? " · on peut déjà la mariner, voir la recette" : ""}`)),
     });
-  const later = meals(2, 7).filter((m) => meatOf(m).length);
+  const later = meals(2, s.plan.days.length).filter((m) => meatOf(m).length);
   if (later.length)
     tasks.push({
       key: "freeze",
       done: done("freeze"),
       html:
         `❄️ <b>Viande de mercredi à dimanche</b> : la ranger au congélateur dès le retour des courses, dans des sacs étiquetés au nom du repas. La sortir au réfrigérateur la veille au soir :` +
-        list(later.map((m) => `${DAYS[(m.i + 6) % 7].toLowerCase()} soir → pour <b>${when(m)}</b> · ${esc(m.r.name)} : ${meatOf(m).map((id) => `${qtyLabel(m.r.ingredients[id] * 2, "g")} de ${short(id)}`).join(", ")}`)),
+        list(later.map((m) => `${dayName(m.i - 1).toLowerCase()} soir → pour <b>${when(m)}</b> · ${esc(m.r.name)} : ${meatOf(m).map((id) => `${qtyLabel(m.r.ingredients[id] * 2, "g")} de ${short(id)}`).join(", ")}`)),
     });
   return tasks;
 }
@@ -705,10 +748,10 @@ function weekText() {
   const b = basket(),
     plain = (h) => h.replace(/<li>/g, "\n   - ").replace(/<br>/g, " ").replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&#39;/g, "’").replace(/&quot;/g, '"');
   return (
-    `DUO — semaine du ${dayDate(0)} au ${dayDate(6)}\n\nDIMANCHE — BATCH COOKING\n` +
+    `DUO — du ${dayName(0).toLowerCase()} ${dayDate(0)} au ${dayName(nDays() - 1).toLowerCase()} ${dayDate(nDays() - 1)} (${nDays()} jours)\n\nDIMANCHE — BATCH COOKING\n` +
     sundayTasks().map((t, k) => `${k + 1}. ${plain(t.html)}`).join("\n") +
     `\n\nMENUS\n` +
-    s.plan.days.map((d, i) => `${DAYS[i]} ${dayDate(i)} : ${d.map((_, j) => slot(i, j).r.name).join(" / ")}`).join("\n") +
+    s.plan.days.map((d, i) => `${dayName(i)} ${dayDate(i)} : ${d.map((_, j) => slot(i, j).r.name).join(" / ")}`).join("\n") +
     `\n\nCOURSES (magasin le moins cher)\n` +
     [...STORES, "À définir"]
       .filter((st) => b.some((x) => x.store === st))
@@ -850,7 +893,7 @@ const inPantry = (r) => Object.entries(r.ingredients).every(([id, q]) => !by[id]
 let pickQuery = "";
 function pickMeal(i, j) {
   pickQuery = "";
-  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>Choisir le ${SLOTS[j].toLowerCase()}</h2><p class="muted">${DAYS[i]} ${dayDate(i)} · actuellement : ${esc(slot(i, j).r.name)}</p><input type="search" placeholder="Une recette, un ingrédient, une cuisine…" oninput="pickQuery=this.value;pickRows(${i},${j})" autofocus><div id="pick-rows" class="pick-list"></div>`;
+  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>Choisir le ${SLOTS[j].toLowerCase()}</h2><p class="muted">${dayName(i)} ${dayDate(i)} · actuellement : ${esc(slot(i, j).r.name)}</p><input type="search" placeholder="Une recette, un ingrédient, une cuisine…" oninput="pickQuery=this.value;pickRows(${i},${j})" autofocus><div id="pick-rows" class="pick-list"></div>`;
   modal().showModal();
   pickRows(i, j);
 }
@@ -877,14 +920,14 @@ function setMeal(i, j, id) {
   save();
   modal().close();
   render();
-  toast(`${DAYS[i]} : ${byR[id].name}. Courses et budget recalculés.`);
+  toast(`${dayName(i)} : ${byR[id].name}. Courses et budget recalculés.`);
 }
 // Depuis une fiche recette : choisir le jour et le repas à remplacer.
 function addToMenu(id) {
   const r = byR[id],
     slots = r.meal === "breakfast" ? [0] : [1, 2];
   modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>📅 ${esc(r.name)}</h2><p class="muted">Remplace le repas choisi ; les courses et le budget suivent.</p><div class="slot-grid">${s.plan.days
-    .map((d, i) => `<div class="slot-day"><b>${DAYS[i].slice(0, 3)}. ${dayDate(i)}</b>${slots.map((j) => (s.done[i + "-" + j] ? `<span class="muted">${SLOTS[j].toLowerCase()} · fait</span>` : `<button class="secondary small" onclick="setMeal(${i},${j},'${id}')">${SLOTS[j].toLowerCase()}<br><small>${esc(slot(i, j).r.name)}</small></button>`)).join("")}</div>`)
+    .map((d, i) => `<div class="slot-day"><b>${dayName(i).slice(0, 3)}. ${dayDate(i)}</b>${slots.map((j) => (s.done[i + "-" + j] ? `<span class="muted">${SLOTS[j].toLowerCase()} · fait</span>` : `<button class="secondary small" onclick="setMeal(${i},${j},'${id}')">${SLOTS[j].toLowerCase()}<br><small>${esc(slot(i, j).r.name)}</small></button>`)).join("")}</div>`)
     .join("")}</div>`;
   modal().showModal();
 }
@@ -907,7 +950,7 @@ function swap(i, j) {
 }
 function useFreezer(i, j) {
   const items = Object.entries(s.freezer).filter(([id, n]) => n >= 2 && byR[id]?.meal === "main");
-  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>🧊 Un plat du congélateur</h2><p class="muted">${DAYS[i]} · ${SLOTS[j].toLowerCase()}. Deux portions seront retirées quand le repas sera marqué mangé.</p><div class="choice-list">${items
+  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>🧊 Un plat du congélateur</h2><p class="muted">${dayName(i)} · ${SLOTS[j].toLowerCase()}. Deux portions seront retirées quand le repas sera marqué mangé.</p><div class="choice-list">${items
     .map(([id, n]) => `<button class="secondary" onclick="setFreezer(${i},${j},'${id}')">${byR[id].emoji} ${esc(byR[id].name)} <small>· ${n} portions</small></button>`)
     .join("")}</div>`;
   modal().showModal();
@@ -1008,7 +1051,7 @@ function shopping() {
     `<label class="inline panel"><input type="checkbox" ${s.cards ? "checked" : ""} onchange="s.cards=this.checked;offerCache={};save();render()"> Cartes de fidélité (Lidl Plus, Kaufland Card XTRA) : utiliser leurs prix réduits</label><label class="panel">Préférer Lidl si l’écart ne dépasse pas (%)<input type="number" min="0" max="50" value="${s.lidlMargin}" onchange="s.lidlMargin=Math.max(0,Math.min(50,+this.value));offerCache={};save();render()"></label>` +
     (!s.plan
       ? '<div class="notice">Générez votre semaine pour obtenir une liste de courses.</div>'
-      : `<div class="stats"><div class="stat"><small>À payer au meilleur prix</small><strong>${eur(c)}</strong><em>${money(c)} RON · paquets entiers</em></div><div class="stat"><small>Réellement consommé</small><strong>${eur(used(s.plan))}</strong><em>budget ${money(s.budgetEur)} € · les restes de paquets restent au placard</em></div><div class="stat"><small>Économie</small><strong>${money(saved)} RON</strong><em>vs le magasin le plus cher, produit par produit</em></div><div class="stat"><small>Magasins</small><strong>${shops.length}</strong><em>${b.length} articles à acheter</em></div></div>${shops
+      : `<div class="stats"><div class="stat"><small>À payer au meilleur prix</small><strong>${eur(c)}</strong><em>${money(c)} RON · paquets entiers</em></div><div class="stat"><small>Réellement consommé</small><strong>${eur(used(s.plan))}</strong><em>budget ${money(periodEur())} € · les restes de paquets restent au placard</em></div><div class="stat"><small>Économie</small><strong>${money(saved)} RON</strong><em>vs le magasin le plus cher, produit par produit</em></div><div class="stat"><small>Magasins</small><strong>${shops.length}</strong><em>${b.length} articles à acheter</em></div></div>${shops
           .map((shop) => {
             const items = b.filter((x) => x.store === shop);
             return `<div class="panel"><h2>${STORE_ICON[shop] || "❔"} ${shop} <span class="muted" style="font-size:13px">· ${money(items.reduce((a, x) => a + x.total, 0))} RON</span></h2><div class="table-wrap"><table class="shop-table"><thead><tr><th>Pris</th><th>Produit</th><th>À acheter</th><th>Total</th></tr></thead><tbody>${items
@@ -1059,7 +1102,9 @@ function receive() {
   if (!items.length) return toast("Cochez les articles achetés.");
   const amount = items.reduce((a, x) => a + x.total, 0);
   items.forEach((x) => (s.stock[x.id] = (s.stock[x.id] || 0) + x.packs * x.pack));
-  s.budgetEur = Math.max(0, Math.round((s.budgetEur - amount / s.rate) * 100) / 100);
+  if (s.plan) s.plan.budgetEur = Math.max(0, Math.round((periodEur() - amount / s.rate) * 100) / 100);
+  else s.budgetEur = Math.max(0, Math.round((s.budgetEur - amount / s.rate) * 100) / 100);
+  s.shopped = true;
   s.checked = {};
   save();
   render();
@@ -1112,6 +1157,7 @@ function recipeRows() {
   document.getElementById("reciperows").innerHTML = list.map(card).join("") || "<p>Aucune recette trouvée.</p>";
 }
 function profiles() {
+  if (s.plan && s.day >= s.plan.days.length) s.day = 0;
   const d = s.plan ? s.plan.days[s.day].map((_, j) => slot(s.day, j).r) : [],
     m = d.reduce(
       (a, r) => {
@@ -1125,7 +1171,7 @@ function profiles() {
     );
   return (
     heading("DES REPÈRES POUR CHACUN", "Profils & nutrition.", "Deux personnes, deux objectifs. Des portions identiques pour commencer.") +
-    `<div class="notice">Saisissez votre propre objectif quotidien en protéines et calories. Les valeurs proposées sont des exemples à personnaliser, pas une prescription. Calculs alimentaires estimatifs à vérifier avec les étiquettes.</div><div class="profile-grid">${s.profiles.map((p, i) => `<section class="panel"><div class="eyebrow">PROFIL 0${i + 1}</div><label>Prénom<input type="text" maxlength="40" value="${esc(p.name)}" onchange="s.profiles[${i}].name=this.value;save()"></label><br><label>Objectif de protéines · g / jour<input type="number" min="1" max="500" value="${p.protein}" onchange="s.profiles[${i}].protein=Math.max(1,Math.min(500,+this.value));save();render()"></label><label>Objectif énergétique · kcal / jour<input type="number" min="500" max="6000" value="${p.kcal}" onchange="s.profiles[${i}].kcal=Math.max(500,Math.min(6000,+this.value));save();render()"></label></section>`).join("")}</div><div class="panel"><div class="row spread"><h2>Votre journée en chiffres</h2><select onchange="s.day=+this.value;save();render()">${DAYS.map((x, i) => `<option value="${i}" ${i === s.day ? "selected" : ""}>${x}</option>`).join("")}</select></div>${
+    `<div class="notice">Saisissez votre propre objectif quotidien en protéines et calories. Les valeurs proposées sont des exemples à personnaliser, pas une prescription. Calculs alimentaires estimatifs à vérifier avec les étiquettes.</div><div class="profile-grid">${s.profiles.map((p, i) => `<section class="panel"><div class="eyebrow">PROFIL 0${i + 1}</div><label>Prénom<input type="text" maxlength="40" value="${esc(p.name)}" onchange="s.profiles[${i}].name=this.value;save()"></label><br><label>Objectif de protéines · g / jour<input type="number" min="1" max="500" value="${p.protein}" onchange="s.profiles[${i}].protein=Math.max(1,Math.min(500,+this.value));save();render()"></label><label>Objectif énergétique · kcal / jour<input type="number" min="500" max="6000" value="${p.kcal}" onchange="s.profiles[${i}].kcal=Math.max(500,Math.min(6000,+this.value));save();render()"></label></section>`).join("")}</div><div class="panel"><div class="row spread"><h2>Votre journée en chiffres</h2><select onchange="s.day=+this.value;save();render()">${(s.plan ? s.plan.days : DAYS).map((_, i) => `<option value="${i}" ${i === s.day ? "selected" : ""}>${s.plan ? `${dayName(i)} ${dayDate(i)}` : DAYS[i]}</option>`).join("")}</select></div>${
       s.plan
         ? `<p class="muted">Prévision des 3 repas du menu par personne${morningItem() ? `, avec le ${morningItem().label} du matin` : ""}. Repère fibres : 30 g par jour.</p><div class="profile-grid">${s.profiles
             .map((p) => {
@@ -1250,7 +1296,7 @@ function cook(i, j) {
 function ateOther(i, j) {
   const frozen = Object.entries(s.freezer).filter(([id, n]) => n > 0 && byR[id]);
   const row = `<div class="row ing-row"><input class="ing-name" list="ing-list" placeholder="Ingrédient"><input class="ing-qty" type="number" min="0" step="any" placeholder="Quantité"></div>`;
-  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>On a mangé autre chose</h2><p class="muted">${DAYS[i]} · ${SLOTS[j].toLowerCase()}. Le repas prévu reste au placard pour plus tard.</p><form id="ate-form" onsubmit="saveAte(event,${i},${j})"><label>Une recette du carnet (pour deux)<input name="recipe" list="recipe-list" placeholder="Ex. Pâtes carbonara"></label><datalist id="recipe-list">${R.filter((r) => r.type !== "batch").map((r) => `<option value="${esc(r.name)}">`).join("")}</datalist>${frozen.length ? `<label>Ou un plat du congélateur (−2 portions)<select name="freezer"><option value="">—</option>${frozen.map(([id, n]) => `<option value="${id}">${byR[id].emoji} ${esc(byR[id].name)} · ${n}</option>`).join("")}</select></label>` : ""}<h3>Ou des ingrédients à la main</h3><div id="ate-rows">${row.repeat(3)}</div><button type="button" class="secondary" onclick="document.getElementById('ate-rows').insertAdjacentHTML('beforeend',document.querySelector('#ate-rows .ing-row').outerHTML)">+ Ligne</button><datalist id="ing-list">${C.map((x) => `<option value="${esc(x.name)}">${x.unit}</option>`).join("")}</datalist><div class="row" style="margin-top:16px"><button type="submit">Enregistrer</button><button type="button" class="secondary" onclick="saveAte(null,${i},${j},'Restaurant ou livraison')">Restaurant / livraison</button></div></form>`;
+  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>On a mangé autre chose</h2><p class="muted">${dayName(i)} · ${SLOTS[j].toLowerCase()}. Le repas prévu reste au placard pour plus tard.</p><form id="ate-form" onsubmit="saveAte(event,${i},${j})"><label>Une recette du carnet (pour deux)<input name="recipe" list="recipe-list" placeholder="Ex. Pâtes carbonara"></label><datalist id="recipe-list">${R.filter((r) => r.type !== "batch").map((r) => `<option value="${esc(r.name)}">`).join("")}</datalist>${frozen.length ? `<label>Ou un plat du congélateur (−2 portions)<select name="freezer"><option value="">—</option>${frozen.map(([id, n]) => `<option value="${id}">${byR[id].emoji} ${esc(byR[id].name)} · ${n}</option>`).join("")}</select></label>` : ""}<h3>Ou des ingrédients à la main</h3><div id="ate-rows">${row.repeat(3)}</div><button type="button" class="secondary" onclick="document.getElementById('ate-rows').insertAdjacentHTML('beforeend',document.querySelector('#ate-rows .ing-row').outerHTML)">+ Ligne</button><datalist id="ing-list">${C.map((x) => `<option value="${esc(x.name)}">${x.unit}</option>`).join("")}</datalist><div class="row" style="margin-top:16px"><button type="submit">Enregistrer</button><button type="button" class="secondary" onclick="saveAte(null,${i},${j},'Restaurant ou livraison')">Restaurant / livraison</button></div></form>`;
   modal().showModal();
 }
 function saveAte(ev, i, j, label) {
@@ -2089,7 +2135,7 @@ function exportList() {
         .map((st) => st.toUpperCase() + "\n" + b.filter((x) => x.store === st).map((x) => `[ ] ${by[x.id].name} — ${x.packs} × ${qtyLabel(x.pack, by[x.id].unit)} (${x.name}) — ${money(x.total)} RON`).join("\n"))
         .join("\n\n") +
       `\n\nTOTAL : ${money(cost(s.plan))} RON\n\nFOURNÉES : ${s.batches.map((id) => byR[id]?.name).filter(Boolean).join(", ")}\n\nMENUS\n` +
-      s.plan.days.map((d, i) => DAYS[i] + " : " + d.map((_, j) => slot(i, j).r.name).join(" / ")).join("\n"),
+      s.plan.days.map((d, i) => dayName(i) + " " + dayDate(i) + " : " + d.map((_, j) => slot(i, j).r.name).join(" / ")).join("\n"),
     "text/plain;charset=utf-8",
   );
 }
@@ -2113,7 +2159,8 @@ function render() {
 function sundayRoutine() {
   const sunday = new Date().getDay() === 0 || location.hash === "#dimanche";
   if (!sunday) return render();
-  if (!s.plan || s.plan.weekStart !== weekStartISO()) {
+  const covered = s.plan && isoAdd(s.plan.weekStart, s.plan.days.length - 1) >= isoAdd(weekStartISO(), 6);
+  if (!covered) {
     generate(true);
     toast("Nouvelle semaine prête : batch cooking et liste de courses à envoyer.");
   } else go("week");
