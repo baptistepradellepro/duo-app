@@ -1208,11 +1208,29 @@ function setMeal(i, j, id) {
 // Depuis une fiche recette : choisir le jour et le repas à remplacer.
 function addToMenu(id) {
   const r = byR[id],
-    slots = r.meal === "breakfast" ? [0] : [1, 2];
-  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>📅 ${esc(r.name)}</h2><p class="muted">Remplace le repas choisi ; les courses et le budget suivent.</p><div class="slot-grid">${s.plan.days
-    .map((d, i) => `<div class="slot-day"><b>${dayName(i).slice(0, 3)}. ${dayDate(i)}</b>${slots.map((j) => (s.done[i + "-" + j] ? `<span class="muted">${SLOTS[j].toLowerCase()} · fait</span>` : `<button class="secondary small" onclick="setMeal(${i},${j},'${id}')">${SLOTS[j].toLowerCase()}<br><small>${esc(slot(i, j).r.name)}</small></button>`)).join("")}</div>`)
+    slots = r.meal === "breakfast" ? [0] : [1, 2],
+    batch = r.type === "batch",
+    have = s.freezer[id] || 0;
+  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>📅 ${esc(r.name)}</h2><p class="muted">Remplace le repas choisi ; les courses et le budget suivent.</p>${
+    batch
+      ? `<form id="batch-src" class="choice-list"><label class="period"><input type="radio" name="src" value="freezer" ${have ? "checked" : ""}> <span><b>🧊 Il y en a au congélateur</b><br><small class="muted">${have ? `${have} portion${have > 1 ? "s" : ""} comptée${have > 1 ? "s" : ""}` : "Portions au congélateur :"} <input name="n" type="number" min="1" max="40" value="${have || 2}" style="width:70px" ${have ? "hidden" : ""}></small></span></label><label class="period"><input type="radio" name="src" value="cook" ${have ? "" : "checked"}> <span><b>🧑‍🍳 Je le prépare</b><br><small class="muted">Ajouté au batch cooking et à la liste de courses</small></span></label></form>`
+      : ""
+  }<div class="slot-grid">${s.plan.days
+    .map((d, i) => `<div class="slot-day"><b>${dayName(i).slice(0, 3)}. ${dayDate(i)}</b>${slots.map((j) => (s.done[i + "-" + j] ? `<span class="muted">${SLOTS[j].toLowerCase()} · fait</span>` : `<button class="secondary small" onclick="placeMeal(${i},${j},'${id}')">${SLOTS[j].toLowerCase()}<br><small>${esc(slot(i, j).r.name)}</small></button>`)).join("")}</div>`)
     .join("")}</div>`;
   modal().showModal();
+}
+// Plat de fournée mis au menu depuis sa fiche : servi du congélateur, ou préparé (batch cooking et courses).
+function placeMeal(i, j, id) {
+  const f = document.getElementById("batch-src");
+  if (!f) return setMeal(i, j, id);
+  if (f.src.value === "freezer") {
+    if (!(s.freezer[id] > 0)) s.freezer[id] = Math.max(1, Math.round(+f.n.value || 2));
+    return setFreezer(i, j, id);
+  }
+  if (!s.batches.includes(id)) s.batches.push(id);
+  delete s.batchDone[id];
+  setMeal(i, j, id);
 }
 function swap(i, j) {
   const cur = s.plan.days[i][j];
@@ -1491,8 +1509,8 @@ function detail(id, i, j) {
     fz = key && s.plan?.freezerUse?.[key] === id;
   let action = "";
   if (key && !s.done[key]) action = `<button onclick="cook(${i},${j})">${fz ? "✓ Mangé : retirer 2 portions du congélateur" : r.type === "batch" ? "✓ Mangé" : "✓ Repas cuisiné : déduire du placard"}</button>`;
-  else if (!key && (r.type === "main" || r.type === "breakfast") && s.plan) action = `<button onclick="addToMenu('${id}')">📅 Mettre au menu</button>`;
-  else if (!key && r.type === "batch" && s.batches.includes(id) && !s.batchDone[id]) action = `<button onclick="cookBatch('${id}')">✓ Fournée préparée : déduire du placard${r.freezer ? " et ranger au congélateur" : ""}</button>`;
+  else if (!key && (r.type === "main" || r.type === "breakfast" || (r.type === "batch" && r.meal === "main" && !r.yields)) && s.plan) action = `<button onclick="addToMenu('${id}')">📅 Mettre au menu</button>`;
+  if (!key && r.type === "batch" && s.batches.includes(id) && !s.batchDone[id]) action += `<button class="${action ? "secondary" : ""}" onclick="cookBatch('${id}')">✓ Fournée préparée : déduire du placard${r.freezer ? " et ranger au congélateur" : ""}</button>`;
   modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><div style="font-size:50px">${r.emoji}</div><h2>${esc(r.name)}</h2><p>${esc(r.cuisine)} · ${r.time} min · <b>${isTotal(r) ? `${r.type === "sauce" ? "pour" : "fournée de"} ${r.portions} ${esc(r.unit)}` : "2 personnes"}</b>${r.freezer ? " · 🧊 se congèle" : ""}</p>${r.source ? `<p><a href="${esc(r.source)}" target="_blank" rel="noopener">Voir la recette d’origine ↗</a></p>` : ""}<div class="notice">Par ${isTotal(r) ? "portion" : "personne"} : ${Math.round(m.kcal)} kcal · ${Math.round(m.protein)} g de protéines · ${Math.round(m.fiber)} g de fibres</div>${tools(r)}<h3>Dans la cuisine</h3><table>${Object.entries(r.ingredients)
     .filter(([x]) => by[x])
     .map(([x, q]) => `<tr><td>${esc(by[x].name)}</td><td>${qtyLabel(q * f, by[x].unit)}</td></tr>`)
