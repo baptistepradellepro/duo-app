@@ -1035,7 +1035,7 @@ function sundayPanel() {
     sunday = from ? ` · ${new Date(isoAdd(s.plan.weekStart, from - 1) + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "numeric" })}` : "";
   if (!todo.length) return `<div class="panel sunday done-all" id="sunday"><h2>🧑‍🍳 Batch cooking terminé ✓</h2><p class="muted">Tout est prêt pour la semaine. <button class="text-button" onclick="shareWeek()">📤 Renvoyer le programme</button></p></div>`;
   return `<section class="panel sunday" id="sunday"><div class="row spread"><h2>🧑‍🍳 Batch cooking du dimanche${sunday}</h2><span class="muted">${all.length - todo.length} / ${all.length} fait</span></div><p class="muted">${from ? `À faire dimanche, pas avant : les plats du batch arrivent au menu à partir de lundi. D’ici là, cuisine au jour le jour.` : "À faire en premier : lundi démarre presque tout prêt."} Chaque étape disparaît quand elle est faite.</p><ol class="tasks">${todo
-    .map((x) => `<li><span>${x.html}</span><span class="row">${x.batch ? `<button class="text-button" onclick="detail('${x.batch}')">Recette</button><button class="small" onclick="cookBatch('${x.batch}')">✓ Fait</button>` : `<button class="small" onclick="prepDone('${x.key}')">✓ Fait</button>`}</span></li>`)
+    .map((x) => `<li><span>${x.html}</span><span class="row">${x.batch ? `<button class="text-button" onclick="detail('${x.batch}')">Recette</button><button class="text-button" onclick="removeBatch('${x.batch}')">Retirer</button><button class="small" onclick="cookBatch('${x.batch}')">✓ Fait</button>` : `<button class="small" onclick="prepDone('${x.key}')">✓ Fait</button>`}</span></li>`)
     .join("")}</ol><div class="row"><button onclick="shareWeek()">📤 Envoyer le programme & la liste</button><button class="secondary" onclick="go('shopping')">Voir les courses</button></div></section>`;
 }
 function prepDone(key) {
@@ -1094,7 +1094,39 @@ function batchPanel() {
     })
     .join("")}</div>`;
 }
+// Retirer une fournée du batch de la semaine : ses repas au menu sont remplacés (sauf s'il en reste au congélateur),
+// ses ingrédients sortent des courses.
+function removeBatch(id) {
+  const r = byR[id];
+  if (!r || !confirm(`Retirer « ${r.name} » du batch cooking de la semaine ?`)) return;
+  s.batches = s.batches.filter((x) => x !== id);
+  delete s.batchDone[id];
+  let frozen = s.freezer[id] || 0,
+    replaced = 0;
+  s.plan?.days.forEach((d, i) =>
+    d.forEach((x, j) => {
+      if (x !== id || s.done[i + "-" + j]) return;
+      // Il en reste au congélateur : le repas reste prévu, servi de là.
+      const part = j === 0 ? s.breakfastShare : 2;
+      if (frozen >= part) return void (frozen -= part);
+      if (j === 0) d[0] = "matin_cafe";
+      else {
+        const pool = R.filter((m) => m.type === "main" && !m.fixed && !m.noPlan && allowed(m) && !s.plan.days.some((y) => y.includes(m.id)));
+        // Le remplaçant le moins cher à acheter (placard d'abord), puis le plus apprécié.
+        const buy = (m) => Object.entries(m.ingredients).reduce((a, [k, q]) => a + Math.max(0, q * 2 - avail(k)) * unitPrice(k), 0) - taste(m) * 6,
+          fit = pool.filter((m) => slotOk(s.plan.days, i, j, m)).sort((a, b) => buy(a) - buy(b));
+        d[j] = (fit[0] || pool[0] || { id: x }).id;
+      }
+      replaced++;
+    }),
+  );
+  s.checked = {};
+  save();
+  render();
+  toast(`${r.name} retiré du batch${replaced ? ` : ${replaced} repas remplacé${replaced > 1 ? "s" : ""} au menu` : ""}. Courses recalculées.`);
+}
 function toggleBatch(id, on) {
+  if (!on) return removeBatch(id);
   s.batches = s.batches.filter((x) => x !== id);
   if (on) s.batches.push(id);
   s.checked = {};
