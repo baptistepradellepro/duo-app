@@ -276,8 +276,11 @@ function demands(plan = s.plan, top = false) {
 function basket(plan = s.plan, top = true) {
   return Object.entries(demands(plan, top))
     .map(([id, need]) => {
-      const missing = Math.max(0, need - avail(id));
-      return missing > 1e-9 ? { id, need, missing, ...bestBuy(id, missing) } : null;
+      const have = avail(id),
+        missing = Math.max(0, need - have),
+        // Il en reste presque assez : on s'adapte plutôt que racheter un paquet entier pour quelques grammes.
+        tiny = have > 0 && (by[id]?.unit === "pièce" ? missing < 0.5 : missing <= Math.max(15, need * 0.08));
+      return missing > 1e-9 && !tiny ? { id, need, have, missing, ...bestBuy(id, missing) } : null;
     })
     .filter(Boolean);
 }
@@ -1284,10 +1287,16 @@ function setFreezer(i, j, id) {
 function stock() {
   const frozen = Object.entries(s.freezer).filter(([id, n]) => n > 0 && byR[id]),
     mine = C.filter((x) => (s.stock[x.id] || 0) > 0).sort((a, b) => a.name.localeCompare(b.name, "fr")),
-    review = s.custom.filter((x) => by[x.id] && !x.confirmed);
+    review = s.custom.filter((x) => by[x.id] && !x.confirmed),
+    same = maybeSame().filter(([from]) => !review.some((x) => x.id === from));
   return (
     heading("LA BASE DE VOS FUTURS REPAS", "Mon placard.", "Scannez, tapez ou modifiez ce que vous avez. Les recettes et les courses en tiennent compte.") +
     `<div class="panel"><div class="row spread"><h2>➕ Ajouter des aliments</h2><button class="secondary small" onclick="aiSettings()">🤖 Claude : ${aiKey() ? "activé" : "désactivé"}</button></div><div class="row"><button onclick="scanner()">📷 Scanner un code-barres</button></div><label>Ou tapez-les, un par ligne ou séparés par des virgules<textarea id="quick" rows="3" placeholder="2 steaks, 500 g de vermicelles de riz, sauce soja, 6 œufs, 1 kg de carottes"></textarea></label><button class="secondary" onclick="quickParse()">Analyser</button><div id="quick-result"></div></div>` +
+    (same.length
+      ? `<div class="panel review"><h2>🧩 Même aliment ? (${same.length})</h2><p class="muted">Ces produits ressemblent à un aliment de l’app. Une réponse suffit : l’app s’en souvient.</p>${same
+          .map(([from, to]) => `<div class="review-row"><span><b>${esc(by[from].name)}</b> <small class="muted">${qtyLabel(s.stock[from] || 0, by[from].unit)}</small><br><small class="muted">= ${esc(by[to].name.split(" · ")[0])} ?</small></span><span class="row"><button class="small" onclick="mergeInto('${from}','${to}')">C’est pareil</button><button class="secondary small" onclick="notSame('${from}','${to}')">Non</button></span></div>`)
+          .join("")}</div>`
+      : "") +
     (review.length
       ? `<div class="panel review"><h2>🔗 À rattacher (${review.length})</h2><p class="muted">Reliez chaque produit à un aliment de l’app pour que les recettes l’utilisent, ou confirmez que c’est un produit à part (sirop, snack…) : il reçoit alors son rayon.</p><div class="row"><button class="small" onclick="claudeCopy()">📋 Classer avec l’app Claude</button><button class="secondary small" onclick="claudePaste()">📥 Coller la réponse de Claude</button>${aiKey() ? `<button class="secondary small" onclick="aiReview()">🤖 Classer automatiquement (clé API)</button>` : ""}</div>${review
           .map((x) => {
@@ -1357,7 +1366,8 @@ function exclude(id, on) {
   toast("Préférence enregistrée. Recomposez la semaine pour l’appliquer.");
 }
 function shopping() {
-  const b = basket(),
+  const same = maybeSame(),
+    b = basket(),
     c = b.reduce((a, x) => a + x.total, 0);
   const saved = b.reduce((a, x) => {
     const worst = Math.max(...STORES.map((st) => (offers(x.id).some((o) => o.store === st) ? bestBuy(x.id, x.missing, st).total : 0)));
@@ -1375,7 +1385,10 @@ function shopping() {
             return `<div class="panel"><h2>${STORE_ICON[shop] || "❔"} ${shop} <span class="muted" style="font-size:13px">· ${money(items.reduce((a, x) => a + x.total, 0))} RON</span></h2><div class="table-wrap"><table class="shop-table"><thead><tr><th>Pris</th><th>Produit</th><th>À acheter</th><th>Total</th></tr></thead><tbody>${items
               .map((x) => {
                 const alts = STORES.filter((st) => st !== x.store && offers(x.id).some((o) => o.store === st)).map((st) => `${st} ${money(bestBuy(x.id, x.missing, st).total)}`);
-                return `<tr><td><input aria-label="Pris ${esc(by[x.id].name)}" type="checkbox" ${s.checked[x.id] ? "checked" : ""} onchange="s.checked['${x.id}']=this.checked;save()"></td><td><b>${esc(by[x.id].name)}</b><br><small class="muted">${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a> · ` : x.name !== by[x.id].name ? esc(x.name) + " · " : ""}${sourceLabel[x.source]}${s.lock[x.id] ? " · 🔒 magasin choisi" : ""}</small><br><small class="muted">Besoin net : ${qtyLabel(x.missing, by[x.id].unit)}${alts.length ? " · ailleurs : " + alts.join(" · ") + " RON" : ""}</small> <button class="text-button" onclick="priceEditor('${x.id}')">Prix ↗</button></td><td>${x.packs} × ${qtyLabel(x.pack, by[x.id].unit)}</td><td>${money(x.total)} RON</td></tr>`;
+                return `<tr><td><input aria-label="Pris ${esc(by[x.id].name)}" type="checkbox" ${s.checked[x.id] ? "checked" : ""} onchange="s.checked['${x.id}']=this.checked;save()"></td><td><b>${esc(by[x.id].name)}</b><br><small class="muted">${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a> · ` : x.name !== by[x.id].name ? esc(x.name) + " · " : ""}${sourceLabel[x.source]}${s.lock[x.id] ? " · 🔒 magasin choisi" : ""}</small><br><small class="muted">Besoin net : ${qtyLabel(x.missing, by[x.id].unit)}${x.have > 0 ? ` (il en faut ${qtyLabel(x.need, by[x.id].unit)}, vous en avez ${qtyLabel(x.have, by[x.id].unit)})` : ""}${same
+                  .filter(([, to]) => to === x.id)
+                  .map(([from, to]) => `<br><small>Déjà au placard ? <b>${esc(by[from].name)}</b> (${qtyLabel(s.stock[from] || 0, by[from].unit)}) <button class="small" onclick="mergeInto('${from}','${to}')">C’est pareil</button><button class="secondary small" onclick="notSame('${from}','${to}')">Non</button></small>`)
+                  .join("")}${alts.length ? " · ailleurs : " + alts.join(" · ") + " RON" : ""}</small> <button class="text-button" onclick="priceEditor('${x.id}')">Prix ↗</button></td><td>${x.packs} × ${qtyLabel(x.pack, by[x.id].unit)}</td><td>${money(x.total)} RON</td></tr>`;
               })
               .join("")}</tbody></table></div></div>`;
           })
@@ -2304,12 +2317,24 @@ async function aiReview() {
 }
 
 // Au lancement : rattache automatiquement les produits enregistrés à part quand la correspondance est sûre.
+// Le cerveau du placard : chaque aliment n'existe qu'une fois.
+// 1. Deux produits ajoutés à la main au même nom (pluriel, accents, majuscules près) n'en font qu'un.
+// 2. Un produit ajouté à la main qui correspond sans ambiguïté à un aliment de l'app y est fusionné, même s'il avait
+//    été rangé à part ou créé par un import de recettes. Sirop, soda, snack… ne sont jamais fusionnés (voir matchProduct).
 function autoSync() {
   let n = 0;
+  const seen = {};
   for (const x of [...s.custom]) {
-    if (x.confirmed) continue;
-    const m = matchProduct(x.name).filter((c) => !c.id.startsWith("custom"));
-    if (sure(m)) {
+    const key = singular(norm(x.name));
+    if (seen[key] && by[seen[key]]) {
+      mergeInto(x.id, seen[key], true);
+      n++;
+    } else seen[key] = x.id;
+  }
+  for (const x of [...s.custom]) {
+    if (!by[x.id]) continue;
+    const m = matchProduct(x.name).filter((c) => !c.id.startsWith("custom") && !(x.notSame || []).includes(c.id));
+    if (sure(m) && (!x.confirmed || m[0].score >= 16)) {
       mergeInto(x.id, m[0].id, true);
       n++;
     }
@@ -2318,6 +2343,22 @@ function autoSync() {
     save();
     setTimeout(() => toast(`${n} produit${n > 1 ? "s" : ""} du placard rattaché${n > 1 ? "s" : ""} automatiquement aux aliments de l’app.`), 600);
   }
+}
+// Ressemblances trop faibles pour fusionner seul : on demande une fois (« C'est pareil ? »), puis on s'en souvient.
+function maybeSame() {
+  const out = [];
+  for (const x of s.custom) {
+    if (!by[x.id] || !(s.stock[x.id] > 0)) continue;
+    const m = matchProduct(x.name).filter((c) => !c.id.startsWith("custom") && !(x.notSame || []).includes(c.id));
+    if (m[0] && m[0].score >= 12) out.push([x.id, m[0].id]);
+  }
+  return out;
+}
+function notSame(from, to) {
+  const x = s.custom.find((c) => c.id === from);
+  if (x) (x.notSame ??= []).push(to);
+  save();
+  render();
 }
 async function onCode(code) {
   if (!/^\d{6,14}$/.test(code)) return toast("Code-barres invalide.");
