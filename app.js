@@ -1061,11 +1061,10 @@ function mealCell(i, j) {
   const { key, fz, r } = slot(i, j),
     done = s.done[key],
     ate = s.plan.ate?.[key],
-    m = macro(r),
-    canFreeze = Object.entries(s.freezer).some(([id, n]) => n >= 2 && byR[id]?.meal === "main");
+    m = macro(r);
   if (ate) return `<div class="meal done"><div><small>${SLOTS[j]} · AUTRE CHOSE</small><b>🍽️ ${esc(ate)}</b><span class="muted">retiré du placard</span></div></div>`;
   const tag = done ? " · ✓" : fz ? " · 🧊 CONGÉLO" : r.fixed ? " · RITUEL" : r.type === "batch" ? (r.freezer ? " · CONGÉLO" : " · FOURNÉE") : "";
-  return `<div class="meal ${done ? "done" : ""} ${fz ? "frozen" : ""}"><div onclick="detail('${r.id}',${i},${j})" role="button" tabindex="0" onkeydown="if(event.key==='Enter')detail('${r.id}',${i},${j})"><small>${SLOTS[j]}${tag}</small><b>${r.emoji} ${esc(r.name)}</b><span class="muted">${Math.round(m.kcal)} kcal · ${Math.round(m.protein)} g prot. · ${Math.round(m.fiber)} g fibres</span></div>${done ? "" : `<div class="meal-actions"><button class="text-button" onclick="pickMeal(${i},${j})">Choisir</button><button class="text-button" onclick="swap(${i},${j})">Au hasard ↻</button>${j > 0 && canFreeze ? `<button class="text-button" onclick="useFreezer(${i},${j})">🧊 Congélo</button>` : ""}<button class="text-button" onclick="ateOther(${i},${j})">Autre</button></div>`}</div>`;
+  return `<div class="meal ${done ? "done" : ""} ${fz ? "frozen" : ""}"><div onclick="detail('${r.id}',${i},${j})" role="button" tabindex="0" onkeydown="if(event.key==='Enter')detail('${r.id}',${i},${j})"><small>${SLOTS[j]}${tag}</small><b>${r.emoji} ${esc(r.name)}</b><span class="muted">${Math.round(m.kcal)} kcal · ${Math.round(m.protein)} g prot. · ${Math.round(m.fiber)} g fibres</span></div>${done ? "" : `<div class="meal-actions"><button class="text-button" onclick="pickMeal(${i},${j})">Choisir</button><button class="text-button" onclick="swap(${i},${j})">Au hasard ↻</button>${j > 0 ? `<button class="text-button" onclick="useFreezer(${i},${j})">🧊 Congélo</button>` : ""}<button class="text-button" onclick="ateOther(${i},${j})">Autre</button></div>`}</div>`;
 }
 function batchPanel() {
   const list = R.filter((r) => r.type === "batch");
@@ -1185,7 +1184,9 @@ function pickRows(i, j) {
   const list = R.filter((r) => fitsSlot(r, j) && r.id !== cur && norm(r.name + " " + r.cuisine + " " + Object.keys(r.ingredients).map((id) => by[id]?.name || "").join(" ")).includes(q))
     .map((r) => ({ r, ok: inPantry(r), like: s.ratings[r.id] === 1, fit: slotOk(s.plan.days, i, j, r) }))
     .sort((a, b) => b.fit - a.fit || b.ok - a.ok || b.like - a.like || a.r.name.localeCompare(b.r.name, "fr"));
+  const frozen = j > 0 && !q ? freezerRows(i, j) : "";
   document.getElementById("pick-rows").innerHTML =
+    (frozen ? `<p class="muted"><b>🧊 Au congélateur</b></p>${frozen}<p class="muted"><b>Dans le carnet</b></p>` : "") +
     list
       .map(({ r, ok, like, fit }) => {
         const m = macro(r);
@@ -1230,15 +1231,32 @@ function swap(i, j) {
   render();
   toast("Repas remplacé, budget et courses recalculés.");
 }
+// Plats du congélateur pour le midi ou le soir : ce qui y est, et de quoi déclarer un plat congelé que l'app ne connaît pas encore.
+const frozenMeals = () => Object.entries(s.freezer).filter(([id, n]) => n > 0 && byR[id] && byR[id].meal === "main" && !byR[id].yields);
+const freezable = () => R.filter((r) => (r.type === "batch" ? r.meal === "main" && r.freezer && !r.yields : r.type === "main" && !r.fixed));
+function freezerRows(i, j) {
+  return frozenMeals()
+    .map(([id, n]) => `<button class="pick-row" onclick="setFreezer(${i},${j},'${id}')"><span class="pick-emoji">🧊</span><span><b>${byR[id].emoji} ${esc(byR[id].name)}</b><small class="muted">${n} portion${n > 1 ? "s" : ""} au congélateur${n < 2 ? " · une seule portion : à compléter" : ""}${slotOk(s.plan.days, i, j, byR[id]) ? "" : " · ⚠️ ressemble à un repas voisin"}</small></span></button>`)
+    .join("");
+}
 function useFreezer(i, j) {
-  const items = Object.entries(s.freezer).filter(([id, n]) => n >= 2 && byR[id]?.meal === "main");
-  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>🧊 Un plat du congélateur</h2><p class="muted">${dayName(i)} · ${SLOTS[j].toLowerCase()}. Deux portions seront retirées quand le repas sera marqué mangé.</p><div class="choice-list">${items
-    .map(([id, n]) => `<button class="secondary" onclick="setFreezer(${i},${j},'${id}')">${byR[id].emoji} ${esc(byR[id].name)} <small>· ${n} portions</small></button>`)
-    .join("")}</div>`;
+  const rows = freezerRows(i, j);
+  modal().innerHTML = `<button class="close" onclick="modal().close()" aria-label="Fermer">✕</button><h2>🧊 Un plat du congélateur</h2><p class="muted">${dayName(i)} · ${SLOTS[j].toLowerCase()}. Deux portions seront retirées quand le repas sera marqué mangé ; ses ingrédients sortent des courses.</p>${rows ? `<div class="pick-list">${rows}</div>` : '<p class="muted">L’app ne compte aucun plat au congélateur.</p>'}<details class="panel" ${rows ? "" : "open"}><summary>Un plat congelé qui n’est pas dans la liste</summary><form onsubmit="event.preventDefault();declareFrozen(this,${i},${j})"><label>Plat<input name="dish" list="freezable-list" required placeholder="Ex. Gyoza, Bolognaise…"></label><datalist id="freezable-list">${freezable()
+    .map((r) => `<option value="${esc(r.name)}">`)
+    .join("")}</datalist><label>Portions au congélateur (une par personne et par repas)<input name="n" type="number" min="1" max="40" value="2"></label><button type="submit">Ajouter et mettre au menu</button></form></details>`;
   modal().showModal();
+}
+function declareFrozen(f, i, j) {
+  const name = norm(f.dish.value),
+    r = freezable().find((x) => norm(x.name) === name) || freezable().find((x) => norm(x.name).includes(name));
+  if (!r) return toast("Plat introuvable : choisissez-le dans la liste proposée.");
+  s.freezer[r.id] = (s.freezer[r.id] || 0) + Math.max(1, Math.round(+f.n.value || 2));
+  setFreezer(i, j, r.id);
 }
 function setFreezer(i, j, id) {
   (s.plan.freezerUse ??= {})[i + "-" + j] = id;
+  if (s.plan.ate) delete s.plan.ate[i + "-" + j];
+  delete s.done[i + "-" + j];
   s.checked = {};
   save();
   modal().close();
