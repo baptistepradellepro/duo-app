@@ -346,43 +346,49 @@ const FIBER_WEIGHT = 1.5,
   FIBER_PICK = 1.5;
 // ─── Équilibre des menus : base, protéine et légumes de chaque plat ───
 const BASES = { riz: "rice|sushi_rice", "pâtes": "pasta|noodles|rice_noodles|gnocchi", "pommes de terre": "potato|sweet_potato|frozen_fries", pain: "bread|baguette|tortilla|sandwich_bread|puff_pastry|rice_paper", "céréales": "couscous|bulgur|semolina|buckwheat|polenta", "légumineuses": "lentil|beans|chickpea" };
-const PROTEINS = { volaille: "chicken|chicken_thigh|whole_chicken|chicken_mince|turkey|ham|bacon", "bœuf": "beef_stew|beef_mince", porc: "pork_mince", poisson: "salmon|tuna", canard: "duck", "œufs": "egg", "végétal": "tofu|lentil|beans|chickpea|cheese|cottage|telemea" };
+const PROTEINS = { volaille: "chicken|chicken_thigh|whole_chicken|chicken_mince|turkey|ham|bacon", "bœuf": "beef_stew|beef_mince", porc: "pork_mince", poisson: "salmon|tuna", canard: "duck", "œufs": "egg", "légumineuses": "lentil|beans|chickpea", tofu: "tofu", fromage: "cheese|cottage|telemea|mozzarella|grated_cheese|cheese_slices|cream_cheese" };
+// Quantité à partir de laquelle une source compte (g par personne) : un œuf de panure ne compte pas, deux œufs oui.
+const PROTEIN_MIN = { "œufs": 55, "légumineuses": 60, fromage: 40 };
 const VEG = new Set([...Object.entries(window.GROUP_OF).filter(([, place]) => /^(Légumes|Surgelés)/.test(place) && !/Frites|Fruits/.test(place)).map(([id]) => id), "tomato", "passata", "sauerkraut", "corn"]);
-const grams = (r, id) => ((r.ingredients[id] || 0) * (by[id]?.unit === "pièce" ? window.PIECE_G?.[id] || 60 : 1));
+// Grammes par personne (les fournées et sauces sont rapportées à une portion).
+const grams = (r, id) => ((r.ingredients[id] || 0) * (by[id]?.unit === "pièce" ? window.PIECE_G?.[id] || 60 : 1)) / (isTotal(r) ? r.portions || 1 : 1);
 const featCache = {};
 function features(r) {
   if (featCache[r.id]) return featCache[r.id];
+  const amount = (ids) => ids.split("|").reduce((a, id) => a + grams(r, id), 0);
   const top = (groups) => {
     let best = null,
       max = 40;
-    for (const [k, ids] of Object.entries(groups)) {
-      const g = ids.split("|").reduce((a, id) => a + grams(r, id), 0);
-      if (g >= max) [best, max] = [k, g];
-    }
+    for (const [k, ids] of Object.entries(groups)) if (amount(ids) >= max) [best, max] = [k, amount(ids)];
     return best;
   };
-  // Tous les féculents présents (≥ 40 g par personne) : un dahl « lentilles & riz » compte aussi comme du riz.
-  const starches = new Set(Object.entries(BASES).filter(([, ids]) => ids.split("|").reduce((a, id) => a + grams(r, id), 0) >= 40).map(([k]) => k));
+  // Tous les glucides et toutes les protéines du plat, pas seulement le principal.
+  const starches = new Set(Object.entries(BASES).filter(([, ids]) => amount(ids) >= 30).map(([k]) => k));
+  const proteins = new Set(Object.entries(PROTEINS).filter(([k, ids]) => amount(ids) >= (PROTEIN_MIN[k] || 40)).map(([k]) => k));
   const base = top(BASES) || "autre",
     protein = top(PROTEINS) || "léger";
-  return (featCache[r.id] = { base, starches, protein, family: `${base}/${protein}`, veg: Object.keys(r.ingredients).filter((id) => VEG.has(id)).reduce((a, id) => a + grams(r, id), 0) });
+  return (featCache[r.id] = { base, starches, protein, proteins, family: `${base}/${protein}`, veg: Object.keys(r.ingredients).filter((id) => VEG.has(id)).reduce((a, id) => a + grams(r, id), 0) });
 }
-// Deux plats trop proches : même base (riz et riz) ou même protéine (poulet et poulet).
+// Deux plats trop proches : un glucide en commun (riz et riz) ou une protéine en commun (œufs et œufs).
 function tooClose(a, b) {
   if (!a || !b) return false;
   const x = features(a),
     y = features(b);
-  return [...x.starches].some((b) => y.starches.has(b)) || (x.protein !== "léger" && x.protein === y.protein);
+  return [...x.starches].some((k) => y.starches.has(k)) || [...x.proteins].some((k) => y.proteins.has(k));
 }
-// Une recette à cette place du menu : différente de l'autre repas du jour et pas la même base que le repas d'avant ou d'après.
+// Même journée : petit-déjeuner, midi et soir sans glucide ni protéine en commun.
+function dayOk(days, i, j, r) {
+  return days[i].every((id, k) => k === j || !tooClose(r, byR[id]));
+}
+// Une recette à cette place : règle de la journée, et pas le même glucide que le repas d'avant ou d'après.
 function slotOk(days, i, j, r) {
+  if (!dayOk(days, i, j, r)) return false;
   if (j === 0) return true;
-  const other = byR[days[i][j === 1 ? 2 : 1]],
-    prev = byR[j === 2 ? days[i][1] : days[i - 1]?.[2]],
+  const prev = byR[j === 2 ? days[i][1] : days[i - 1]?.[2]],
     next = byR[j === 1 ? days[i][2] : days[i + 1]?.[1]],
     f = features(r),
-    sameBase = (x) => x && [...f.starches].some((b) => features(x).starches.has(b));
-  return !tooClose(r, other) && !sameBase(prev) && !sameBase(next);
+    sameBase = (x) => x && [...f.starches].some((k) => features(x).starches.has(k));
+  return !sameBase(prev) && !sameBase(next);
 }
 // opts : { start: "AAAA-MM-JJ", days: nombre de jours, budgetEur: budget de la période }.
 function generate(auto = false, opts = {}) {
@@ -419,10 +425,12 @@ function generate(auto = false, opts = {}) {
   for (let t = 0; t < 400; t++) {
     const picked = {};
     let pork = 0;
-    const pick = (arr, fits = () => true) => {
+    const pick = (arr, fits = () => true, dayFits = () => true) => {
       const pool = [...arr].sort((a, b) => rank[a.id] - rank[b.id]);
       const free = (r) => (picked[r.id] || 0) < (r.type === "main" ? 1 : 3) && (!hasPork(r) || pork < s.porkMax);
       let cand = pool.filter((r) => free(r) && fits(r));
+      if (!cand.length) cand = pool.filter((r) => free(r) && dayFits(r));
+      if (!cand.length) cand = pool.filter((r) => dayFits(r));
       if (!cand.length) cand = pool.filter(free);
       if (!cand.length) cand = pool.filter((r) => !hasPork(r));
       if (!cand.length) cand = pool;
@@ -451,7 +459,7 @@ function generate(auto = false, opts = {}) {
     for (let i = 0; i < N; i++)
       for (const j of [1, 2]) {
         if (days[i][j]) continue;
-        const id = pick(mains, (r) => slotOk(days, i, j, r) && weekOk(r));
+        const id = pick(mains, (r) => slotOk(days, i, j, r) && weekOk(r), (r) => dayOk(days, i, j, r));
         days[i][j] = id;
         note(id);
       }
@@ -478,7 +486,7 @@ function generate(auto = false, opts = {}) {
       liking = p.days.reduce((a, d) => a + d.slice(1).reduce((x, id) => x + tastes[id], 0), 0),
       // Au moins ~200 g de légumes par personne et par jour sur le midi et le soir.
       vegGap = p.days.reduce((a, d) => a + Math.max(0, 200 - d.slice(1).reduce((x, id) => x + features(byR[id]).veg, 0)), 0),
-      clashes = p.days.reduce((a, d, i) => a + (tooClose(byR[d[1]], byR[d[2]]) ? 1 : 0) + (i && [...features(byR[d[1]]).starches].some((b) => features(byR[p.days[i - 1][2]]).starches.has(b)) ? 1 : 0), 0),
+      clashes = p.days.reduce((a, d, i) => a + [[0, 1], [0, 2], [1, 2]].filter(([x, y]) => tooClose(byR[d[x]], byR[d[y]])).length + (i && [...features(byR[d[1]]).starches].some((b) => features(byR[p.days[i - 1][2]]).starches.has(b)) ? 1 : 0), 0),
       repeats = Object.values(p.days.flatMap((d) => d.slice(1)).reduce((a, id) => ((a[features(byR[id]).family] = (a[features(byR[id]).family] || 0) + 1), a), {})).reduce((a, n) => a + Math.max(0, n - 1), 0),
       score = u * 0.2 + (c - u) * 0.05 - diversity * 5 - cuisines * 4 - liking * 8 + Math.abs(avg - target) * 0.015 + protGap * 0.6 + vegGap * 0.05 + clashes * 25 + repeats * 6 + fiberGap * FIBER_WEIGHT;
     if (u <= periodBudget * s.rate && score < bestScore) {
