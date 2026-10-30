@@ -272,6 +272,21 @@ function demands(plan = s.plan, top = false) {
   }
   return d;
 }
+// Détail du besoin d'un aliment, recette par recette, pour comprendre chaque ligne de courses.
+function needFor(id, plan = s.plan) {
+  const out = {},
+    add = (label, q) => q > 0 && (out[label] = (out[label] || 0) + q);
+  plan.days.forEach((day, i) =>
+    day.forEach((_, j) => {
+      const { key, fz, r } = slot(i, j, plan);
+      if (s.done[key] || !r) return;
+      if (!fz && r.type !== "batch") add(r.name, (r.ingredients[id] || 0) * 2);
+      else add(r.name + " (accompagnement)", (r.serve?.[id] || 0) * 2);
+    }),
+  );
+  for (const b of s.batches) if (byR[b] && !s.batchDone[b]) add(byR[b].name + " (batch du dimanche)", byR[b].ingredients[id] || 0);
+  return Object.entries(out).sort((a, b) => b[1] - a[1]);
+}
 // top : inclure les compléments protéinés (toujours dans la liste de courses, dans le budget seulement si demandé).
 function basket(plan = s.plan, top = true) {
   return Object.entries(demands(plan, top))
@@ -1385,7 +1400,9 @@ function shopping() {
             return `<div class="panel"><h2>${STORE_ICON[shop] || "❔"} ${shop} <span class="muted" style="font-size:13px">· ${money(items.reduce((a, x) => a + x.total, 0))} RON</span></h2><div class="table-wrap"><table class="shop-table"><thead><tr><th>Pris</th><th>Produit</th><th>À acheter</th><th>Total</th></tr></thead><tbody>${items
               .map((x) => {
                 const alts = STORES.filter((st) => st !== x.store && offers(x.id).some((o) => o.store === st)).map((st) => `${st} ${money(bestBuy(x.id, x.missing, st).total)}`);
-                return `<tr><td><input aria-label="Pris ${esc(by[x.id].name)}" type="checkbox" ${s.checked[x.id] ? "checked" : ""} onchange="s.checked['${x.id}']=this.checked;save()"></td><td><b>${esc(by[x.id].name)}</b><br><small class="muted">${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a> · ` : x.name !== by[x.id].name ? esc(x.name) + " · " : ""}${sourceLabel[x.source]}${s.lock[x.id] ? " · 🔒 magasin choisi" : ""}</small><br><small class="muted">Besoin net : ${qtyLabel(x.missing, by[x.id].unit)}${x.have > 0 ? ` (il en faut ${qtyLabel(x.need, by[x.id].unit)}, vous en avez ${qtyLabel(x.have, by[x.id].unit)})` : ""}${same
+                return `<tr><td><input aria-label="Pris ${esc(by[x.id].name)}" type="checkbox" ${s.checked[x.id] ? "checked" : ""} onchange="s.checked['${x.id}']=this.checked;save()"></td><td><b>${esc(by[x.id].name)}</b><br><small class="muted">${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a> · ` : x.name !== by[x.id].name ? esc(x.name) + " · " : ""}${sourceLabel[x.source]}${s.lock[x.id] ? " · 🔒 magasin choisi" : ""}</small><br><small class="muted">Besoin net : ${qtyLabel(x.missing, by[x.id].unit)}${x.have > 0 ? ` (il en faut ${qtyLabel(x.need, by[x.id].unit)}, vous en avez ${qtyLabel(x.have, by[x.id].unit)})` : ""}<br><small class="muted">Pour : ${needFor(x.id)
+                  .map(([label, q]) => `${esc(label)} ${qtyLabel(q, by[x.id].unit)}`)
+                  .join(" · ") || "le matin"}</small> <button class="text-button" onclick="enough('${x.id}',${x.need})">✓ J’en ai assez</button>${same
                   .filter(([, to]) => to === x.id)
                   .map(([from, to]) => `<br><small>Déjà au placard ? <b>${esc(by[from].name)}</b> (${qtyLabel(s.stock[from] || 0, by[from].unit)}) <button class="small" onclick="mergeInto('${from}','${to}')">C’est pareil</button><button class="secondary small" onclick="notSame('${from}','${to}')">Non</button></small>`)
                   .join("")}${alts.length ? " · ailleurs : " + alts.join(" · ") + " RON" : ""}</small> <button class="text-button" onclick="priceEditor('${x.id}')">Prix ↗</button></td><td>${x.packs} × ${qtyLabel(x.pack, by[x.id].unit)}</td><td>${money(x.total)} RON</td></tr>`;
@@ -2018,7 +2035,8 @@ function newCustom(name, unit, pack) {
 function convertQty(q, from, to) {
   const a = by[from].unit,
     b = by[to].unit,
-    piece = window.PIECE_G?.[to] || (b === "pièce" ? 60 : 100);
+    // Une « pièce » d'un produit vendu au poids (farine, viande hachée…) est un paquet entier.
+    piece = window.PIECE_G?.[to] || (b === "pièce" ? window.PIECE_G?.[from] || 60 : by[to].pack || 100);
   if (a === b || (a !== "pièce" && b !== "pièce")) return q;
   return a === "pièce" ? q * piece : Math.max(1, Math.round(q / piece));
 }
@@ -2353,6 +2371,13 @@ function maybeSame() {
     if (m[0] && m[0].score >= 12) out.push([x.id, m[0].id]);
   }
   return out;
+}
+// « J'en ai assez » : le placard est corrigé à la quantité nécessaire, la ligne disparaît.
+function enough(id, need) {
+  s.stock[id] = Math.max(s.stock[id] || 0, need - pendingYield(id));
+  save();
+  render();
+  toast(`${by[id].name.split(" · ")[0]} : placard corrigé (${qtyLabel(s.stock[id], by[id].unit)}).`);
 }
 function notSame(from, to) {
   const x = s.custom.find((c) => c.id === from);
