@@ -44,7 +44,7 @@ const initial = () => ({
   porkMax: 1,
   topupOn: true,
   topup: "protein_coffee",
-  topupInBudget: false,
+  topupInBudget: true,
   topupMax: 7,
   morning: "orange",
   juiceMl: 150,
@@ -322,12 +322,6 @@ function taste(r) {
   return 0.5 * avg(rated.filter(([x]) => x.cuisine === r.cuisine)) + 0.5 * avg(rated.filter(([x]) => main.some((id) => x.ingredients[id])));
 }
 const hasPork = (r) => !!r.ingredients.pork_mince;
-function unitCost(r) {
-  return Object.entries(r.ingredients).reduce(
-    (a, [id, q]) => a + Math.max(0, q * 2 - avail(id)) * unitPrice(id),
-    0,
-  );
-}
 function fixedFor(i, j, start = planStart()) {
   if (j !== 2) return null;
   const wd = weekdayOf(isoAdd(start, i));
@@ -487,7 +481,11 @@ function generate(auto = false, opts = {}) {
   const batchFrom = (7 - weekdayOf(start)) % 7,
     batchDays = N - batchFrom;
   s.lastBatches = s.batches;
-  s.batches = batchDays > 0 ? autoBatches(batchDays, batchFrom) : [];
+  const chosen = batchDays > 0 ? autoBatches(batchDays, batchFrom) : [],
+    isMeal = (id) => byR[id]?.type === "batch" && byR[id].meal === "main" && byR[id].freezer,
+    // Au-delà des plats servis au menu, les fournées pour remplir le congélateur attendent de voir s'il reste du budget.
+    extras = chosen.filter(isMeal).slice(menuBatchCount(batchDays));
+  s.batches = chosen.filter((id) => !extras.includes(id));
   s.batchDone = {};
   s.prepDone = {};
   // Cinnamon rolls : ceux du congélateur d'abord, ceux du dimanche à partir du lundi, puis petits-déjeuners simples.
@@ -513,10 +511,16 @@ function generate(auto = false, opts = {}) {
   s.done = {};
   s.checked = {};
   s.shopped = false;
-  const costs = Object.fromEntries(R.map((r) => [r.id, unitCost(r)])),
-    tastes = Object.fromEntries(R.map((r) => [r.id, taste(r)])),
-    // Classement des plats : moins cher, plus apprécié, plus riche en fibres.
-    rank = Object.fromEntries(R.map((r) => [r.id, costs[r.id] - tastes[r.id] * 6 - macro(r).fiber * FIBER_PICK]));
+  // Classement des plats : ce qu'ils obligent à acheter, puis les goûts et les fibres.
+  const tastes = Object.fromEntries(R.map((r) => [r.id, taste(r)])),
+    fiberOf = Object.fromEntries(R.map((r) => [r.id, macro(r).fiber])),
+    // Paquet le moins cher de chaque ingrédient (taille et prix), pour compter les paquets entiers à acheter.
+    packOf = Object.fromEntries(
+      C.map((x) => {
+        const o = bestBuy(x.id, x.pack);
+        return [x.id, o?.pack > 0 && o.price > 0 ? { pack: o.pack, price: o.price } : { pack: x.pack || 1, price: x.price || 0 }];
+      }),
+    );
   let best = null,
     bestScore = Infinity,
     cheapest = null,
@@ -524,8 +528,30 @@ function generate(auto = false, opts = {}) {
   for (let t = 0; t < 400; t++) {
     const picked = {};
     let pork = 0;
+    // Ce qui reste des paquets achetés pour la période : un plat qui réutilise un paquet entamé ne coûte presque rien,
+    // un plat qui oblige à acheter un paquet entier pour une cuillère coûte le paquet.
+    const left = {},
+      have = (id) => (left[id] ??= avail(id)),
+      extra = (ings, f) =>
+        Object.entries(ings).reduce((a, [id, q]) => {
+          const short = q * f - (packOf[id] ? have(id) : q * f);
+          return short > 1e-9 ? a + Math.ceil(short / packOf[id].pack - 1e-9) * packOf[id].price : a;
+        }, 0),
+      take = (ings, f) => {
+        for (const [id, q] of Object.entries(ings)) {
+          if (!packOf[id]) continue;
+          const short = q * f - have(id);
+          if (short > 1e-9) left[id] += Math.ceil(short / packOf[id].pack - 1e-9) * packOf[id].pack;
+          left[id] -= q * f;
+        }
+      },
+      dish = (r) => (r.type === "batch" ? r.serve || {} : r.ingredients);
+    for (const id of s.batches) if (byR[id]) take(byR[id].ingredients, 1);
     const pick = (arr, fits = () => true, dayFits = () => true) => {
-      const pool = [...arr].sort((a, b) => rank[a.id] - rank[b.id]);
+      const pool = arr
+        .map((r) => [r, extra(dish(r), 2) - tastes[r.id] * 6 - fiberOf[r.id] * FIBER_PICK])
+        .sort((a, b) => a[1] - b[1])
+        .map(([r]) => r);
       const free = (r) => (picked[r.id] || 0) < (r.type === "main" ? 1 : 3) && (!hasPork(r) || pork < s.porkMax);
       let cand = pool.filter((r) => free(r) && fits(r));
       if (!cand.length) cand = pool.filter((r) => free(r) && dayFits(r));
@@ -533,13 +559,15 @@ function generate(auto = false, opts = {}) {
       if (!cand.length) cand = pool.filter(free);
       if (!cand.length) cand = pool.filter((r) => !hasPork(r));
       if (!cand.length) cand = pool;
-      const r = t === 0 ? cand[0] : cand[Math.floor(Math.pow(Math.random(), 1.5) * cand.length)];
+      const r = t === 0 ? cand[0] : cand[Math.floor(Math.pow(Math.random(), 2) * cand.length)];
+      take(dish(r), 2);
       picked[r.id] = (picked[r.id] || 0) + 1;
       if (hasPork(r)) pork++;
       return r.id;
     };
     // Plats fixes d'abord (chirashi, ramen), puis chaque midi et soir en respectant l'équilibre.
     const days = Array.from({ length: N }, (_, i) => [rolls[i] ? bake : pick(breakfasts), null, fixedFor(i, 2, start)]);
+    days.forEach((d) => d[2] && take(byR[d[2]].ingredients, 2));
     const bases = {},
       prots = {},
       families = {};
@@ -558,6 +586,7 @@ function generate(auto = false, opts = {}) {
         if (!free.length) break;
         const [i, j] = free[Math.floor(Math.random() * free.length)];
         days[i][j] = id;
+        take(dish(byR[id]), 2);
         picked[id] = (picked[id] || 0) + 1;
         if (hasPork(byR[id])) pork++;
         note(id);
@@ -585,8 +614,8 @@ function generate(auto = false, opts = {}) {
     };
     const c = cost(p),
       u = used(p);
-    if (u < low) {
-      low = u;
+    if (c < low) {
+      low = c;
       cheapest = p;
     }
     const diversity = new Set(p.days.flat()).size,
@@ -601,16 +630,21 @@ function generate(auto = false, opts = {}) {
       vegGap = p.days.reduce((a, d) => a + Math.max(0, 200 - d.slice(1).reduce((x, id) => x + features(byR[id]).veg, 0)), 0),
       clashes = p.days.reduce((a, d, i) => a + [[0, 1], [0, 2], [1, 2]].filter(([x, y]) => tooClose(byR[d[x]], byR[d[y]])).length + (i && [...features(byR[d[1]]).starches].some((b) => features(byR[p.days[i - 1][2]]).starches.has(b)) ? 1 : 0), 0),
       repeats = Object.values(p.days.flatMap((d) => d.slice(1)).reduce((a, id) => ((a[features(byR[id]).family] = (a[features(byR[id]).family] || 0) + 1), a), {})).reduce((a, n) => a + Math.max(0, n - 1), 0),
-      score = u * 0.2 + (c - u) * 0.05 - diversity * 5 - cuisines * 4 - liking * 8 + Math.abs(avg - target) * 0.015 + protGap * 0.6 + vegGap * 0.05 + clashes * 25 + repeats * 6 + fiberGap * FIBER_WEIGHT;
-    if (u <= periodBudget * s.rate && score < bestScore) {
+      score = c * 0.2 + u * 0.05 - diversity * 5 - cuisines * 4 - liking * 8 + Math.abs(avg - target) * 0.015 + protGap * 0.6 + vegGap * 0.05 + clashes * 25 + repeats * 6 + fiberGap * FIBER_WEIGHT;
+    if (c <= periodBudget * s.rate && score < bestScore) {
       bestScore = score;
       best = p;
     }
   }
   s.plan = best || cheapest;
+  // Fournées en plus pour le congélateur, tant que le ticket reste dans le budget.
+  for (const id of extras) {
+    s.batches.push(id);
+    if (cost(s.plan) > periodBudget * s.rate) s.batches.pop();
+  }
   save();
   go("week");
-  toast(best ? (N === 7 ? "Votre semaine est prête !" : `Vos ${N} jours sont prêts !`) : "Budget trop serré : proposition la moins chère trouvée.");
+  toast(best ? (N === 7 ? "Votre semaine est prête !" : `Vos ${N} jours sont prêts !`) : `Budget trop serré : au mieux ${eur(cost(s.plan))} à payer pour ${money(periodBudget)} €. Augmentez le budget ou remplissez le placard.`);
 }
 // Recomposer : d'aujourd'hui à dimanche, jusqu'à dimanche prochain (si les courses ne sont pas encore faites), ou la semaine prochaine.
 let periods = [];
@@ -1185,7 +1219,7 @@ function shopping() {
     `<label class="inline panel"><input type="checkbox" ${s.cards ? "checked" : ""} onchange="s.cards=this.checked;offerCache={};save();render()"> Cartes de fidélité (Lidl Plus, Kaufland Card XTRA) : utiliser leurs prix réduits</label><label class="panel">Préférer Lidl si l’écart ne dépasse pas (%)<input type="number" min="0" max="50" value="${s.lidlMargin}" onchange="s.lidlMargin=Math.max(0,Math.min(50,+this.value));offerCache={};save();render()"></label>` +
     (!s.plan
       ? '<div class="notice">Générez votre semaine pour obtenir une liste de courses.</div>'
-      : `<div class="stats"><div class="stat"><small>À payer au meilleur prix</small><strong>${eur(c)}</strong><em>${money(c)} RON · paquets entiers</em></div><div class="stat"><small>Réellement consommé</small><strong>${eur(used(s.plan))}</strong><em>budget ${money(periodEur())} € · les restes de paquets restent au placard</em></div><div class="stat"><small>Économie</small><strong>${money(saved)} RON</strong><em>vs le magasin le plus cher, produit par produit</em></div><div class="stat"><small>Magasins</small><strong>${shops.length}</strong><em>${b.length} articles à acheter</em></div></div>${shops
+      : `<div class="stats"><div class="stat"><small>À payer au meilleur prix</small><strong>${eur(c)}</strong><em>${money(c)} RON · budget ${money(periodEur())} €${c > budget() + 0.5 ? ` · <b>${eur(c - budget())} au-dessus</b>` : ""}</em></div><div class="stat"><small>Mangé pendant la période</small><strong>${eur(used(s.plan, true))}</strong><em>le reste des paquets entiers reste au placard</em></div><div class="stat"><small>Économie</small><strong>${money(saved)} RON</strong><em>vs le magasin le plus cher, produit par produit</em></div><div class="stat"><small>Magasins</small><strong>${shops.length}</strong><em>${b.length} articles à acheter</em></div></div>${shops
           .map((shop) => {
             const items = b.filter((x) => x.store === shop);
             return `<div class="panel"><h2>${STORE_ICON[shop] || "❔"} ${shop} <span class="muted" style="font-size:13px">· ${money(items.reduce((a, x) => a + x.total, 0))} RON</span></h2><div class="table-wrap"><table class="shop-table"><thead><tr><th>Pris</th><th>Produit</th><th>À acheter</th><th>Total</th></tr></thead><tbody>${items
@@ -2335,6 +2369,8 @@ async function updateRate() {
 for (const x of s.custom) if (x.confirmed && x.cat !== normCat(x.cat)) x.cat = normCat(x.cat);
 // Passage unique à l'orange entière le matin (plus de fibres que le jus) ; ensuite le réglage reste libre.
 if (s.morningV !== 2) Object.assign(s, { morning: "orange", morningV: 2 });
+// Le budget couvre tout le ticket de caisse, cafés protéinés compris.
+if (s.budgetV !== 2) Object.assign(s, { topupInBudget: true, budgetV: 2 });
 autoSync();
 sundayRoutine();
 updateRate();
