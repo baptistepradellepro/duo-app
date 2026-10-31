@@ -192,6 +192,8 @@ function pendingYield(id) {
   return s.batches.reduce((a, b) => a + (!s.batchDone[b] && byR[b]?.yields?.[id] ? byR[b].yields[id] : 0), 0);
 }
 const avail = (id) => (s.stock[id] || 0) + pendingYield(id);
+// Fait maison, jamais sur la liste de courses.
+const HOMEMADE = new Set(["broth"]);
 
 // ─── Recettes et planning ─────────────────────────────────────────────────
 function macro(r) {
@@ -199,7 +201,7 @@ function macro(r) {
     (v, [id, q]) => {
       const x = by[id];
       if (!x) return v;
-      const f = q / (x.unit === "pièce" ? 1 : 100);
+      const f = (q - (r.discard?.[id] || 0)) / (x.unit === "pièce" ? 1 : 100);
       v.kcal += x.kcal * f;
       v.protein += x.protein * f;
       v.fiber += (x.fiber || 0) * f;
@@ -290,6 +292,7 @@ function needFor(id, plan = s.plan) {
 // top : inclure les compléments protéinés (toujours dans la liste de courses, dans le budget seulement si demandé).
 function basket(plan = s.plan, top = true) {
   return Object.entries(demands(plan, top))
+    .filter(([id]) => !HOMEMADE.has(id))
     .map(([id, need]) => {
       const have = avail(id),
         missing = Math.max(0, need - have),
@@ -381,7 +384,7 @@ const dayDate = (i) => new Date(isoAdd(planStart(), i) + "T12:00:00").toLocaleDa
 const FIBER_WEIGHT = 1.5,
   FIBER_PICK = 1.5;
 // ─── Équilibre des menus : base, protéine et légumes de chaque plat ───
-const BASES = { riz: "rice|sushi_rice", "pâtes": "pasta|noodles|rice_noodles|gnocchi", "pommes de terre": "potato|sweet_potato|frozen_fries", pain: "bread|baguette|tortilla|pita|buns|sandwich_bread|puff_pastry|rice_paper", "céréales": "couscous|bulgur|semolina|buckwheat|polenta", "légumineuses": "lentil|beans|chickpea" };
+const BASES = { riz: "rice|sushi_rice", "pâtes": "pasta|vermicelli|noodles|rice_noodles|gnocchi", "pommes de terre": "potato|sweet_potato|frozen_fries", pain: "bread|baguette|tortilla|pita|buns|sandwich_bread|puff_pastry|rice_paper", "céréales": "couscous|bulgur|semolina|buckwheat|polenta", "légumineuses": "lentil|beans|chickpea" };
 const PROTEINS = { volaille: "chicken|chicken_thigh|whole_chicken|chicken_mince|turkey|ham|bacon", "bœuf": "beef_stew|beef_mince", porc: "pork_mince", poisson: "salmon|tuna", canard: "duck", "œufs": "egg", "légumineuses": "lentil|beans|chickpea", tofu: "tofu", fromage: "cheese|cottage|telemea|mozzarella|grated_cheese|cheese_slices|cream_cheese" };
 // Quantité à partir de laquelle une source compte (g par personne) : un œuf de panure ne compte pas, deux œufs oui.
 const PROTEIN_MIN = { "œufs": 55, "légumineuses": 60, fromage: 40 };
@@ -459,6 +462,7 @@ const SIDE_ASIA = /Japonaise|Chinoise|Coréenne|Thaïlandaise|Vietnamienne/,
   SIDE_BEANS = /Française|Basiques|Russe|Maison/;
 const round5 = (q) => Math.max(5, Math.round(q / 5) * 5);
 function balance(r) {
+  if (r.manual) return { ...r, noPlan: true };
   if (r.fixed || !(r.type === "main" || (r.type === "batch" && r.meal === "main"))) return r;
   const out = { ...r, ingredients: { ...r.ingredients }, steps: [...r.steps] };
   if (NOT_A_MEAL.test(" " + norm(r.name) + " ") || COMPONENT.test(norm(r.name))) return { ...out, noPlan: true };
@@ -1287,7 +1291,7 @@ function swap(i, j) {
   const opts =
     j === 0
       ? [...s.batches.filter((id) => byR[id]?.meal === "breakfast").map((id) => byR[id]), ...R.filter((r) => r.type === "breakfast" && allowed(r))]
-      : R.filter((r) => r.type === "main" && !r.fixed && allowed(r) && !hasPork(r));
+      : R.filter((r) => r.type === "main" && !r.fixed && !r.noPlan && allowed(r) && !hasPork(r));
   const all = opts.filter((r) => r.id !== cur),
     balanced = all.filter((r) => slotOk(s.plan.days, i, j, r)),
     pool = balanced.length ? balanced : all;
@@ -1495,7 +1499,7 @@ let inspirationIds = null;
 function inspiration() {
   const planned = new Set(s.plan ? s.plan.days.flat() : []);
   if (!inspirationIds || inspirationIds.some((id) => !byR[id] || !allowed(byR[id])))
-    inspirationIds = R.filter((r) => r.type === "main" && !r.fixed && allowed(r) && !planned.has(r.id))
+    inspirationIds = R.filter((r) => r.type === "main" && !r.fixed && !r.noPlan && allowed(r) && !planned.has(r.id))
       .map((r) => ({ id: r.id, v: taste(r) * 2 + Math.random() * 2 }))
       .sort((a, b) => b.v - a.v)
       .slice(0, 3)
@@ -1641,7 +1645,7 @@ function tools(r) {
   const ing = r.ingredients,
     text = norm(r.name + " " + r.steps.join(" ")),
     t = [];
-  if (r.noPlan) t.push("🎉 Plat de fête, entrée ou dessert : jamais proposé comme repas du menu");
+  if (r.noPlan && !r.manual) t.push("🎉 Plat de fête, entrée ou dessert : jamais proposé comme repas du menu");
   if (ing.rice || ing.sushi_rice || ing.buckwheat) t.push("🍚 Rice cooker pour la céréale");
   if (/air fryer/.test(text)) t.push("💨 Air fryer");
   else if (ing.frozen_fries || ing.panko || ing.chicken_thigh) t.push("💨 Air fryer possible pour dorer sans friture");
@@ -1653,7 +1657,7 @@ function tools(r) {
   return t.length ? `<div class="chips">${t.map((x) => `<span class="chip">${x}</span>`).join("")}</div>` : "";
 }
 function takeStock(ingredients, f, label) {
-  const short = Object.entries(ingredients).filter(([id, q]) => by[id] && (s.stock[id] || 0) < q * f);
+  const short = Object.entries(ingredients).filter(([id, q]) => by[id] && !HOMEMADE.has(id) && (s.stock[id] || 0) < q * f);
   if (short.length && !confirm(`Stock insuffisant pour ${short.map(([id]) => by[id].name.split(" · ")[0]).join(", ")}.\n${label} quand même et mettre ces stocks à zéro ?`)) return false;
   Object.entries(ingredients).forEach(([id, q]) => by[id] && (s.stock[id] = Math.max(0, (s.stock[id] || 0) - q * f)));
   return true;
@@ -1939,6 +1943,7 @@ function parseQty(q) {
 const WEAK = new Set(["frai", "fraiche", "file", "filet", "nature", "natur", "classic", "original", "extra", "premium", "mini", "maxi", "pack", "sachet", "bucati", "buca", "pentru", "with", "avec", "sans", "light", "family", "gust", "aroma"]);
 const NOT_COOKING = /\b(sirop|syrup|sirup|soda|limonade|limonada|boisson|bautura|jus|suc|nectar|biscuit|biscuiti|bonbon|bomboane|chips|barre|baton|cereale|cereales|glace|inghetata|napolitane|tablette|energy|monin|cola)s?\b/;
 const singular = (t) => t.split(" ").map((w) => (w.length > 3 ? w.replace(/(x|s)$/, "") : w)).join(" ");
+const BRANDS = new Set(["kikkoman", "knorr", "maggi", "philadelphia"]);
 const ALIAS_LIST = Object.entries(window.ALIASES || {}).flatMap(([id, list]) => list.split("|").map((a) => ({ id, a: " " + singular(norm(a)) + " " })));
 // Aliments de l'app les plus probables pour un nom de produit, du plus sûr au moins sûr.
 function matchProduct(text, cats = []) {
@@ -1946,7 +1951,8 @@ function matchProduct(text, cats = []) {
     scores = {};
   const add = (id, v) => by[id] && (scores[id] = Math.max(scores[id] || 0, v));
   // L'expression la plus longue l'emporte : « steak haché » avant « steak ».
-  for (const { id, a } of ALIAS_LIST) if (t.includes(a)) add(id, 10 + a.length);
+  // Une marque ne dit pas quel produit c'est (Kikkoman fait aussi du mirin) : elle suggère, sans jamais décider seule.
+  for (const { id, a } of ALIAS_LIST) if (t.includes(a)) add(id, BRANDS.has(a.trim()) ? 12 : 10 + a.length);
   const tags = cats.map((c) => String(c).toLowerCase());
   for (const [id, list] of Object.entries(window.CATS || {}))
     if (tags.length && list.split("|").some((c) => tags.some((tag) => tag.endsWith(":" + c) || tag.includes(c)))) scores[id] = (scores[id] || 0) + 25;
@@ -2619,6 +2625,11 @@ if (s.morningV !== 2) Object.assign(s, { morning: "orange", morningV: 2 });
 if (s.budgetV !== 2) Object.assign(s, { topupInBudget: true, budgetV: 2 });
 // 70 € par semaine pour manger équilibré, plus d'orange le matin.
 if (s.budgetV !== 3) Object.assign(s, { budgetEur: 70, morning: "none", checked: {}, budgetV: 3 });
+// Les 4,5 L de bouillon déjà préparés.
+if (s.brothV !== 1) {
+  s.stock.broth = (s.stock.broth || 0) + 4500;
+  s.brothV = 1;
+}
 // Le matin : cinnamon rolls et un café protéiné Lidl par jour.
 if (s.coffeeV !== 1) {
   Object.assign(s, { topupOn: true, topup: "protein_coffee", topupMax: 7, coffeeV: 1 });

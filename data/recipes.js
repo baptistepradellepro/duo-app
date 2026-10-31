@@ -3,6 +3,8 @@
 // type "drink" (boisson) et "snack" (en-cas) : par personne, hors planning, à enregistrer avec « Cuisiné en plus ».
 // type "sauce" et "batch" : quantités TOTALES pour la fournée ; portions = nombre de portions individuelles produites.
 // fixed : "chirashi" (mardi soir), "ramen" (jeudi ou vendredi soir).
+// manual : jamais proposée seule, ni complétée d'un accompagnement ; à mettre au menu soi-même.
+// discard : quantités achetées mais non mangées (saumure, marinade), hors calories.
 // yields : ce que la préparation ajoute au placard (ex. blancs et cuisses du poulet entier).
 window.RECIPES = [];
 function r(id, name, emoji, cuisine, type, time, ingredients, steps, o = {}) {
@@ -24,26 +26,39 @@ function r(id, name, emoji, cuisine, type, time, ingredients, steps, o = {}) {
     yields: o.yields || null,
     snack: !!o.snack,
     retired: !!o.retired,
+    manual: !!o.manual,
+    discard: o.discard || null,
   });
 }
 
 // ─── Rituels de la semaine ───────────────────────────────────────────────
-r("poulet_entier", "Poulet entier désossé + bouillon", "🐔", "Française", "batch", 150,
-  { whole_chicken: 1, carrot: 100, onion: 100 },
+r("poulet_entier", "Poulet entier désossé + bouillon", "🐔", "Française", "batch", 200,
+  { whole_chicken: 1, carrot: 100, onion: 150 },
   [
     "Désosser le poulet : lever les deux blancs, puis les cuisses entières ; désosser cuisses et hauts de cuisse.",
-    "Ranger blancs et viande de cuisse au réfrigérateur (2 jours maximum) ou les congeler à plat : ils servent dans les recettes de la semaine.",
-    "Bouillon : carcasse + ailes + 1 oignon + 1 carotte dans 2,5 L d’eau froide. Frémir 2 à 3 h, écumer, filtrer.",
-    "Refroidir vite (bac d’eau froide), garder au réfrigérateur 3 jours maximum ou congeler. Il sert pour le ramen.",
-  ], { portions: 1, unit: "poulet", yields: { chicken: 350, chicken_thigh: 400 } });
-r("ramen", "Ramen au bouillon de poulet maison", "🍜", "Japonaise", "main", 20,
-  { noodles: 100, carrot: 60, onion: 40 },
+    "Ranger blancs et viande de cuisse au réfrigérateur (2 jours maximum) ou les congeler à plat. Garder 1 blanc pour le ramen du jeudi : le congeler et le sortir au réfrigérateur le mardi soir.",
+    "Bouillon : carcasse + ailes + 1 carotte + 1 oignon dans environ 5 L d’eau froide. Porter à frémissement, laisser frémir 2 à 3 h en écumant, puis filtrer : environ 4,5 L. Ne pas saler, c’est le tare ou l’assiette qui assaisonne.",
+    "Refroidir vite (bac d’eau froide) et congeler par portions de 1 L : le dimanche au jeudi fait 4 jours, trop long au réfrigérateur.",
+  ], { portions: 1, unit: "poulet", yields: { chicken: 350, chicken_thigh: 400, broth: 4500 } });
+r("ramen", "Ramen poulet croustillant, œuf tamago & tare", "🍜", "Japonaise", "main", 40,
+  { noodles: 100, chicken: 88, egg: 2, spring_onion: 0.25, soy_sauce: 70, mirin: 43, kombu: 2.5, shiitake: 3, broth: 450, oil: 3 },
   [
-    "Porter à frémissement le bouillon du poulet entier (environ 500 ml par personne). Saler, ajouter de la sauce soja si vous en avez.",
-    "Ajouter l’oignon émincé finement et la carotte en julienne, cuire 5 minutes.",
-    "Cuire les nouilles à part selon le paquet, égoutter, répartir dans les bols.",
-    "Verser le bouillon et les légumes bien chauds. Ajouter les restes de poulet effiloché s’il en reste.",
-  ], { fixed: "ramen" });
+    "LA VEILLE · Saumure : dissoudre 25 g de sel dans 500 ml d’eau, ajouter 30 ml de sauce soja et 1 blanc de poulet. Laisser au réfrigérateur jusqu’au lendemain.",
+    "LA VEILLE · 4 œufs tamago : cuire 6 minutes 30 dans l’eau bouillante, plonger dans l’eau glacée, écaler. Les laisser dans 60 ml de sauce soja, 60 ml de mirin et 120 ml d’eau, au réfrigérateur jusqu’au lendemain.",
+    "LA VEILLE · Sortir 1 L de bouillon du congélateur et le laisser décongeler au réfrigérateur.",
+    "Tare : laisser infuser 30 minutes à froid 50 ml de sauce soja, 25 ml de mirin, 50 ml d’eau, 5 g de kombu et 2 shiitakés séchés. Chauffer doucement, retirer le kombu avant l’ébullition, laisser frémir 5 minutes et filtrer.",
+    "Égoutter et sécher le blanc. Le pocher 12 à 15 minutes à petit frémissement, jusqu’à 74 °C à cœur. Le sécher de nouveau, puis le dorer 1 minute par face dans une poêle chaude avec un peu d’huile. Trancher.",
+    "Faire chauffer 900 ml de bouillon. Cuire 200 g de nouilles selon le paquet, égoutter.",
+    "Mettre 30 à 40 ml de tare au fond de chaque bol, verser 450 ml de bouillon, mélanger. Goûter et ajuster.",
+    "Ajouter les nouilles, le poulet tranché, 2 œufs coupés en deux par bol et les oignons verts ciselés.",
+  ], { fixed: "ramen", discard: { soy_sauce: 45, mirin: 30 } });
+r("poule_au_pot", "Poule au pot tout con (bouillon & vermicelles)", "🍲", "Française", "main", 10,
+  { vermicelli: 60, broth: 500 },
+  [
+    "Porter 1 L de bouillon à frémissement et le saler.",
+    "Ajouter 120 g de vermicelles et les cuire selon le paquet.",
+    "Servir aussitôt.",
+  ], { manual: true });
 r("chirashi", "Chirashi saumon & avocat", "🍣", "Japonaise", "main", 30,
   { salmon: 125, avocado: 0.5, sushi_rice: 100, rice_vinegar: 15, soy_sauce: 10 },
   [

@@ -152,6 +152,7 @@ const out = { updated: new Date().toISOString().slice(0, 10), stores: { Lidl: {}
 const kaufland = await kauflandOffers();
 console.log(`Kaufland : ${kaufland.length} offres de la semaine`);
 for (const item of CATALOG) {
+  if (!item.query) continue; // fait maison
   for (const [store, fn] of [["Lidl", lidl], ["Auchan", auchan], ["Carrefour", carrefour]]) {
     try {
       const kept = keep(item, await fn(item));

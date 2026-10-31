@@ -125,6 +125,11 @@ window.CATALOG = [
   ["bulgur", "Boulgour · Bulgur", "g", 500, 8.99, 350, 12, "bulgur", ["bulgur"], []],
   ["gnocchi", "Gnocchi", "g", 500, 7.99, 160, 4, "gnocchi", ["gnocchi"], ["sos", "barilla", "paste", "nr", "n85"]],
   ["puff_pastry", "Pâte feuilletée · Aluat foietaj", "g", 400, 7.99, 400, 6, "aluat foietaj", ["foietaj"], ["telemea", "branza", "mere", "cirese", "placinta", "croissant", "umplut"]],
+  ["vermicelli", "Vermicelles (pâtes) · Fidea", "g", 400, 3.99, 350, 12, "fidea", ["fidea"], ["orez", "supa", "instant"]],
+  ["mirin", "Mirin · Mirin", "ml", 150, 19.99, 240, 0.3, "mirin", ["mirin"], []],
+  ["kombu", "Algue kombu séchée · Alge kombu", "g", 50, 19.99, 250, 7, "alge kombu", ["kombu"], []],
+  ["shiitake", "Shiitakés séchés · Ciuperci shiitake uscate", "g", 50, 19.99, 300, 10, "ciuperci shiitake", ["shiitake"], ["sos", "supa"]],
+  ["broth", "Bouillon de poulet maison", "ml", 1000, 0, 15, 1.5, "", [], []],
   ["buns", "Pains à burger · Chifle burger", "pièce", 4, 6.99, 150, 5, "chifle burger", ["chifle"], ["hot dog", "hotdog", "crenvursti"]],
   ["pita", "Pains pita · Lipie", "pièce", 5, 6.99, 165, 5.5, "lipie", ["lipie"], ["chips", "crackers", "umpluta", "pizza"]],
   ["tahini", "Tahini (crème de sésame) · Tahini", "g", 300, 16.99, 600, 17, "tahini", ["tahini"], ["halva", "halvita", "baton"]],
@@ -161,6 +166,7 @@ window.CATALOG = [
 
 // Fibres (g pour 100 g ou 100 ml, ou par pièce pour les aliments comptés à la pièce). Valeurs moyennes, à affiner avec les étiquettes.
 window.FIBER = {
+  vermicelli: 3, kombu: 30, shiitake: 30, mirin: 0, broth: 0,
   buns: 1.2, pita: 1.5, tahini: 9, olives: 3,
   oats: 10, milk: 0, yogurt: 0, banana: 2.6, egg: 0, bread: 7, chicken: 0, rice: 1.3, pasta: 3, lentil: 11, beans: 6, chickpea: 7, tuna: 0, salmon: 0, tofu: 1,
   potato: 2, broccoli: 2.6, spinach: 2.2, tomato: 1.2, carrot: 2.8, onion: 1.7, pepper: 1.7, oil: 0, cheese: 0, peanut: 6, apple: 2.4, nuts: 6.7,
