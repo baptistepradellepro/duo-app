@@ -1,6 +1,6 @@
 // Généré par tools/fetch-prices.mjs — ne pas modifier à la main.
 window.PRICES = {
- "updated": "2026-11-15",
+ "updated": "2026-11-22",
  "stores": {
   "Lidl": {
    "oats": [
@@ -20,13 +20,6 @@ window.PRICES = {
      "pack": 1000,
      "url": "https://www.lidl.ro/p/pilos-lapte-de-consum/p11540438",
      "promo": true
-    },
-    {
-     "name": "Felie de lapte 10 x 28 g",
-     "price": 22.99,
-     "pack": 280,
-     "url": "https://www.lidl.ro/p/felie-de-lapte/p11597425",
-     "promo": true
     }
    ],
    "yogurt": [
@@ -36,36 +29,35 @@ window.PRICES = {
      "pack": 400,
      "url": "https://www.lidl.ro/p/pilos-iaurt-cremos-in-stil-grecesc/p11595903",
      "promo": true
-    },
+    }
+   ],
+   "banana": [
     {
-     "name": "Pilos Iaurt natur în stil grecesc 1 kg",
-     "price": 12.19,
-     "plus": 9.99,
+     "name": "Banane per kg",
+     "price": 4.99,
      "pack": 1000,
-     "url": "https://www.lidl.ro/p/pilos-iaurt-natur-in-stil-grecesc/p11308820",
+     "url": "https://www.lidl.ro/p/banane/p11150766",
      "promo": true
     }
    ],
-   "chicken": [
+   "egg": [
     {
-     "name": "- Piept de pui, dezosat, fără piele 650 g / 1 kg = 24,60 lei",
-     "price": 21.49,
-     "plus": 15.99,
-     "pack": 650,
-     "url": "https://www.lidl.ro/p/piept-de-pui-dezosat-fara-piele/p11573471",
-     "promo": true
-    }
-   ],
-   "pasta": [
-    {
-     "name": "DELUXE Paste umplute 250 g",
-     "price": 12.99,
-     "pack": 250,
-     "url": "https://www.lidl.ro/p/deluxe-paste-umplute/p11041373",
+     "name": "DELUXE Cremă de lichior ouă 500 ml",
+     "price": 39.99,
+     "pack": 10,
+     "url": "https://www.lidl.ro/p/deluxe-crema-de-lichior-oua/p11305719",
      "promo": true
     }
    ],
    "chickpea": [
+    {
+     "name": "Năut 425 ml / 1 kg = 9,13 lei",
+     "price": 2.99,
+     "plus": 2.19,
+     "pack": 425,
+     "url": "https://www.lidl.ro/p/naut/p11002013",
+     "promo": true
+    },
     {
      "name": "Campo Largo Năut 1 kg",
      "price": 9.69,
@@ -83,22 +75,15 @@ window.PRICES = {
      "pack": 145,
      "url": "https://www.lidl.ro/p/nixe-ton-in-ulei-de-masline/p11210442",
      "promo": true
-    },
-    {
-     "name": "File de ton din Azore 120 g",
-     "price": 16.99,
-     "pack": 120,
-     "url": "https://www.lidl.ro/p/file-de-ton-din-azore/p11040787",
-     "promo": true
     }
    ],
    "salmon": [
     {
-     "name": "- File de somon cu piele 4 x 125 g / 1 kg = 85,98 lei",
-     "price": 62.99,
-     "plus": 42.99,
-     "pack": 500,
-     "url": "https://www.lidl.ro/p/file-de-somon-cu-piele/p11309281",
+     "name": "File de somon condimentat 250 g / 1 kg = 95,96 lei",
+     "price": 32.99,
+     "plus": 23.99,
+     "pack": 250,
+     "url": "https://www.lidl.ro/p/file-de-somon-condimentat/p11150751",
      "promo": true
     },
     {
@@ -111,19 +96,17 @@ window.PRICES = {
    ],
    "potato": [
     {
-     "name": "Harvest Basket Cartofi ondulați pentru cuptor 1 kg",
-     "price": 8.39,
-     "plus": 5.49,
+     "name": "Cartofi albi spălați 1 kg = 2,99 lei",
+     "price": 8.99,
      "pack": 1000,
-     "url": "https://www.lidl.ro/p/harvest-basket-cartofi-ondulati-pentru-cuptor/p11151335",
+     "url": "https://www.lidl.ro/p/cartofi-albi-spalati/p11029634",
      "promo": true
     }
    ],
    "broccoli": [
     {
-     "name": "Broccoli 500 g / 1 kg = 11,98 lei",
-     "price": 9.99,
-     "plus": 5.99,
+     "name": "Broccoli 500 g",
+     "price": 6.99,
      "pack": 500,
      "url": "https://www.lidl.ro/p/broccoli/p11151157",
      "promo": true
@@ -131,61 +114,29 @@ window.PRICES = {
    ],
    "spinach": [
     {
-     "name": "Spanac pungă 500 g",
-     "price": 8.99,
-     "pack": 500,
-     "url": "https://www.lidl.ro/p/spanac/p11151069",
-     "promo": true
-    }
-   ],
-   "onion": [
-    {
-     "name": "Ceapă galbenă per kg",
-     "price": 1.59,
-     "pack": 1000,
-     "url": "https://www.lidl.ro/p/ceapa-galbena/p11029564",
-     "promo": true
-    }
-   ],
-   "pepper": [
-    {
-     "name": "Ardei gras mix 500 g",
-     "price": 8.99,
-     "pack": 500,
-     "url": "https://www.lidl.ro/p/ardei-gras-mix/p11151119",
-     "promo": true
-    },
-    {
-     "name": "Ardei roșu Palermo pungă 500 g",
-     "price": 9.99,
-     "pack": 500,
-     "url": "https://www.lidl.ro/p/ardei-rosu-palermo/p11151122",
+     "name": "Freshona Spanac tocat 450 g / 1 kg = 5,98 lei",
+     "price": 3.99,
+     "plus": 2.69,
+     "pack": 450,
+     "url": "https://www.lidl.ro/p/freshona-spanac-tocat/p11257597",
      "promo": true
     }
    ],
    "oil": [
     {
-     "name": "Primadonna Ulei de măsline extravirgin 1 L",
+     "name": "Deluxe Ulei de măsline 500 ml",
      "price": 39.99,
-     "plus": 29.99,
-     "pack": 1000,
-     "url": "https://www.lidl.ro/p/primadonna-ulei-de-masline-extravirgin/p11208738",
-     "promo": true
-    },
-    {
-     "name": "Deluxe Ulei de măsline extravirgin 750 ml",
-     "price": 49.99,
-     "pack": 750,
-     "url": "https://www.lidl.ro/p/deluxe-ulei-de-masline-extravirgin/p11208772",
+     "pack": 500,
+     "url": "https://www.lidl.ro/p/deluxe-ulei-de-masline/p11210092",
      "promo": true
     }
    ],
    "apple": [
     {
-     "name": "Mere roșii per kg",
+     "name": "Mere golden per kg",
      "price": 2.99,
      "pack": 1000,
-     "url": "https://www.lidl.ro/p/mere-rosii/p11029972",
+     "url": "https://www.lidl.ro/p/mere-golden/p11030101",
      "promo": true
     },
     {
@@ -196,47 +147,53 @@ window.PRICES = {
      "promo": true
     }
    ],
+   "ham": [
+    {
+     "name": "Pikok Șuncă din piept de pui 500 g",
+     "price": 12.99,
+     "pack": 500,
+     "url": "https://www.lidl.ro/p/pikok-sunca-din-piept-de-pui/p11595555",
+     "promo": true
+    }
+   ],
+   "polenta": [
+    {
+     "name": "Belbake Mălai 1 kg",
+     "price": 1.79,
+     "pack": 1000,
+     "url": "https://www.lidl.ro/p/belbake-malai/p11573499",
+     "promo": true
+    }
+   ],
    "baguette": [
     {
-     "name": "Baghetă rustică cu maia 300 g",
-     "price": 2.89,
+     "name": "- Baghetă franțuzească 300 g",
+     "price": 1.49,
      "pack": 1,
-     "url": "https://www.lidl.ro/p/bagheta-rustica-cu-maia/p11602125",
+     "url": "https://www.lidl.ro/p/bagheta-frantuzeasca/p11358986",
      "promo": true
     }
    ],
    "avocado": [
     {
-     "name": "Avocado per buc.",
-     "price": 3.49,
-     "pack": 1,
-     "url": "https://www.lidl.ro/p/avocado/p11214527",
-     "promo": true
-    },
-    {
-     "name": "Avocado Hass plasă 700 g / 1 kg = 13,55 lei",
+     "name": "Avocado Hass plasă 700 g / 1 kg = 12,84 lei",
      "price": 14.99,
-     "plus": 9.49,
+     "plus": 8.99,
      "pack": 1,
      "url": "https://www.lidl.ro/p/avocado-hass/p11029903",
      "promo": true
     }
    ],
-   "fresh_tomato": [
+   "mushroom": [
     {
-     "name": "Mere roșii per kg",
-     "price": 2.99,
-     "pack": 1000,
-     "url": "https://www.lidl.ro/p/mere-rosii/p11029972",
-     "promo": true
-    },
-    {
-     "name": "Baresa Rosii pasate 500 g",
-     "price": 2.39,
+     "name": "Ciuperci Champignon albe caserolă 500 g",
+     "price": 6.49,
      "pack": 500,
-     "url": "https://www.lidl.ro/p/baresa-rosii-pasate/p11210612",
+     "url": "https://www.lidl.ro/p/ciuperci-champignon-albe/p11029529",
      "promo": true
-    },
+    }
+   ],
+   "fresh_tomato": [
     {
      "name": "Mere roșii, bio caserolă 1 kg",
      "price": 6.99,
@@ -250,23 +207,28 @@ window.PRICES = {
      "pack": 720,
      "url": "https://www.lidl.ro/p/naturelo-passata-rustica-de-rosii/p11602689",
      "promo": true
-    }
-   ],
-   "beetroot": [
+    },
     {
-     "name": "Sfeclă roșie per kg",
-     "price": 1.59,
+     "name": "Roșii per kg",
+     "price": 8.99,
      "pack": 1000,
-     "url": "https://www.lidl.ro/p/sfecla-rosie/p11029663",
+     "url": "https://www.lidl.ro/p/rosii/p11029800",
+     "promo": true
+    },
+    {
+     "name": "Roșii bio caserolă 500 g",
+     "price": 11.99,
+     "pack": 500,
+     "url": "https://www.lidl.ro/p/rosii-bio/p11028770",
      "promo": true
     }
    ],
    "lemon": [
     {
-     "name": "Lămâi plasă 750 g",
-     "price": 4.39,
-     "pack": 750,
-     "url": "https://www.lidl.ro/p/lamai/p11030073",
+     "name": "Lămâi per kg",
+     "price": 4.99,
+     "pack": 1000,
+     "url": "https://www.lidl.ro/p/lamai/p11030083",
      "promo": true
     }
    ],
@@ -282,10 +244,19 @@ window.PRICES = {
    ],
    "butter": [
     {
-     "name": "Unt cu trufe / fulgi de chilli 80 g",
-     "price": 8.99,
-     "pack": 80,
-     "url": "https://www.lidl.ro/p/unt-cu-trufe-fulgi-de-chilli/p11678352",
+     "name": "Unt 200 g",
+     "price": 13.49,
+     "pack": 200,
+     "url": "https://www.lidl.ro/p/unt/p11918844",
+     "promo": true
+    }
+   ],
+   "mozzarella": [
+    {
+     "name": "MILBONA Mozzarella Classic 125 g",
+     "price": 3.49,
+     "pack": 125,
+     "url": "https://www.lidl.ro/p/milbona-mozzarella-classic/p11006425",
      "promo": true
     }
    ],
@@ -310,11 +281,10 @@ window.PRICES = {
    ],
    "telemea": [
     {
-     "name": "Pilos Telemea de Vacă per 100 g",
-     "price": 2.49,
-     "plus": 1.89,
-     "pack": 100,
-     "url": "https://www.lidl.ro/p/pilos-telemea-de-vaca/p11599626",
+     "name": "Pilos Telemea de vacă 200 g",
+     "price": 5.99,
+     "pack": 200,
+     "url": "https://www.lidl.ro/p/pilos-telemea-de-vaca/p11573580",
      "promo": true
     },
     {
@@ -322,6 +292,15 @@ window.PRICES = {
      "price": 12.99,
      "pack": 300,
      "url": "https://www.lidl.ro/p/pilos-telemea-maturata-de-oaie/p11597375",
+     "promo": true
+    }
+   ],
+   "parmesan": [
+    {
+     "name": "MILBONA Parmezan ras / fâșii 125 g",
+     "price": 13.99,
+     "pack": 125,
+     "url": "https://www.lidl.ro/p/milbona-parmezan-ras-fasii/p11000962",
      "promo": true
     }
    ],
@@ -333,29 +312,24 @@ window.PRICES = {
      "pack": 300,
      "url": "https://www.lidl.ro/p/milbona-crema-de-branza-proaspata/p11030267",
      "promo": true
-    },
-    {
-     "name": "MILBONA Cremă de brânză Camembert cu trufe și ciuperci 150 g",
-     "price": 14.99,
-     "pack": 150,
-     "url": "https://www.lidl.ro/p/milbona-crema-de-branza-camembert-cu-trufe-si-ciuperci/p11150698",
-     "promo": true
     }
    ],
    "honey": [
     {
-     "name": "Deluxe Miere polifloră cu nuci 440 g",
-     "price": 39.99,
-     "pack": 440,
-     "url": "https://www.lidl.ro/p/deluxe-miere-poliflora-cu-nuci/p11214765",
-     "promo": true
-    },
-    {
-     "name": "Deluxe Miere de Manuka 250 g / 1 kg = 139,96 lei",
-     "price": 49.99,
-     "plus": 34.99,
+     "name": "Deluxe Miere de Manuka 250 g",
+     "price": 89.99,
      "pack": 250,
-     "url": "https://www.lidl.ro/p/deluxe-miere-de-manuka/p11209856",
+     "url": "https://www.lidl.ro/p/deluxe-miere-de-manuka/p11256074",
+     "promo": true
+    }
+   ],
+   "oil_sun": [
+    {
+     "name": "Ulei de floarea-soarelui 1 L",
+     "price": 9.99,
+     "plus": 7.99,
+     "pack": 1000,
+     "url": "https://www.lidl.ro/p/ulei-de-floarea-soarelui/p11598637",
      "promo": true
     }
    ],
@@ -368,16 +342,6 @@ window.PRICES = {
      "promo": true
     }
    ],
-   "stock_cube": [
-    {
-     "name": "- Cuburi din pulpă de porc 600 g 1 kg = 18,32 lei",
-     "price": 16.79,
-     "plus": 10.99,
-     "pack": 8,
-     "url": "https://www.lidl.ro/p/cuburi-din-pulpa-de-porc/p11598489",
-     "promo": true
-    }
-   ],
    "mustard": [
     {
      "name": "CĂMARA NOASTRĂ Muștar 300 g",
@@ -387,13 +351,38 @@ window.PRICES = {
      "promo": true
     }
    ],
-   "mayonnaise": [
+   "red_wine": [
     {
-     "name": "Kania Sos de maioneză 400 ml / 1 L = 18,73 lei",
-     "price": 9.79,
-     "plus": 7.49,
-     "pack": 400,
-     "url": "https://www.lidl.ro/p/kania-sos-de-maioneza/p11408148",
+     "name": "- Vin roșu sec D.O.P. 0,75 L / 1 L = 17,32 lei",
+     "price": 17.49,
+     "plus": 12.99,
+     "pack": 750,
+     "url": "https://www.lidl.ro/p/vin-rosu-sec-d-o-p/p11008566",
+     "promo": true
+    },
+    {
+     "name": "Vin roșu sec 0,7 L",
+     "price": 27.99,
+     "pack": 700,
+     "url": "https://www.lidl.ro/p/vin-rosu-sec/p11595430",
+     "promo": true
+    }
+   ],
+   "gnocchi": [
+    {
+     "name": "DELUXE Gnocchi umpluți 1 kg = 23,98 lei",
+     "price": 11.99,
+     "pack": 1000,
+     "url": "https://www.lidl.ro/p/deluxe-gnocchi-umpluti/p11140491",
+     "promo": true
+    }
+   ],
+   "puff_pastry": [
+    {
+     "name": "- Foietaj cu vișine 105 g",
+     "price": 1.99,
+     "pack": 105,
+     "url": "https://www.lidl.ro/p/foietaj-cu-visine/p11358974",
      "promo": true
     }
    ],
@@ -406,16 +395,6 @@ window.PRICES = {
      "promo": true
     }
    ],
-   "duck": [
-    {
-     "name": "Pulpe de rață per 100 g",
-     "price": 4.69,
-     "plus": 3.69,
-     "pack": 100,
-     "url": "https://www.lidl.ro/p/pulpe-de-rata/p11407886",
-     "promo": true
-    }
-   ],
    "jam": [
     {
      "name": "Gem extra de căpșuni 450 g / 1 kg = 17,76 lei",
@@ -423,6 +402,15 @@ window.PRICES = {
      "plus": 7.99,
      "pack": 450,
      "url": "https://www.lidl.ro/p/gem-extra-de-capsuni/p11009826",
+     "promo": true
+    }
+   ],
+   "orange_juice": [
+    {
+     "name": "Solevita Suc de portocale presat direct 1 L",
+     "price": 13.99,
+     "pack": 1000,
+     "url": "https://www.lidl.ro/p/solevita-suc-de-portocale-presat-direct/p11253938",
      "promo": true
     }
    ]
@@ -449,7 +437,7 @@ window.PRICES = {
     },
     {
      "name": "Fulgi fini de ovaz SanoVita, 750 g",
-     "price": 13.99,
+     "price": 11.99,
      "pack": 750,
      "url": "https://www.auchan.ro/fulgi-de-ovaz-fini-sanovita-750-g/p"
     },
@@ -480,10 +468,10 @@ window.PRICES = {
      "url": "https://www.auchan.ro/lapte-integral-uht-auchan-3-5-grasime-1-l/p"
     },
     {
-     "name": "Lapte de consum integral Olympus, 3.7% grasime, 1 l",
+     "name": "Lapte de consum integral Napolact, 3.5% grasime, 1 l",
      "price": 7.29,
      "pack": 1000,
-     "url": "https://www.auchan.ro/lapte-de-consum-olympus-3-7-grasime-1-l/p"
+     "url": "https://www.auchan.ro/lapte-de-consum-napolact-3-5-grasime-1-l/p"
     }
    ],
    "yogurt": [
@@ -521,7 +509,7 @@ window.PRICES = {
    "banana": [
     {
      "name": "Banane, +/- 1 kg",
-     "price": 6.99,
+     "price": 4.99,
      "pack": 1000,
      "url": "https://www.auchan.ro/banane-1-kg/p"
     },
@@ -533,12 +521,6 @@ window.PRICES = {
     }
    ],
    "egg": [
-    {
-     "name": "Oua de gaina, Albert, marime M, cod 3, 10 bucati",
-     "price": 10.49,
-     "pack": 10,
-     "url": "https://www.auchan.ro/oua-de-gaina-albert-marime-m-cod-3-10-bucati/p"
-    },
     {
      "name": "Oua de gaina Pouce, marimea M, cod 2, 30 bucati",
      "price": 33.99,
@@ -558,6 +540,12 @@ window.PRICES = {
      "url": "https://www.auchan.ro/oua-de-gaina-toneli-marime-ml-30-bucati/p"
     },
     {
+     "name": "Oua de gaina, Albert, marime M, cod 3, 10 bucati",
+     "price": 13.39,
+     "pack": 10,
+     "url": "https://www.auchan.ro/oua-de-gaina-albert-marime-m-cod-3-10-bucati/p"
+    },
+    {
      "name": "Oua de gaina, Oua de Tara, marime M, cod 0, 6 bucati",
      "price": 11.99,
      "pack": 6,
@@ -566,16 +554,16 @@ window.PRICES = {
    ],
    "bread": [
     {
-     "name": "Paine cu faina integrala Deplina Vel Pitar, 500 g",
-     "price": 6.19,
-     "pack": 500,
-     "url": "https://www.auchan.ro/paine-cu-faina-integrala-deplina-vel-pitar-500g/p"
-    },
-    {
      "name": "Paine din faina dietetica-integrala de grau Vel Pitar, feliata, 500 g",
      "price": 6.29,
      "pack": 500,
      "url": "https://www.auchan.ro/paine-din-faina-dietetica-integrala-de-grau-vel-pitar-feliata-500-g/p"
+    },
+    {
+     "name": "Paine prajita din faina integrala cu sare Eti Biscotte Toast Classic, 143 g",
+     "price": 2,
+     "pack": 143,
+     "url": "https://www.auchan.ro/paine-prajita-din-faina-integrala-cu-sare-eti-biscotte-toast-classic-143-g/p"
     },
     {
      "name": "Paine campeneasca integrala Vel Pitar, 600 g",
@@ -594,6 +582,14 @@ window.PRICES = {
      "price": 6.99,
      "pack": 90,
      "url": "https://www.auchan.ro/mini-bucati-de-paine-prajita-cu-22-faina-integrala-de-grau-cu-susan-diatosta-90-g/p"
+    }
+   ],
+   "chicken": [
+    {
+     "name": "Piept de pui vidat Caroli, +/- 300 g",
+     "price": 59.99,
+     "pack": 300,
+     "url": "https://www.auchan.ro/piept-de-pui-vidat-caroli-300-g/p"
     }
    ],
    "rice": [
@@ -623,7 +619,7 @@ window.PRICES = {
     },
     {
      "name": "Orez cu bob lung Panzani Rapid, 250 g",
-     "price": 5.49,
+     "price": 4.69,
      "pack": 250,
      "url": "https://www.auchan.ro/orez-cu-bob-lung-panzani-rapid-250-g/p"
     }
@@ -654,30 +650,30 @@ window.PRICES = {
      "url": "https://www.auchan.ro/paste-fainoase-panzani-penne-400-g/p"
     },
     {
-     "name": "Paste fainoase Penne fara gluten Schar, 250g",
-     "price": 11.49,
+     "name": "Paste scurte Di Bari pennette al peperoncino, 250 g",
+     "price": 11.59,
      "pack": 250,
-     "url": "https://www.auchan.ro/paste-fainoase-penne-fara-gluten-schar-250g/p"
+     "url": "https://www.auchan.ro/paste-scurte-di-bari-pennette-al-peperoncino-250-g/p"
     }
    ],
    "lentil": [
     {
-     "name": "Linte rosie Auchan, 500g",
-     "price": 6.19,
-     "pack": 500,
-     "url": "https://www.auchan.ro/linte-rosie-auchan-500g/p"
-    },
-    {
      "name": "Linte verde Auchan, 500g",
-     "price": 6.19,
+     "price": 5.49,
      "pack": 500,
      "url": "https://www.auchan.ro/linte-verde-auchan-500g/p"
     },
     {
      "name": "Linte rosie Deroni, 500 g",
-     "price": 6.29,
+     "price": 5.49,
      "pack": 500,
      "url": "https://www.auchan.ro/linte-rosie-deroni-500g/p"
+    },
+    {
+     "name": "Linte D'aucy, 800 g",
+     "price": 11.99,
+     "pack": 800,
+     "url": "https://www.auchan.ro/linte-daucy-800g/p"
     },
     {
      "name": "Linte rosie Legurme, 1 kg",
@@ -694,6 +690,18 @@ window.PRICES = {
    ],
    "beans": [
     {
+     "name": "Fasole rosie Giana, 425 ml",
+     "price": 4.39,
+     "pack": 425,
+     "url": "https://www.auchan.ro/fasole-rosie-giana-425-ml/p"
+    },
+    {
+     "name": "Conserva fasole rosie O'Green, 400 g",
+     "price": 4.15,
+     "pack": 400,
+     "url": "https://www.auchan.ro/conserva-fasole-rosie-ogreen-400-g/p"
+    },
+    {
      "name": "Fasole rosie boabe Pouce, in conserva, 800 g",
      "price": 8.99,
      "pack": 800,
@@ -704,18 +712,6 @@ window.PRICES = {
      "price": 4.59,
      "pack": 400,
      "url": "https://www.auchan.ro/fasole-rosie-boabe-pouce-in-conserva-400-g/p"
-    },
-    {
-     "name": "Fasole rosie Giana, 425 ml",
-     "price": 5.39,
-     "pack": 425,
-     "url": "https://www.auchan.ro/fasole-rosie-giana-425-ml/p"
-    },
-    {
-     "name": "Fasole rosie Home Garden, 400 g",
-     "price": 5.15,
-     "pack": 400,
-     "url": "https://www.auchan.ro/fasole-rosie-home-garden-400-g/p"
     },
     {
      "name": "Fasole rosie D'aucy, 150 g",
@@ -740,28 +736,28 @@ window.PRICES = {
    ],
    "tuna": [
     {
-     "name": "Ton maruntit in suc propriu Gaston, 160 g",
-     "price": 3.69,
-     "pack": 160,
-     "url": "https://www.auchan.ro/ton-maruntit-gaston-160-g/p"
-    },
-    {
      "name": "Ton maruntit in suc propriu Pouce, 160 g",
      "price": 4.49,
      "pack": 160,
      "url": "https://www.auchan.ro/ton-maruntit-in-suc-propriu-pouce-160g/p"
     },
     {
-     "name": "Ton maruntit Gaston in ulei vegetal si suc propriu 160 g",
-     "price": 4.49,
-     "pack": 160,
-     "url": "https://www.auchan.ro/ton-maruntit-gaston-in-ulei-vegetal-si-suc-propriu-160-g/p"
-    },
-    {
      "name": "Ton maruntit in suc propriu Giana, 160 g",
      "price": 4.95,
      "pack": 160,
      "url": "https://www.auchan.ro/ton-maruntit-in-suc-propriu-giana-160-g/p"
+    },
+    {
+     "name": "Ton maruntit Gaston in ulei vegetal si suc propriu 160 g",
+     "price": 4.99,
+     "pack": 160,
+     "url": "https://www.auchan.ro/ton-maruntit-gaston-in-ulei-vegetal-si-suc-propriu-160-g/p"
+    },
+    {
+     "name": "Ton maruntit in suc propriu Gaston, 160 g",
+     "price": 5.19,
+     "pack": 160,
+     "url": "https://www.auchan.ro/ton-maruntit-gaston-160-g/p"
     }
    ],
    "salmon": [
@@ -773,24 +769,18 @@ window.PRICES = {
     },
     {
      "name": "Somon file Defish, 4 x 100 g",
-     "price": 55.49,
+     "price": 67.29,
      "pack": 400,
      "url": "https://www.auchan.ro/somon-file-defish-4-x-100-g/p"
     },
     {
      "name": "Somon file Frosta, 2 bucati, 180 g",
-     "price": 30.89,
+     "price": 32.69,
      "pack": 180,
      "url": "https://www.auchan.ro/somon-file-frosta-2-bucati-180-g/p"
     }
    ],
    "tofu": [
-    {
-     "name": "Tofu natur Auchan, 180 g",
-     "price": 6.49,
-     "pack": 180,
-     "url": "https://www.auchan.ro/tofu-natur-auchan-180-g/p"
-    },
     {
      "name": "Tofu in saramura Inedit 300 g",
      "price": 12.29,
@@ -805,13 +795,19 @@ window.PRICES = {
     },
     {
      "name": "Tofu cu marar sterilizat SanoVita, 200 g",
-     "price": 12.19,
+     "price": 8.49,
      "pack": 200,
      "url": "https://www.auchan.ro/tofu-cu-marar-sanovita-200-g/p"
     },
     {
+     "name": "Tofu cu masline sterilizat SanoVita, 200 g",
+     "price": 8.49,
+     "pack": 200,
+     "url": "https://www.auchan.ro/tofu-cu-masline-sanovita-200-g/p"
+    },
+    {
      "name": "Crema de tofu cu masline Inedit, 135g",
-     "price": 11.45,
+     "price": 8.99,
      "pack": 135,
      "url": "https://www.auchan.ro/crema-de-tofu-cu-masline-inedit-135g/p"
     }
@@ -884,10 +880,18 @@ window.PRICES = {
    ],
    "onion": [
     {
-     "name": "Ceapa galbena la plasa Filiera Auchan, 2 kg",
+     "name": "Ceapa galbena la plasa, 500 g",
      "price": 5.99,
-     "pack": 2000,
-     "url": "https://www.auchan.ro/ceapa-galbena-la-plasa-2-kilograme/p"
+     "pack": 500,
+     "url": "https://www.auchan.ro/ceapa-galbena-la-plasa-500-g/p"
+    }
+   ],
+   "pepper": [
+    {
+     "name": "Ardei gras in 3 culori, 350g",
+     "price": 8.19,
+     "pack": 350,
+     "url": "https://www.auchan.ro/ardei-gras-in-3-culori-350g/p"
     }
    ],
    "oil": [
@@ -899,7 +903,7 @@ window.PRICES = {
     },
     {
      "name": "Ulei de masline extravirgin Ribatti, 3 l",
-     "price": 99,
+     "price": 98.99,
      "pack": 3000,
      "url": "https://www.auchan.ro/ulei-de-masline-extravirgin-ribatti-3l/p"
     },
@@ -924,28 +928,28 @@ window.PRICES = {
    ],
    "cheese": [
     {
-     "name": "Branza de vaci Sanlacta, 250 g",
-     "price": 7.59,
+     "name": "Branza de vaci proaspata Delaco, 0.2% grasime, 250 g",
+     "price": 6.49,
      "pack": 250,
-     "url": "https://www.auchan.ro/branza-de-vaci-sanlacta-250-g/p"
-    },
-    {
-     "name": "Branza fina de vaci cu smantana Monor, 3.5% grasime, 1 kg",
-     "price": 31.69,
-     "pack": 1000,
-     "url": "https://www.auchan.ro/branza-fina-de-vaci-cu-smantana-monor-3-5-grasime-1-kg/p"
+     "url": "https://www.auchan.ro/branza-de-vaci-delaco-proaspata-0-2-grasime-250-g/p"
     },
     {
      "name": "Branza de vaci proaspata Delaco, 4.4% grasime, 250 g",
-     "price": 7.99,
+     "price": 6.79,
      "pack": 250,
      "url": "https://www.auchan.ro/branza-de-vaci-delaco-proaspata-4-4-grasime-250-g/p"
     },
     {
-     "name": "Branza grasa de vaci Prodlacta, proaspata, 500 g",
-     "price": 15.99,
-     "pack": 500,
-     "url": "https://www.auchan.ro/branza-grasa-de-vaci-prodlacta-proaspata-500-g/p"
+     "name": "Branza de vaci dietetica Auchan, 0.5% grasime, 200 g",
+     "price": 5.99,
+     "pack": 200,
+     "url": "https://www.auchan.ro/branza-de-vaci-dietetica-auchan-0-5-grasime-200-g/p"
+    },
+    {
+     "name": "Branza de vaci Sanlacta, 250 g",
+     "price": 7.59,
+     "pack": 250,
+     "url": "https://www.auchan.ro/branza-de-vaci-sanlacta-250-g/p"
     },
     {
      "name": "Branza de vaci cu smantana Fagaras, proaspata, 175 g",
@@ -957,27 +961,33 @@ window.PRICES = {
    "peanut": [
     {
      "name": "Unt de arahide Go On Smooth, 500 g",
-     "price": 20.99,
+     "price": 21.99,
      "pack": 500,
      "url": "https://www.auchan.ro/unt-de-arahide-go-on-smooth-500-g/p"
     },
     {
+     "name": "Unt de arahide cu caramel sarat Go On, 350 g",
+     "price": 16.99,
+     "pack": 350,
+     "url": "https://www.auchan.ro/unt-de-arahide-cu-caramel-sarat-go-on-350-g/p"
+    },
+    {
+     "name": "Unt de arahide si nuca de cocos Go On, 350 g",
+     "price": 16.99,
+     "pack": 350,
+     "url": "https://www.auchan.ro/unt-de-arahide-si-nuca-de-cocos-go-on-350-g/p"
+    },
+    {
      "name": "Unt de arahide Go On Crunchy, 500 g",
-     "price": 27.99,
+     "price": 28.99,
      "pack": 500,
      "url": "https://www.auchan.ro/unt-de-arahide-go-on-crunchy-500-g/p"
     },
     {
      "name": "Unt de arahide Bonne Maman, 325 g",
-     "price": 26.24,
+     "price": 37.49,
      "pack": 325,
      "url": "https://www.auchan.ro/unt-de-arahide-bonne-maman-325-g/p"
-    },
-    {
-     "name": "Unt de arahide cu caramel sarat Go On, 350 g",
-     "price": 29.49,
-     "pack": 350,
-     "url": "https://www.auchan.ro/unt-de-arahide-cu-caramel-sarat-go-on-350-g/p"
     }
    ],
    "apple": [
@@ -1002,6 +1012,12 @@ window.PRICES = {
    ],
    "nuts": [
     {
+     "name": "Miez de nuca Pouce, 500 g",
+     "price": 24.49,
+     "pack": 500,
+     "url": "https://www.auchan.ro/pouce-miez-de-nuca-500g/p"
+    },
+    {
      "name": "Mix de miez de nuca, prune, stafide si arahide Pouce, 250 g",
      "price": 13.29,
      "pack": 250,
@@ -1020,12 +1036,6 @@ window.PRICES = {
      "url": "https://www.auchan.ro/miez-de-nuca-sferturi-pouce-200g/p"
     },
     {
-     "name": "Miez de nuca Auchan, 500 g",
-     "price": 31.99,
-     "pack": 500,
-     "url": "https://www.auchan.ro/miez-nuca-auchan-500-g/p"
-    },
-    {
      "name": "Mix de miez de nuca, ananas si caju Auchan, 150 g",
      "price": 11.19,
      "pack": 150,
@@ -1042,6 +1052,12 @@ window.PRICES = {
    ],
    "chicken_thigh": [
     {
+     "name": "Pulpe de pui inferioare Auchan, +/- 2.5 kg",
+     "price": 16.19,
+     "pack": 2500,
+     "url": "https://www.auchan.ro/pulpe-de-pui-inferioare-auchan-2-5-kg/p"
+    },
+    {
      "name": "Pulpe de pui superioare dezosate Agricola Family Pack, +/- 1 .3 kg",
      "price": 30.39,
      "pack": 3000,
@@ -1054,16 +1070,10 @@ window.PRICES = {
      "url": "https://www.auchan.ro/pulpa-de-pui-inferioara-fragedo-caserola-1-5-kg/p"
     },
     {
-     "name": "Pulpe de pui cu os Agricola Family, +/- 900 g",
-     "price": 15.79,
-     "pack": 900,
-     "url": "https://www.auchan.ro/pulpe-de-pui-cu-os-agricola-family-900-g/p"
-    },
-    {
-     "name": "Pulpe de pui inferioare Puiul de Craiesti Zero Antibiotice, +/-1 kg",
-     "price": 18.99,
+     "name": "Pulpe inferioare de pui Pouce, +/- 1 kg",
+     "price": 18.29,
      "pack": 1000,
-     "url": "https://www.auchan.ro/pulpe-de-pui-inferioare-puiul-de-craiesti-zera-antibiotice-1-kg/p"
+     "url": "https://www.auchan.ro/pulpe-inferioare-de-pui-pouce-1-pret-pe-kg/p"
     },
     {
      "name": "Pulpe de pui inferioare Auchan, hranit cu porumb si cereale, +/- 800 g",
@@ -1078,24 +1088,12 @@ window.PRICES = {
      "price": 19.29,
      "pack": 1000,
      "url": "https://www.auchan.ro/carne-tocata-de-porc-auchan-1kg/p"
-    },
-    {
-     "name": "Carne tocata de porc Auchan, 500 g",
-     "price": 13.19,
-     "pack": 500,
-     "url": "https://www.auchan.ro/carne-tocata-de-porc-auchan-500-g/p"
-    },
-    {
-     "name": "Carne tocata de porc din spata Auchan, 500 g",
-     "price": 13.59,
-     "pack": 500,
-     "url": "https://www.auchan.ro/carne-tocata-de-porc-din-spata-auchan-500-g/p"
     }
    ],
    "beef_mince": [
     {
      "name": "Carne tocata de vita Auchan, 500 g",
-     "price": 22.39,
+     "price": 19.99,
      "pack": 500,
      "url": "https://www.auchan.ro/carne-tocata-de-vita-auchan-530g/p"
     },
@@ -1108,16 +1106,10 @@ window.PRICES = {
    ],
    "ham": [
     {
-     "name": "Sunca din piept de pui Sissi, 650 g",
-     "price": 22.99,
-     "pack": 650,
-     "url": "https://www.auchan.ro/sunca-din-piept-de-pui-sissi-650-g/p"
-    },
-    {
-     "name": "Sunca de pui feliata Aldis, 400 g",
-     "price": 17.49,
-     "pack": 400,
-     "url": "https://www.auchan.ro/sunca-de-pui-feliata-aldis-400-g/p"
+     "name": "Sunca presata Fox din piept pui, 450 g",
+     "price": 20.99,
+     "pack": 450,
+     "url": "https://www.auchan.ro/sunca-presata-fox-din-piept-pui-450-g/p"
     },
     {
      "name": "Sunca presata de pui Caroli, 650g",
@@ -1132,48 +1124,54 @@ window.PRICES = {
      "url": "https://www.auchan.ro/sunca-de-pui-feliata-auchan-150-g/p"
     },
     {
-     "name": "Sunca din piept de pui Caroli High Protein, feliat, 100 g",
-     "price": 5.49,
+     "name": "Sunca de pui feliata Aldis, 400 g",
+     "price": 20.99,
+     "pack": 400,
+     "url": "https://www.auchan.ro/sunca-de-pui-feliata-aldis-400-g/p"
+    },
+    {
+     "name": "Sunca de pui feliata Meda, 100 g",
+     "price": 8.19,
      "pack": 100,
-     "url": "https://www.auchan.ro/sunca-din-piept-de-pui-caroli-high-protein-100-g/p"
+     "url": "https://www.auchan.ro/sunca-de-pui-feliata-meda-100-g/p"
     }
    ],
    "noodles": [
     {
-     "name": "Taitei pentru ramen Shan Shi, 250 g",
-     "price": 6.99,
-     "pack": 250,
-     "url": "https://www.auchan.ro/taitei-pentru-ramen-shan-shi-250-g/p"
-    },
-    {
      "name": "Taitei proaspeti pentru ramen Asia Service Food, 180 g",
-     "price": 6.59,
+     "price": 6.99,
      "pack": 180,
      "url": "https://www.auchan.ro/taitei-proaspeti-pentru-ramen-asia-service-food-180-g/p"
+    },
+    {
+     "name": "Taitei pentru ramen Shan Shi, 250 g",
+     "price": 9.99,
+     "pack": 250,
+     "url": "https://www.auchan.ro/taitei-pentru-ramen-shan-shi-250-g/p"
     }
    ],
    "rice_noodles": [
     {
      "name": "Taitei de orez Vermicelli Asian Flavours, 400 g",
-     "price": 13.99,
+     "price": 14.99,
      "pack": 400,
      "url": "https://www.auchan.ro/taitei-de-orez-vermicelli-asian-flavours-400-g/p"
     },
     {
      "name": "Taitei de orez Vifon, 300 g",
-     "price": 10.59,
+     "price": 11.49,
      "pack": 300,
      "url": "https://www.auchan.ro/taitei-de-orez-vifon-300-g/p"
     },
     {
      "name": "Taitei din orez vermicelli Pantai, 400 g",
-     "price": 18.49,
+     "price": 19.49,
      "pack": 400,
      "url": "https://www.auchan.ro/taitei-din-orez-vermicelli-pantai-400-g/p"
     },
     {
      "name": "Taitei din orez panglica Pantai, 400 g",
-     "price": 18.49,
+     "price": 19.49,
      "pack": 400,
      "url": "https://www.auchan.ro/taitei-din-orez-panglica-pantai-400-g/p"
     }
@@ -1181,7 +1179,7 @@ window.PRICES = {
    "rice_paper": [
     {
      "name": "Foi de orez Bich Chi, 22 cm, 200 g",
-     "price": 9.75,
+     "price": 9.99,
      "pack": 200,
      "url": "https://www.auchan.ro/foi-de-orez-bich-chi-22-cm-200-g/p"
     }
@@ -1189,24 +1187,18 @@ window.PRICES = {
    "sushi_rice": [
     {
      "name": "Orez pentru sushi Auchan, 500 g",
-     "price": 7.49,
+     "price": 8.99,
      "pack": 500,
      "url": "https://www.auchan.ro/orez-pentru-sushi-auchan-500g/p"
     },
     {
      "name": "Orez pentru sushi Aron Rice, 2 x 500 g",
-     "price": 17.99,
+     "price": 26.79,
      "pack": 1000,
      "url": "https://www.auchan.ro/orez-pentru-sushi-aron-rice-2-x-500-g/p"
     }
    ],
    "flour": [
-    {
-     "name": "Faina alba de grau superioara 000 Auchan, 1 kg",
-     "price": 1.99,
-     "pack": 1000,
-     "url": "https://www.auchan.ro/faina-alba-superioara-000-auchan-1-kg/p"
-    },
     {
      "name": "Faina alba 650 Auchan, 1 kg",
      "price": 2.05,
@@ -1224,20 +1216,26 @@ window.PRICES = {
      "price": 2.69,
      "pack": 1000,
      "url": "https://www.auchan.ro/faina-alba-superioara-000-dobrogea-1-kg/p"
+    },
+    {
+     "name": "Faina alba superioara din grau 000 Boromir, 1 kg",
+     "price": 2.69,
+     "pack": 1000,
+     "url": "https://www.auchan.ro/faina-alba-000-boromir-1-kg/p"
     }
    ],
    "buckwheat": [
+    {
+     "name": "Hrisca Legurme, 500 g",
+     "price": 11.3,
+     "pack": 500,
+     "url": "https://www.auchan.ro/hrisca-legurme--500-g/p"
+    },
     {
      "name": "Hrisca Legurme, 1 kg",
      "price": 24.59,
      "pack": 1000,
      "url": "https://www.auchan.ro/hrisca-legurme-1-kg/p"
-    },
-    {
-     "name": "Hrisca Legurme, 500 g",
-     "price": 13.29,
-     "pack": 500,
-     "url": "https://www.auchan.ro/hrisca-legurme--500-g/p"
     }
    ],
    "polenta": [
@@ -1249,7 +1247,7 @@ window.PRICES = {
     },
     {
      "name": "Malai Goldmaya, 1 kg",
-     "price": 2.39,
+     "price": 2.89,
      "pack": 1000,
      "url": "https://www.auchan.ro/malai-goldmaya-1kg/p"
     },
@@ -1260,10 +1258,10 @@ window.PRICES = {
      "url": "https://www.auchan.ro/malai-extra-arpis-degerminat-1-kg/p"
     },
     {
-     "name": "Malai extra gold Raftul Bunicii, 1 kg",
+     "name": "Malai Titan Extra Gold, 1 kg",
      "price": 2.89,
      "pack": 1000,
-     "url": "https://www.auchan.ro/malai-extra-gold-raftul-bunicii-1-kg/p"
+     "url": "https://www.auchan.ro/malai-extra-gold-titan-1kg/p"
     },
     {
      "name": "Malai pentru mamaliga Auchan, gata in 3 minute, 500 g",
@@ -1275,15 +1273,21 @@ window.PRICES = {
    "tortilla": [
     {
      "name": "Tortilla din faina de grau Old El Paso, 8 bucati, 326 g",
-     "price": 12.59,
+     "price": 18.99,
      "pack": 8,
      "url": "https://www.auchan.ro/tortilla-din-faina-de-grau-old-el-paso-8-bucati-326g/p"
     },
     {
      "name": "Tortilla medie de grau Santa Maria, 320 g",
-     "price": 16.99,
+     "price": 17.99,
      "pack": 6,
      "url": "https://www.auchan.ro/tortilla-medie-de-grau-santa-maria-320-g/p"
+    },
+    {
+     "name": "Tortilla din faina de grau La Fiesta, 320 g",
+     "price": 18.99,
+     "pack": 6,
+     "url": "https://www.auchan.ro/tortilla-din-faina-de-grau-la-fiesta-320-g/p"
     }
    ],
    "sandwich_bread": [
@@ -1300,22 +1304,22 @@ window.PRICES = {
      "url": "https://www.auchan.ro/paine-toast-clasica-auchan-600-g/p"
     },
     {
+     "name": "Paine toast cu secara Auchan, 600 g",
+     "price": 5.79,
+     "pack": 600,
+     "url": "https://www.auchan.ro/paine-toast-cu-secara-auchan-600-g/p"
+    },
+    {
      "name": "Paine toast cu graham Auchan, 600 g",
      "price": 5.79,
      "pack": 600,
      "url": "https://www.auchan.ro/paine-toast-cu-graham-auchan-600-g/p"
     },
     {
-     "name": "Paine alba toast KB, 600 g",
-     "price": 9.29,
-     "pack": 600,
-     "url": "https://www.auchan.ro/paine-alba-toast-karamolegos-bakery-600-g/p"
-    },
-    {
-     "name": "Paine toast fara adaos de sare si zahar KB, 500 g",
-     "price": 9.99,
-     "pack": 500,
-     "url": "https://www.auchan.ro/paine-toast-fara-adaos-de-sare-si-zahar-kb-500g/p"
+     "name": "Paine alba toast KB, 300 g",
+     "price": 5.49,
+     "pack": 300,
+     "url": "https://www.auchan.ro/paine-alba-toast-karamolegos-bakery-300-g/p"
     }
    ],
    "baguette": [
@@ -1326,8 +1330,14 @@ window.PRICES = {
      "url": "https://www.auchan.ro/bagheta-frantuzeasca-cu-maia-auchan-300-g/p"
     },
     {
+     "name": "Sandwich bagheta cu sunca Auchan, 200 g",
+     "price": 9.99,
+     "pack": 1,
+     "url": "https://www.auchan.ro/sandwich-bagheta-cu-sunca-auchan-200-g/p"
+    },
+    {
      "name": "Bagheta Magica Set de Magie AS - Magie pentru copii",
-     "price": 37,
+     "price": 24,
      "pack": 1,
      "url": "https://www.auchan.ro/bagheta-magica-set-de-magie-as-magie-pentru-copii/p"
     }
@@ -1335,7 +1345,7 @@ window.PRICES = {
    "panko": [
     {
      "name": "Pesmet panko, Miyata, 200 g",
-     "price": 9.69,
+     "price": 9.99,
      "pack": 200,
      "url": "https://www.auchan.ro/pesmet-panko-miyata-200-g/p"
     },
@@ -1354,22 +1364,22 @@ window.PRICES = {
      "url": "https://www.auchan.ro/cartofi-congelati-pouce-1-kg/p"
     },
     {
-     "name": "Cartofi pai congelati 10mm Fantasy , 2.5Kg",
-     "price": 25.99,
-     "pack": 2500,
-     "url": "https://www.auchan.ro/cartofi-pai-congelati-10mm-fantasy-2-5kg/p"
-    },
-    {
      "name": "Cartofi pai congelati Auchan La Masa in Romania, 1 kg",
-     "price": 10.79,
+     "price": 8.59,
      "pack": 1000,
      "url": "https://www.auchan.ro/cartofi-pai-congelati-auchan-la-masa-in-romania-1-kg/p"
     },
     {
      "name": "Cartofi rondele congelati Auchan La Masa in Romania, 1 kg",
-     "price": 10.79,
+     "price": 8.59,
      "pack": 1000,
      "url": "https://www.auchan.ro/cartofi-rondele-congelati-auchan-la-masa-in-romania-1-kg/p"
+    },
+    {
+     "name": "Cartofi pai congelati 10mm Fantasy , 2.5Kg",
+     "price": 32.89,
+     "pack": 2500,
+     "url": "https://www.auchan.ro/cartofi-pai-congelati-10mm-fantasy-2-5kg/p"
     },
     {
      "name": "Cartofi congelati, pentru cuptor Farm Frites, 450g",
@@ -1386,22 +1396,22 @@ window.PRICES = {
      "url": "https://www.auchan.ro/avocado-pret-pe-bucata/p"
     },
     {
-     "name": "Avocado la plasa, 500 g",
-     "price": 6.99,
-     "pack": 1,
-     "url": "https://www.auchan.ro/avocado-la-plasa-500-g/p"
-    },
-    {
      "name": "Avocado ECO, pret pe bucata",
      "price": 7.49,
      "pack": 1,
      "url": "https://www.auchan.ro/avocado-eco-pret-pe-bucata/p"
     },
     {
-     "name": "Avocado ready to eat",
+     "name": "Avocado la plasa, 500 g",
+     "price": 10.49,
+     "pack": 1,
+     "url": "https://www.auchan.ro/avocado-la-plasa-500-g/p"
+    },
+    {
+     "name": "Spuma de ras Intesa pour Homme Avocado 300 ml",
      "price": 14.49,
      "pack": 1,
-     "url": "https://www.auchan.ro/avocado-ready-to-eat/p"
+     "url": "https://www.auchan.ro/spuma-de-ras-intesa-pour-homme-avocado-300-ml/p"
     }
    ],
    "garlic": [
@@ -1467,13 +1477,13 @@ window.PRICES = {
    "cabbage": [
     {
      "name": "Varza alba, +/- 3 kg",
-     "price": 1.49,
+     "price": 1.19,
      "pack": 3000,
      "url": "https://www.auchan.ro/varza-alba-3-kg/p"
     },
     {
      "name": "Varza alba tocata in saramura Auchan, 680 g",
-     "price": 8.99,
+     "price": 7.64,
      "pack": 680,
      "url": "https://www.auchan.ro/varza-alba-tocata-in-saramura-auchan-680-g/p"
     },
@@ -1507,7 +1517,7 @@ window.PRICES = {
    "zucchini": [
     {
      "name": "Dovlecei Zucchini, +/- 1kg",
-     "price": 7.99,
+     "price": 10.99,
      "pack": 1000,
      "url": "https://www.auchan.ro/dovlecei-zucchini-1kg/p"
     },
@@ -1527,7 +1537,7 @@ window.PRICES = {
     },
     {
      "name": "Vinete, +/- 1 kg",
-     "price": 15.99,
+     "price": 14.99,
      "pack": 1000,
      "url": "https://www.auchan.ro/vinete-1-kg/p"
     },
@@ -1539,7 +1549,7 @@ window.PRICES = {
     },
     {
      "name": "Vinete a la grecque cu branza de capra si masline negre congelate Auchan, 900 g",
-     "price": 26.99,
+     "price": 27.99,
      "pack": 900,
      "url": "https://www.auchan.ro/vinete-a-la-grecque-cu-branza-de-capra-si-masline-negre-congelate-auchan-900g/p"
     }
@@ -1558,10 +1568,10 @@ window.PRICES = {
      "url": "https://www.auchan.ro/ciuperci-champignon-auchan-450g/p"
     },
     {
-     "name": "Ciuperci Champignon, 500 g",
-     "price": 8.99,
+     "name": "Ciuperci Champignon brune, 500 g",
+     "price": 9.99,
      "pack": 500,
-     "url": "https://www.auchan.ro/ciuperci-champignon-romanesti-500-g/p"
+     "url": "https://www.auchan.ro/ciuperci-champignon-brune-romania-500-g/p"
     },
     {
      "name": "Ciuperci Champignon albe, 250 g",
@@ -1572,14 +1582,8 @@ window.PRICES = {
    ],
    "cucumber": [
     {
-     "name": "Castraveti in saramura Conacul Boierului, 1600 g",
-     "price": 18.06,
-     "pack": 1600,
-     "url": "https://www.auchan.ro/castraveti-in-saramura-conacul-boierului-1600-g/p"
-    },
-    {
      "name": "Castraveti intregi in saramura Auchan, 690 g",
-     "price": 8.99,
+     "price": 7.64,
      "pack": 690,
      "url": "https://www.auchan.ro/castraveti-intregi-in-saramura-auchan-690-g/p"
     },
@@ -1588,6 +1592,12 @@ window.PRICES = {
      "price": 13.99,
      "pack": 1000,
      "url": "https://www.auchan.ro/castraveti-cornichon-1-kg/p"
+    },
+    {
+     "name": "Castraveti in saramura Conacul Boierului, 1600 g",
+     "price": 27.79,
+     "pack": 1600,
+     "url": "https://www.auchan.ro/castraveti-in-saramura-conacul-boierului-1600-g/p"
     },
     {
      "name": "Castraveti Fabio, +/- 500g",
@@ -1604,20 +1614,26 @@ window.PRICES = {
    ],
    "fresh_tomato": [
     {
+     "name": "Cartofi rosii romanesti, 5 kg",
+     "price": 15.99,
+     "pack": 5000,
+     "url": "https://www.auchan.ro/cartofii-rosii-romanesti-5-kg/p"
+    },
+    {
+     "name": "Rosii pasate Auchan, 745 g",
+     "price": 7.47,
+     "pack": 745,
+     "url": "https://www.auchan.ro/rosii-pasate-auchan-745-g/p"
+    },
+    {
      "name": "Rosii pasate Pouce, 680 g",
      "price": 6.99,
      "pack": 680,
      "url": "https://www.auchan.ro/rosii-pasate-pouce-680-g/p"
     },
     {
-     "name": "Rosii pasate Auchan, 745 g",
-     "price": 8.79,
-     "pack": 745,
-     "url": "https://www.auchan.ro/rosii-pasate-auchan-745-g/p"
-    },
-    {
      "name": "Rosii prunisoare la caserola, 500g",
-     "price": 11.49,
+     "price": 10.99,
      "pack": 500,
      "url": "https://www.auchan.ro/rosii-prunisoare-la-caserola-500g/p"
     },
@@ -1642,6 +1658,12 @@ window.PRICES = {
      "price": 2.49,
      "pack": 1000,
      "url": "https://www.auchan.ro/sfecla-rosie-1-kg/p"
+    },
+    {
+     "name": "Sfecla rosie in otet Auchan, 700 g",
+     "price": 6.99,
+     "pack": 700,
+     "url": "https://www.auchan.ro/sfecla-rosie-in-otet-auchan-700-g/p"
     },
     {
      "name": "Sfecla rosie cuburi Auchan, 200 g",
@@ -1679,7 +1701,7 @@ window.PRICES = {
     },
     {
      "name": "Patrunjel Cosmin, 8g",
-     "price": 1.89,
+     "price": 1.65,
      "pack": 1,
      "url": "https://www.auchan.ro/patrunjel-cosmin-8g/p"
     }
@@ -1710,20 +1732,18 @@ window.PRICES = {
      "url": "https://www.auchan.ro/ardei-iute-verde-100-g/p"
     }
    ],
-   "frozen_peas": [
-    {
-     "name": "Mazare verde fina congelata Casa Taraneasca, 1kg",
-     "price": 16.49,
-     "pack": 1000,
-     "url": "https://www.auchan.ro/maza-verde-fina-congelata-casa-taraneasca-1kg/p"
-    }
-   ],
    "wok_veg": [
     {
      "name": "Amestec de legume wok Edenia, 450 g",
      "price": 13.39,
      "pack": 450,
      "url": "https://www.auchan.ro/amestec-de-legume-wok-edenia-450-g/p"
+    },
+    {
+     "name": "Amestec de legume wok Ardo Bio, 600 g",
+     "price": 17.99,
+     "pack": 600,
+     "url": "https://www.auchan.ro/amestec-de-legume-wok-ardo-bio-600g/p"
     }
    ],
    "corn": [
@@ -1766,20 +1786,20 @@ window.PRICES = {
      "url": "https://www.auchan.ro/castraveti-murati-mama-nina-800g/p"
     },
     {
-     "name": "Castraveti murati Home Garden, 6 - 9 cm, 900 ml",
-     "price": 16.14,
-     "pack": 900,
-     "url": "https://www.auchan.ro/castraveti-murati-home-garden/p"
-    },
-    {
      "name": "Castraveti murati in otet 4-7 cm Home Garden, 720 ml",
      "price": 12.99,
      "pack": 720,
      "url": "https://www.auchan.ro/castraveti-murati-in-otet-4-7-cm-home-garden-720-cm/p"
     },
     {
+     "name": "Castraveti murati Home Garden, 6 - 9 cm, 900 ml",
+     "price": 17.99,
+     "pack": 900,
+     "url": "https://www.auchan.ro/castraveti-murati-home-garden/p"
+    },
+    {
      "name": "Castraveti murati 1-4 cm Roua, 350 g",
-     "price": 7.89,
+     "price": 8.99,
      "pack": 350,
      "url": "https://www.auchan.ro/roua-castraveti-murati-1-4cm-350g/p"
     }
@@ -1799,15 +1819,15 @@ window.PRICES = {
     },
     {
      "name": "Unt de masa Monor, 82% grasime, 200 g",
-     "price": 9.19,
+     "price": 9.49,
      "pack": 200,
      "url": "https://www.auchan.ro/unt-de-masa-monor-82-grasime-200-g/p"
     },
     {
-     "name": "Unt Albalact, 82% grasime, 200 g",
+     "name": "Unt irlandez Auchan, 82% grasime, 200 g",
      "price": 9.99,
      "pack": 200,
-     "url": "https://www.auchan.ro/unt-albalact-82-grasime-200-g/p"
+     "url": "https://www.auchan.ro/unt-irlandez-auchan-82-grasime-200-g/p"
     },
     {
      "name": "Unt Sole, 82% grasime, 100 g",
@@ -1830,16 +1850,16 @@ window.PRICES = {
      "url": "https://www.auchan.ro/smantana-pentru-gatit-meggle-10-grasime-0-5-l/p"
     },
     {
-     "name": "Smantana de gatit UHT LaDorna, 15% grasime, 500 ml",
-     "price": 13.19,
-     "pack": 500,
-     "url": "https://www.auchan.ro/smantana-de-gatit-uht-ladorna-15-grasime-500-ml/p"
+     "name": "Smantana pentru gatit Meggle, 20% grasime, 1 l",
+     "price": 25.49,
+     "pack": 1000,
+     "url": "https://www.auchan.ro/smantana-pentru-gatit-meggle-20-grasime-1-l/p"
     },
     {
-     "name": "Smantana de gatit Meggle, 20% grasime, 0.5 l",
-     "price": 13.49,
-     "pack": 500,
-     "url": "https://www.auchan.ro/smantana-de-gatit-meggle-20-grasime-0-5-l/p"
+     "name": "Smantana pentru gatit Meggle, 10% grasime, 200 g",
+     "price": 5.99,
+     "pack": 200,
+     "url": "https://www.auchan.ro/smantana-pentru-gatit-meggle-10-grasime-200-g/p"
     }
    ],
    "sour_cream": [
@@ -1869,18 +1889,12 @@ window.PRICES = {
     },
     {
      "name": "Smantana Mizo, 20% grasime, fara lactoza, 150 g",
-     "price": 5.79,
+     "price": 4.29,
      "pack": 150,
      "url": "https://www.auchan.ro/smantana-mizo-20-grasime-fara-lactoza-150-g/p"
     }
    ],
    "mozzarella": [
-    {
-     "name": "Mozzarella gourmet Delaco, 350 g",
-     "price": 13.49,
-     "pack": 350,
-     "url": "https://www.auchan.ro/mozzarella-gourmet-delaco-350-g/p"
-    },
     {
      "name": "Branza Mozzarella Auchan, 350 g",
      "price": 14.29,
@@ -1888,16 +1902,22 @@ window.PRICES = {
      "url": "https://www.auchan.ro/branza-mozzarella-auchan-350-g/p"
     },
     {
-     "name": "Mozzarella Galbani, 125 g",
-     "price": 5.5,
-     "pack": 125,
-     "url": "https://www.auchan.ro/mozzarella-galbani-125-g/p"
+     "name": "Mozzarella Galbani, 200 g",
+     "price": 10,
+     "pack": 200,
+     "url": "https://www.auchan.ro/mozzarella-galbani-200-g/p"
     },
     {
      "name": "Mozzarella Delaco, 125 g",
      "price": 6.49,
      "pack": 125,
      "url": "https://www.auchan.ro/mozzarella-delaco-125-g/p"
+    },
+    {
+     "name": "Mozzarella gourmet Delaco, 750 g",
+     "price": 39.69,
+     "pack": 750,
+     "url": "https://www.auchan.ro/mozzarella-gourmet-delaco-750-g/p"
     },
     {
      "name": "Mozzarella de vaca Buonsapore Trevisanalat, 100 g",
@@ -1920,31 +1940,25 @@ window.PRICES = {
      "url": "https://www.auchan.ro/branza-cheddar-auchan-felii-150-g/p"
     },
     {
-     "name": "Branza cheddar Auchan Bio, felii, 125 g",
-     "price": 12.99,
-     "pack": 125,
-     "url": "https://www.auchan.ro/branza-cheddar-auchan-bio-felii-125-g/p"
+     "name": "Branza cheddar rosie felii Kerrygold, 150 g",
+     "price": 14.79,
+     "pack": 150,
+     "url": "https://www.auchan.ro/branza-cheddar-rosie-felii-kerry-gold-150-g/p"
     },
     {
-     "name": "Branza Irish Cheddar Red Dublin Dairy, felii, 150 g",
-     "price": 17.19,
+     "name": "Branza cheddar alba felii Kerrygold, 150 g",
+     "price": 14.79,
      "pack": 150,
-     "url": "https://www.auchan.ro/branza-irish-cheddar-red-dublin-dairy-felii-150-g/p"
+     "url": "https://www.auchan.ro/branza-cheddar-alba-felii-kerry-gold-150-g/p"
     },
     {
      "name": "Branza Cheddar felii President, 100 g",
-     "price": 11.49,
+     "price": 11.79,
      "pack": 100,
      "url": "https://www.auchan.ro/branza-cheddar-felii-president-100-g/p"
     }
    ],
    "telemea": [
-    {
-     "name": "Telemea de vaca Delaco, 300 g",
-     "price": 11.29,
-     "pack": 300,
-     "url": "https://www.auchan.ro/telemea-de-vaca-delaco-300-g/p"
-    },
     {
      "name": "Branza telemea de vaca Pouce, 200 g",
      "price": 7.99,
@@ -1964,10 +1978,16 @@ window.PRICES = {
      "url": "https://www.auchan.ro/telemea-de-vaca-maturata-delaco-in-saramura-800-g/p"
     },
     {
-     "name": "Telemea de vaca light Hochland, 150 g",
+     "name": "Telemea de vaca Hochland, 350 g",
+     "price": 14.79,
+     "pack": 350,
+     "url": "https://www.auchan.ro/telemea-de-vaca-hochland-350-g/p"
+    },
+    {
+     "name": "Telemea de vaca cu verdeata Hochland, 150 g",
      "price": 10.49,
      "pack": 150,
-     "url": "https://www.auchan.ro/telemea-de-vaca-light-hochland-150-g/p"
+     "url": "https://www.auchan.ro/telemea-de-vaca-cu-verdeata-hochland-150-g/p"
     }
    ],
    "parmesan": [
@@ -2005,21 +2025,21 @@ window.PRICES = {
     },
     {
      "name": "Crema de branza Olympus, 21% grasime, 200 g",
-     "price": 8.39,
+     "price": 7.49,
      "pack": 200,
      "url": "https://www.auchan.ro/crema-de-branza-olympus-21-grasime-200-g/p"
     },
     {
-     "name": "Crema de branza cu verdeata Almette, 250 g",
-     "price": 11.79,
-     "pack": 250,
-     "url": "https://www.auchan.ro/crema-de-branza-cu-verdeata-almette-250-g/p"
+     "name": "Crema de branza Hochland Clasic, 200 g",
+     "price": 7.87,
+     "pack": 200,
+     "url": "https://www.auchan.ro/crema-de-branza-hochland-clasic-200-g/p"
     }
    ],
    "sugar": [
     {
      "name": "Zahar alb Bod, 1 kg",
-     "price": 4.09,
+     "price": 4.39,
      "pack": 1000,
      "url": "https://www.auchan.ro/zahar-alb-bod/p"
     },
@@ -2034,6 +2054,12 @@ window.PRICES = {
      "price": 4.49,
      "pack": 1000,
      "url": "https://www.auchan.ro/zahar-cristal-margaritar-1-kg/p"
+    },
+    {
+     "name": "Zahar cubic alb Diamant, 500 g",
+     "price": 3.59,
+     "pack": 500,
+     "url": "https://www.auchan.ro/zahar-cubic-diamant-500-g/p"
     }
    ],
    "yeast": [
@@ -2048,18 +2074,6 @@ window.PRICES = {
      "price": 1.19,
      "pack": 10,
      "url": "https://www.auchan.ro/drojdie-uscata-pakmaya-10g/p"
-    },
-    {
-     "name": "Drojdie uscata Kamis, 6 x 8 g",
-     "price": 8.99,
-     "pack": 48,
-     "url": "https://www.auchan.ro/drojdie-uscata-kamis-6-x-8-g/p"
-    },
-    {
-     "name": "Drojdie uscata Dr. Oetker, 7 g",
-     "price": 1.35,
-     "pack": 7,
-     "url": "https://www.auchan.ro/drojdie-uscata-dr--oetker-7-g/p"
     }
    ],
    "baking_powder": [
@@ -2089,6 +2103,12 @@ window.PRICES = {
     }
    ],
    "cinnamon": [
+    {
+     "name": "Scortisoara macinata Cosmin 15g",
+     "price": 1.79,
+     "pack": 15,
+     "url": "https://www.auchan.ro/scortisoara-macinata-cosmin-15g/p"
+    },
     {
      "name": "Scortisoara macinata Fuchs, 20 g",
      "price": 3.09,
@@ -2129,7 +2149,7 @@ window.PRICES = {
     },
     {
      "name": "Biosept miere propolis Fares, 100ml",
-     "price": 43.99,
+     "price": 44.99,
      "pack": 100,
      "url": "https://www.auchan.ro/biosept-miere-propolis-fares-100ml/p"
     }
@@ -2148,16 +2168,16 @@ window.PRICES = {
      "url": "https://www.auchan.ro/ulei-de-floarea-soarelui-auchan-1-l/p"
     },
     {
+     "name": "Ulei de floarea soarelui bogat in Vitamina E Spornic, 2 l",
+     "price": 16.49,
+     "pack": 2000,
+     "url": "https://www.auchan.ro/ulei-de-floarea-soarelui-bogat-in-vitamina-e-spornic-2-l/p"
+    },
+    {
      "name": "Ulei de floarea soarelui Floarea de Aur, 1 l",
      "price": 8.29,
      "pack": 1000,
      "url": "https://www.auchan.ro/ulei-de-floarea-soarelui-floarea-de-aur-1-l/p"
-    },
-    {
-     "name": "Ulei de floarea soarelui bogat in Vitamina E Spornic, 2 l",
-     "price": 16.59,
-     "pack": 2000,
-     "url": "https://www.auchan.ro/ulei-de-floarea-soarelui-bogat-in-vitamina-e-spornic-2-l/p"
     },
     {
      "name": "Sos Bechamel UHT pe baza de ulei de seminte de floarea soarelui Gran Cucina, 500 g",
@@ -2182,28 +2202,28 @@ window.PRICES = {
    ],
    "tomato_paste": [
     {
-     "name": "Pasta de tomate Auchan concentratie 24%, 720g",
-     "price": 7.99,
-     "pack": 720,
-     "url": "https://www.auchan.ro/pasta-de-tomate-auchan-concentratie-24--720g/p"
-    },
-    {
      "name": "Pasta de tomate Defne, concentratie 24%, 800 g",
      "price": 9.85,
      "pack": 800,
      "url": "https://www.auchan.ro/pasta-de-tomate-defne-concentratie-24-800-g/p"
     },
     {
+     "name": "Pasta de tomate Auchan concentratie 24%, 720g",
+     "price": 9.15,
+     "pack": 720,
+     "url": "https://www.auchan.ro/pasta-de-tomate-auchan-concentratie-24--720g/p"
+    },
+    {
      "name": "Pasta de tomate Auchan, concentratie 24%, 300 g",
-     "price": 4.89,
+     "price": 5.49,
      "pack": 300,
      "url": "https://www.auchan.ro/pasta-de-tomate-auchan-concentratie-24--300g/p"
     },
     {
-     "name": "Pasta de tomate Mutti Passata 700 g",
-     "price": 11.89,
-     "pack": 700,
-     "url": "https://www.auchan.ro/pasta-de-tomate-mutti-passata-700-g/p"
+     "name": "Pasta de tomate Home Garden 930 g",
+     "price": 22.99,
+     "pack": 930,
+     "url": "https://www.auchan.ro/pasta-de-tomate-home-garden-930-g/p"
     },
     {
      "name": "Pasta de tomate Giana, 70 g",
@@ -2214,72 +2234,72 @@ window.PRICES = {
    ],
    "coconut_milk": [
     {
-     "name": "Lapte de cocos Desiam 400 ml",
-     "price": 12.69,
+     "name": "Lapte de cocos Ampawa, 400 ml",
+     "price": 12.49,
      "pack": 400,
-     "url": "https://www.auchan.ro/lapte-de-cocos-desiam-400-ml/p"
+     "url": "https://www.auchan.ro/lapte-de-cocos-ampawa-400-ml/p"
     },
     {
      "name": "Lapte cocos Shan Shi Light, 165 g",
-     "price": 6.55,
+     "price": 6.99,
      "pack": 165,
      "url": "https://www.auchan.ro/lapte-cocos-shan-shi-light-165-g/p"
     },
     {
      "name": "Lapte de nuca de cocos Thai Blue Dragon, 400 ml",
-     "price": 15.89,
+     "price": 16.99,
      "pack": 400,
      "url": "https://www.auchan.ro/blue-dragon-thai-lapte-cocos-400-ml/p"
     },
     {
-     "name": "Lapte de cocos Shan Shi, 165 g",
-     "price": 8.99,
-     "pack": 165,
-     "url": "https://www.auchan.ro/lapte-de-cocos-shan-shi-165-g/p"
+     "name": "Lapte de cocos Desiam 400 ml",
+     "price": 18.39,
+     "pack": 400,
+     "url": "https://www.auchan.ro/lapte-de-cocos-desiam-400-ml/p"
     }
    ],
    "soy_sauce": [
     {
-     "name": "Sos de soia Superior Jolion, 500 ml",
-     "price": 6.99,
-     "pack": 500,
-     "url": "https://www.auchan.ro/sos-de-soia-superior-jolion-500ml/p"
-    },
-    {
      "name": "Sos de soia Vifon, 230 ml",
-     "price": 6.89,
+     "price": 8.99,
      "pack": 230,
      "url": "https://www.auchan.ro/sos-de-soia-vifon-230ml/p"
     },
     {
      "name": "Sos superior de soia Miyata, 150 ml",
-     "price": 6.79,
+     "price": 6.99,
      "pack": 150,
      "url": "https://www.auchan.ro/sos-superior-de-soia-chainkwo-150-ml/p"
     },
     {
      "name": "Sos de soia fermentat natural Daesang, 200 ml",
-     "price": 11.49,
+     "price": 12.49,
      "pack": 200,
      "url": "https://www.auchan.ro/sos-de-soia-fermentat-natural-daesang-200-ml/p"
+    },
+    {
+     "name": "Sos de soia Maggi Classic, 190 ml",
+     "price": 12.49,
+     "pack": 190,
+     "url": "https://www.auchan.ro/sos-de-soia-maggi-classic-190-ml/p"
     }
    ],
    "rice_vinegar": [
     {
      "name": "Otet de orez alb Asian Flavours, 150 ml",
-     "price": 6.59,
+     "price": 6.99,
      "pack": 150,
      "url": "https://www.auchan.ro/otet-de-orez-alb-asian-flavours-150-ml/p"
     },
     {
      "name": "Otet din orez Desiam, 200 ml",
-     "price": 11.19,
+     "price": 12.49,
      "pack": 200,
      "url": "https://www.auchan.ro/otet-din-orez-desiam-200-ml/p"
     },
     {
      "name": "Otet de orez Shan Shi, 150 g",
-     "price": 14.99,
+     "price": 15.99,
      "pack": 150,
      "url": "https://www.auchan.ro/otet-de-orez-shan-shi-150-g/p"
     }
@@ -2287,19 +2307,19 @@ window.PRICES = {
    "sesame_oil": [
     {
      "name": "Ulei de susan Kaiser Franz Josef, 250 ml",
-     "price": 27.49,
+     "price": 20.9,
      "pack": 250,
      "url": "https://www.auchan.ro/ulei-de-susan-kaiser-franz-josef-250-ml/p"
     },
     {
      "name": "Ulei de susan Kikkoman, 125 ml",
-     "price": 24.49,
+     "price": 25.49,
      "pack": 125,
      "url": "https://www.auchan.ro/ulei-de-susan-kikkoman-125-ml/p"
     },
     {
      "name": "Ulei de susan Shan Shi, 100 g",
-     "price": 23.49,
+     "price": 24.49,
      "pack": 100,
      "url": "https://www.auchan.ro/ulei-de-susan-shan-shi-100-g/p"
     }
@@ -2321,13 +2341,13 @@ window.PRICES = {
    "fish_sauce": [
     {
      "name": "Sos de peste Thai Dancer, 300 ml",
-     "price": 13.99,
+     "price": 14.99,
      "pack": 300,
      "url": "https://www.auchan.ro/sos-de-peste-thai-dancer-300-ml/p"
     },
     {
      "name": "Sos de peste deSiam, 60 ml",
-     "price": 8.59,
+     "price": 8.99,
      "pack": 60,
      "url": "https://www.auchan.ro/desiam---sos-de-peste-60-ml/p"
     }
@@ -2335,21 +2355,15 @@ window.PRICES = {
    "oyster_sauce": [
     {
      "name": "Sos condimentat de stridii Shan Shi, 200 ml",
-     "price": 24.39,
+     "price": 25.49,
      "pack": 200,
      "url": "https://www.auchan.ro/sos-condimentat-de-stridii-shan-shi-200-ml/p"
-    },
-    {
-     "name": "Sos de stridii, Blue Dragon, 150 ml",
-     "price": 25.59,
-     "pack": 150,
-     "url": "https://www.auchan.ro/so-de-stridii-blue-dragon-ml/p"
     }
    ],
    "curry_paste": [
     {
      "name": "Desiam - Pasta de Curry rosu, 70 g",
-     "price": 13.79,
+     "price": 14.99,
      "pack": 70,
      "url": "https://www.auchan.ro/desiam---pasta-de-curry-rosu-70-g/p"
     }
@@ -2357,7 +2371,7 @@ window.PRICES = {
    "paprika": [
     {
      "name": "Boia dulce Cosmin, 100g",
-     "price": 5.19,
+     "price": 5.49,
      "pack": 100,
      "url": "https://www.auchan.ro/boia-dulce-cosmin-100g/p"
     },
@@ -2375,7 +2389,7 @@ window.PRICES = {
     },
     {
      "name": "Boia de ardei dulce Galeo, 20.4 g",
-     "price": 2.55,
+     "price": 2.09,
      "pack": 20.4,
      "url": "https://www.auchan.ro/galeo-boia-de-ardei-dulce-20-4g/p"
     }
@@ -2395,15 +2409,15 @@ window.PRICES = {
     },
     {
      "name": "Mustar clasic Auchan 300 g",
-     "price": 3.49,
+     "price": 3.99,
      "pack": 300,
      "url": "https://www.auchan.ro/mustar-clasic-auchan-300-g/p"
     },
     {
-     "name": "Mustar cu boabe intregi Auchan, 300 g",
-     "price": 4.49,
-     "pack": 300,
-     "url": "https://www.auchan.ro/mustar-cu-boabe-intregi-auchan-300-g/p"
+     "name": "Mustar de masa La Minut, 490g",
+     "price": 8.49,
+     "pack": 490,
+     "url": "https://www.auchan.ro/mustar-de-masa-la-minut-490g/p"
     },
     {
      "name": "Mustar boabe Cosmin, 100g",
@@ -2426,20 +2440,20 @@ window.PRICES = {
      "url": "https://www.auchan.ro/sos-de-maioneza-auchan-450-g/p"
     },
     {
+     "name": "Sos de maioneza Heinz, 395 g",
+     "price": 12.49,
+     "pack": 395,
+     "url": "https://www.auchan.ro/sos-de-maioneza-heinz-395g/p"
+    },
+    {
      "name": "Sos de maioneza cu chili Spring Chilli Mayo, 440 g",
      "price": 14.49,
      "pack": 440,
      "url": "https://www.auchan.ro/sos-de-maioneza-cu-chili-spring-chilli-mayo-440-g/p"
     },
     {
-     "name": "Sos de maioneza Dijamant, 285 ml",
-     "price": 9.99,
-     "pack": 285,
-     "url": "https://www.auchan.ro/sos-de-maioneza-dijamant-285-ml/p"
-    },
-    {
      "name": "Maioneza cu crema wasabi Saitaku, 160 g",
-     "price": 20.19,
+     "price": 21.49,
      "pack": 160,
      "url": "https://www.auchan.ro/maioneza-cu-crema-wasabi-saitaku-160-g/p"
     }
@@ -2460,28 +2474,28 @@ window.PRICES = {
    ],
    "peanuts": [
     {
-     "name": "Arahide decojite prajite cu sare Elmas, 300 g",
-     "price": 6.69,
-     "pack": 300,
-     "url": "https://www.auchan.ro/elmas-arah-decoj-prajit-sare-300g/p"
-    },
-    {
      "name": "Arahide decojite cu sare prajite in ulei Auchan, 300 g",
      "price": 6.89,
      "pack": 300,
      "url": "https://www.auchan.ro/arahide-decojite-cu-sare-prajite-in-ulei-auchan-300-g/p"
     },
     {
+     "name": "Arahide decojite Pouce, prajite si sarate, 100 g",
+     "price": 2.59,
+     "pack": 100,
+     "url": "https://www.auchan.ro/arahide-decojite-pouce-prajite-si-sarate-100-g/p"
+    },
+    {
+     "name": "Arahide decojite prajite cu sare Elmas, 300 g",
+     "price": 9.39,
+     "pack": 300,
+     "url": "https://www.auchan.ro/elmas-arah-decoj-prajit-sare-300g/p"
+    },
+    {
      "name": "Arahide prajite si sarate Best, 150 g",
      "price": 5.89,
      "pack": 150,
      "url": "https://www.auchan.ro/arahide-prajite-si-sarate-best-150-g/p"
-    },
-    {
-     "name": "Arahide prajite nesarate Mogyi, 300 g",
-     "price": 12.29,
-     "pack": 300,
-     "url": "https://www.auchan.ro/arahide-prajite-nesarate-mogyi-300-g/p"
     },
     {
      "name": "Arahide prajite si sarate Best, 50 g",
@@ -2504,16 +2518,16 @@ window.PRICES = {
      "url": "https://www.auchan.ro/vin-rosu-auchan-pierre-c-vieillesvignes-075l-sgr/p"
     },
     {
+     "name": "Vin rosu sec Apriori Empirico, Saperavi, 0.75 l",
+     "price": 25.89,
+     "pack": 750,
+     "url": "https://www.auchan.ro/vin-rosu-sec-apriori-empirico-saperavi-0-75-l-sgr/p"
+    },
+    {
      "name": "Vin rosu sec Feteasca de Tohani, 0.75 l",
      "price": 30.39,
      "pack": 750,
      "url": "https://www.auchan.ro/vin-rosu-sec-feteasca-de-tohani-0-75-l-sgr/p"
-    },
-    {
-     "name": "Vin rosu sec Tohani Siel, Cupaj, 0.75 l",
-     "price": 35.49,
-     "pack": 750,
-     "url": "https://www.auchan.ro/vin-rosu-sec-siel-rosu-14-0-75l-sgr/p"
     }
    ],
    "semolina": [
@@ -2530,22 +2544,22 @@ window.PRICES = {
      "url": "https://www.auchan.ro/gris-raftul-bunicii-500g/p"
     },
     {
+     "name": "Gris de grau extra fin Dobrogea, 500 g",
+     "price": 4.39,
+     "pack": 500,
+     "url": "https://www.auchan.ro/gris-de-grau-extra-fin-dobrogea-500-g/p"
+    },
+    {
      "name": "Gris din grau Titan, 500 g",
-     "price": 3.99,
+     "price": 4.99,
      "pack": 500,
      "url": "https://www.auchan.ro/titan-gris-din-grau-500g/p"
     },
     {
-     "name": "Gris de grau Baneasa, 500 g",
-     "price": 4.35,
-     "pack": 500,
-     "url": "https://www.auchan.ro/gris-baneasa-500-g/p"
-    },
-    {
-     "name": "Grisine cu mac Pouce, 90 g",
+     "name": "Grisine cu sare Pouce, 90 g",
      "price": 2.19,
      "pack": 90,
-     "url": "https://www.auchan.ro/grisine-cu-mac-pouce-90-g/p"
+     "url": "https://www.auchan.ro/grisine-cu-sare-pouce-90-g/p"
     }
    ],
    "couscous": [
@@ -2557,18 +2571,30 @@ window.PRICES = {
     },
     {
      "name": "CusCus Premium Panzani, 500 g",
-     "price": 8.29,
+     "price": 8.25,
      "pack": 500,
      "url": "https://www.auchan.ro/cuscus-premium-panzani-500-g/p"
     },
     {
      "name": "Cuscus Gyermelyi cu 4 oua, 500 g",
-     "price": 9.69,
+     "price": 9.99,
      "pack": 500,
      "url": "https://www.auchan.ro/cuscus-gyermelyi-cu-4-oua-500-g/p"
     }
    ],
    "bulgur": [
+    {
+     "name": "Bulgur Auchan, 400 g",
+     "price": 5.99,
+     "pack": 400,
+     "url": "https://www.auchan.ro/bulgur-auchan-400g/p"
+    },
+    {
+     "name": "Bulgur Legurme, 500 g",
+     "price": 7.9,
+     "pack": 500,
+     "url": "https://www.auchan.ro/bulgur-legurme-500-g/p"
+    },
     {
      "name": "Bulgur Legurme, 1 kg",
      "price": 17.19,
@@ -2576,22 +2602,16 @@ window.PRICES = {
      "url": "https://www.auchan.ro/bulgur-legurme-1-kg/p"
     },
     {
-     "name": "Bulgur Legurme, 500 g",
-     "price": 9.29,
-     "pack": 500,
-     "url": "https://www.auchan.ro/bulgur-legurme-500-g/p"
-    },
-    {
      "name": "Bulgur Suntat, 500 g",
-     "price": 11.99,
+     "price": 12.99,
      "pack": 500,
      "url": "https://www.auchan.ro/bulgur-suntat-500-g/p"
     },
     {
-     "name": "Salata bulgur cu humus Auchan, 200 g",
-     "price": 8.99,
+     "name": "Salata bulgur cu humus si merisoare Auchan, 200 g",
+     "price": 9.49,
      "pack": 200,
-     "url": "https://www.auchan.ro/salata-bulgur-cu-humus-auchan-200-g/p"
+     "url": "https://www.auchan.ro/salata-bulgur-cu-humus-si-merisoare-auchan-200-g/p"
     }
    ],
    "gnocchi": [
@@ -2611,21 +2631,21 @@ window.PRICES = {
    "puff_pastry": [
     {
      "name": "Aluat foietaj Linco, 800g",
-     "price": 13.19,
+     "price": 9.89,
      "pack": 800,
      "url": "https://www.auchan.ro/aluat-foietaj-linco-800g/p"
+    },
+    {
+     "name": "Aluat foietaj Linco Patisero Editie Limitata, 400g",
+     "price": 7.42,
+     "pack": 400,
+     "url": "https://www.auchan.ro/aluat-foietaj-linco-patisero-editie-limitata-400g/p"
     },
     {
      "name": "Aluat foietaj Pouce, 230 g",
      "price": 4.99,
      "pack": 230,
      "url": "https://www.auchan.ro/aluat-foietaj-pouce-230-g/p"
-    },
-    {
-     "name": "Aluat foietaj Linco Patisero Editie Limitata, 400g",
-     "price": 9.89,
-     "pack": 400,
-     "url": "https://www.auchan.ro/aluat-foietaj-linco-patisero-editie-limitata-400g/p"
     },
     {
      "name": "Aluat foietaj refrigerat Bella, 400 g",
@@ -2654,10 +2674,24 @@ window.PRICES = {
      "url": "https://www.auchan.ro/fidea-cuiburi-baneasa-200g/p"
     },
     {
+     "name": "Fidea cuiburi Baneasa cu 4 oua, 200 g",
+     "price": 5.45,
+     "pack": 200,
+     "url": "https://www.auchan.ro/fidea-cuiburi-baneasa-cu-4-oua-200-g/p"
+    },
+    {
      "name": "Fidea de preparare rapida cu gust de legume Reeva, 60 g",
      "price": 2.75,
      "pack": 60,
      "url": "https://www.auchan.ro/fidea-de-preparare-rapida-cu-gust-de-legume--plic-60gr--60buc-bax/p"
+    }
+   ],
+   "shiitake": [
+    {
+     "name": "Ciuperci Shiitake, 100 g",
+     "price": 6.99,
+     "pack": 100,
+     "url": "https://www.auchan.ro/ciuperci-shii-take-100-g/p"
     }
    ],
    "buns": [
@@ -2682,22 +2716,22 @@ window.PRICES = {
      "url": "https://www.auchan.ro/lavas-lipie-turceasca-yuksel-500-g-1/p"
     },
     {
-     "name": "Lipie graham Pain D`or, 500 g",
-     "price": 7.65,
-     "pack": 5,
-     "url": "https://www.auchan.ro/lipie-graham-pain-d-or-500-g/p"
-    },
-    {
      "name": "Lipie cu pui Auchan, 240 g",
      "price": 9.99,
      "pack": 5,
      "url": "https://www.auchan.ro/lipie-cu-pui-auchan-240-g/p"
+    },
+    {
+     "name": "Lipie piadina clasica Acqua Farina, 360 g",
+     "price": 10.99,
+     "pack": 5,
+     "url": "https://www.auchan.ro/lipie-piadina-clasica-acqua-farina-360-g/p"
     }
    ],
    "tahini": [
     {
      "name": "Sos tahini Sebahat, 290 g",
-     "price": 26.39,
+     "price": 27.49,
      "pack": 290,
      "url": "https://www.auchan.ro/sos-tahini-sebahat-290-g/p"
     }
@@ -2708,6 +2742,12 @@ window.PRICES = {
      "price": 11.19,
      "pack": 690,
      "url": "https://www.auchan.ro/masline-verzi-in-saramura-auchan-fara-samburi-690-g/p"
+    },
+    {
+     "name": "Masline negre in saramura Auchan, fara samburi, 350 g",
+     "price": 6.49,
+     "pack": 350,
+     "url": "https://www.auchan.ro/masline-negre-in-saramura-auchan-fara-samburi-350-g/p"
     },
     {
      "name": "Masline negre fara samburi Vera, 340 g",
@@ -2722,22 +2762,16 @@ window.PRICES = {
      "url": "https://www.auchan.ro/masline-verzi-fara-samburi-vera-340-g/p"
     },
     {
-     "name": "Masline negre fara samburi Alinda, 360 g",
-     "price": 14.89,
-     "pack": 360,
-     "url": "https://www.auchan.ro/alinda-masline-negre-fara-samburi-360g/p"
-    },
-    {
-     "name": "Mix masline tip kalamata si verzi Pepe Rosso, fara samburi, 150 g",
+     "name": "Masline negre colosal Pepe Rosso, fara samburi, 150 g",
      "price": 10.89,
      "pack": 150,
-     "url": "https://www.auchan.ro/mix-masline-tip-kalamata-si-verzi-pepe-rosso-fara-samburi-150-g/p"
+     "url": "https://www.auchan.ro/masline-negre-colosal-pepe-rosso-fara-samburi-150-g/p"
     }
    ],
    "chicken_mince": [
     {
      "name": "Carne tocata de pui Deliciosul de Vaslui, caserola, +/- 700 g",
-     "price": 17.29,
+     "price": 13.79,
      "pack": 700,
      "url": "https://www.auchan.ro/carne-tocata-de-pui-deliciosul-de-vaslui-caserola-700-g/p"
     }
@@ -2786,37 +2820,43 @@ window.PRICES = {
    ],
    "jam": [
     {
+     "name": "Gem de piersici Raureni, 370 g",
+     "price": 7.99,
+     "pack": 370,
+     "url": "https://www.auchan.ro/gem-de-piersici-raureni-370-g/p"
+    },
+    {
      "name": "Gem de capsuni Auchan 370 g",
      "price": 8.99,
      "pack": 370,
      "url": "https://www.auchan.ro/gem-de-capsuni-auchan-370-g/p"
     },
     {
-     "name": "Gem de visine Arovit 360 g",
-     "price": 9.35,
-     "pack": 360,
-     "url": "https://www.auchan.ro/gem-de-visine-arovit-360-g/p"
-    },
-    {
      "name": "Gem de caise Arovit 360 g",
-     "price": 9.35,
+     "price": 9.99,
      "pack": 360,
      "url": "https://www.auchan.ro/gem-de-caise-arovit-360-g/p"
     },
     {
      "name": "Salata Little Gem, 300 g",
-     "price": 8.99,
+     "price": 8.49,
      "pack": 300,
      "url": "https://www.auchan.ro/salata-little-gem-300-g/p"
     },
     {
-     "name": "Gem de capsuni dietetic Arovit, 225 g",
-     "price": 12.29,
+     "name": "Gem de caise dietetic Arovit, 225 g",
+     "price": 13.49,
      "pack": 225,
-     "url": "https://www.auchan.ro/gem-de-capsuni-dietetic-arovit-225-g/p"
+     "url": "https://www.auchan.ro/gem-de-caise-dietetic-arovit-225-g/p"
     }
    ],
    "cocoa": [
+    {
+     "name": "Cacao pudra Dr.Oetker, 100 g",
+     "price": 11.89,
+     "pack": 100,
+     "url": "https://www.auchan.ro/cacao-neagra-dr--oetker-100-g/p"
+    },
     {
      "name": "Pudra de cacao Dr.Oetker, 50 g",
      "price": 7.15,
@@ -2825,7 +2865,7 @@ window.PRICES = {
     },
     {
      "name": "Cacao pudra ecologica Torras, fara zahar si fara gluten, 150 g",
-     "price": 35.19,
+     "price": 36.49,
      "pack": 150,
      "url": "https://www.auchan.ro/cacao-pudra-ecologica-torras-fara-zahar-si-fara-gluten-150-g/p"
     }
@@ -2838,22 +2878,22 @@ window.PRICES = {
      "url": "https://www.auchan.ro/baton-de-ciocolata-neagra-kitkat-70-41-5g/p"
     },
     {
-     "name": "Ciocolata neagra Roshen, 80% cacao, 85 g",
-     "price": 9.99,
-     "pack": 85,
-     "url": "https://www.auchan.ro/ciocolata-neagra-roshen-80-cacao-85g/p"
+     "name": "Ciocolata neagra Toblerone Dark, 100 g",
+     "price": 13.49,
+     "pack": 100,
+     "url": "https://www.auchan.ro/ciocolata-neagra-toblerone-dark-100-g/p"
+    },
+    {
+     "name": "Ciocolata neagra cu menta Torras fara gluten, 75 g",
+     "price": 11.04,
+     "pack": 75,
+     "url": "https://www.auchan.ro/ciocolata-neagra-cu-menta-torras-fara-gluten/p"
     },
     {
      "name": "Tablete de ciocolata neagra Merci, 100 g, 4 bucati",
      "price": 14.99,
      "pack": 100,
      "url": "https://www.auchan.ro/tablete-de-ciocolata-neagra-merci-100-g-4-bucati/p"
-    },
-    {
-     "name": "Ciocolata neagra cu 70% cacao Heidi Ecuador, 50 g",
-     "price": 8.07,
-     "pack": 50,
-     "url": "https://www.auchan.ro/ciocolata-neagra-cu-70-cacao-heidi-ecuador-50-g/p"
     },
     {
      "name": "Ciocolata neagra Heidi, 75% cacao, 27 g",
@@ -2864,14 +2904,8 @@ window.PRICES = {
    ],
    "cauliflower": [
     {
-     "name": "Conopida, +/- 2 kg",
-     "price": 8.99,
-     "pack": 2000,
-     "url": "https://www.auchan.ro/conopida-1-kg/p"
-    },
-    {
      "name": "Conopida in otet Auchan La Masa in Romania, 700 g",
-     "price": 10.99,
+     "price": 9.34,
      "pack": 700,
      "url": "https://www.auchan.ro/conopida-in-otet-auchan-la-masa-in-romania-700-g/p"
     },
@@ -2891,7 +2925,7 @@ window.PRICES = {
    "sweet_potato": [
     {
      "name": "Cartofi dulci, +/-1.5 kg",
-     "price": 4.99,
+     "price": 6.49,
      "pack": 1500,
      "url": "https://www.auchan.ro/cartofi-dulci-1-5-kg/p"
     },
@@ -2922,10 +2956,10 @@ window.PRICES = {
    ],
    "orange_juice": [
     {
-     "name": "Suc de portocale Olympus, 1 l",
-     "price": 14.24,
-     "pack": 1000,
-     "url": "https://www.auchan.ro/suc-natural-de-portocale-olympus-1-l-sgr/p"
+     "name": "Suc de portocale Olympus, 0.5 l",
+     "price": 7.79,
+     "pack": 500,
+     "url": "https://www.auchan.ro/suc-natural-de-portocale-olympus-0-5-l-sgr/p"
     },
     {
      "name": "Suc de portocale Santal, 1 l",
@@ -2947,7 +2981,7 @@ window.PRICES = {
     },
     {
      "name": "Suc de portocale Olympus, 0.25 l",
-     "price": 7.29,
+     "price": 7.55,
      "pack": 250,
      "url": "https://www.auchan.ro/suc-natural-de-portocale-olympus-0-25-l-sgr/p"
     }
@@ -2980,10 +3014,10 @@ window.PRICES = {
      "url": "https://www.auchan.ro/fasole-verde-taiata-daucy-820-g/p"
     },
     {
-     "name": "Fasole verde pastai congelata Edenia, 1 kg",
-     "price": 17.39,
-     "pack": 1000,
-     "url": "https://www.auchan.ro/fasole-verde-pastai-congelata-edenia-1kg/p"
+     "name": "Mix de fasole verde si galbena D'aucy 400 g",
+     "price": 6.79,
+     "pack": 400,
+     "url": "https://www.auchan.ro/mix-de-fasole-verde-si-galbena-daucy-400-g/p"
     }
    ]
   },
@@ -3054,14 +3088,6 @@ window.PRICES = {
      "url": "https://carrefour.ro/catalogsearch/result/?q=iaurt%20grecesc"
     }
    ],
-   "banana": [
-    {
-     "name": "Banane deshidratate 150g",
-     "price": 8.69,
-     "pack": 150,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=banane"
-    }
-   ],
    "egg": [
     {
      "name": "Fierbator de oua Trisa Vario Eggs 7390.7512, 7 oua, 400 W, Argintiu",
@@ -3093,8 +3119,14 @@ window.PRICES = {
    "rice": [
     {
      "name": " Orez cu bob mare Deroni 1kg",
-     "price": 8.69,
+     "price": 8.59,
      "pack": 1000,
+     "url": "https://carrefour.ro/catalogsearch/result/?q=orez%20bob%20lung"
+    },
+    {
+     "name": "Deroni Orez Camolino 900G",
+     "price": 8.09,
+     "pack": 900,
      "url": "https://carrefour.ro/catalogsearch/result/?q=orez%20bob%20lung"
     },
     {
@@ -3104,15 +3136,9 @@ window.PRICES = {
      "url": "https://carrefour.ro/catalogsearch/result/?q=orez%20bob%20lung"
     },
     {
-     "name": "Orez Bob cu Bob Mare Riso Scotti 1 kg",
-     "price": 11.99,
-     "pack": 1000,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=orez%20bob%20lung"
-    },
-    {
-     "name": "Orez special pentru pilaf Panzani 1kg",
-     "price": 12.99,
-     "pack": 1000,
+     "name": "Orez basmati Deroni 500g",
+     "price": 5.99,
+     "pack": 500,
      "url": "https://carrefour.ro/catalogsearch/result/?q=orez%20bob%20lung"
     },
     {
@@ -3157,19 +3183,19 @@ window.PRICES = {
     },
     {
      "name": "Bioverde Linte Eco 400G",
-     "price": 7.05,
+     "price": 5.29,
      "pack": 400,
      "url": "https://carrefour.ro/catalogsearch/result/?q=linte"
     },
     {
      "name": "D'aucy linte 800 g",
-     "price": 14.49,
+     "price": 12.99,
      "pack": 800,
      "url": "https://carrefour.ro/catalogsearch/result/?q=linte"
     },
     {
      "name": "Linte verde Deroni 500g",
-     "price": 9.99,
+     "price": 8.99,
      "pack": 500,
      "url": "https://carrefour.ro/catalogsearch/result/?q=linte"
     },
@@ -3189,8 +3215,14 @@ window.PRICES = {
     },
     {
      "name": "Fasole rosie in saramura Giana 425ml",
-     "price": 5.39,
+     "price": 4.55,
      "pack": 425,
+     "url": "https://carrefour.ro/catalogsearch/result/?q=fasole%20rosie%20conserva"
+    },
+    {
+     "name": "Fasole rosie boabe O Green 400g",
+     "price": 5.09,
+     "pack": 400,
      "url": "https://carrefour.ro/catalogsearch/result/?q=fasole%20rosie%20conserva"
     },
     {
@@ -3200,14 +3232,8 @@ window.PRICES = {
      "url": "https://carrefour.ro/catalogsearch/result/?q=fasole%20rosie%20conserva"
     },
     {
-     "name": "Fasole rosie boabe O Green 400g",
-     "price": 6.39,
-     "pack": 400,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=fasole%20rosie%20conserva"
-    },
-    {
      "name": "Fasole rosie D'aucy 150g",
-     "price": 4.79,
+     "price": 5.09,
      "pack": 150,
      "url": "https://carrefour.ro/catalogsearch/result/?q=fasole%20rosie%20conserva"
     }
@@ -3327,8 +3353,14 @@ window.PRICES = {
    "oil": [
     {
      "name": "Ulei de masline extravirgin Kaiser Franz Josef 500 ml",
-     "price": 25.39,
+     "price": 22.89,
      "pack": 500,
+     "url": "https://carrefour.ro/catalogsearch/result/?q=ulei%20masline%20extravirgin"
+    },
+    {
+     "name": "Ulei De Masline Extra Virgin 1 L Mueloliva",
+     "price": 49.99,
+     "pack": 1000,
      "url": "https://carrefour.ro/catalogsearch/result/?q=ulei%20masline%20extravirgin"
     },
     {
@@ -3344,14 +3376,8 @@ window.PRICES = {
      "url": "https://carrefour.ro/catalogsearch/result/?q=ulei%20masline%20extravirgin"
     },
     {
-     "name": "Ulei de masline extravirgin Costa dOro, 1l",
-     "price": 55.99,
-     "pack": 1000,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=ulei%20masline%20extravirgin"
-    },
-    {
      "name": "Ulei de masline extravirgin 250 ml Kaiser Franz Josef",
-     "price": 17.75,
+     "price": 16.19,
      "pack": 250,
      "url": "https://carrefour.ro/catalogsearch/result/?q=ulei%20masline%20extravirgin"
     }
@@ -3400,18 +3426,12 @@ window.PRICES = {
      "price": 6.99,
      "pack": 500,
      "url": "https://carrefour.ro/catalogsearch/result/?q=mere"
-    },
-    {
-     "name": "Spuma bord satin, mere verzi, Carplan 500ml",
-     "price": 24.9,
-     "pack": 500,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=mere"
     }
    ],
    "nuts": [
     {
      "name": "Miez de nuca Carrefour la Piata 500g",
-     "price": 29.99,
+     "price": 24.99,
      "pack": 500,
      "url": "https://carrefour.ro/catalogsearch/result/?q=miez%20nuca"
     },
@@ -3484,12 +3504,6 @@ window.PRICES = {
      "url": "https://carrefour.ro/catalogsearch/result/?q=faina%20alba%20000"
     },
     {
-     "name": "Faina alba de grau Raftul bunicii, superioara 000, 1 kg",
-     "price": 2.69,
-     "pack": 1000,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=faina%20alba%20000"
-    },
-    {
      "name": "Faina alba superioara 000 Arpis, 1Kg",
      "price": 2.85,
      "pack": 1000,
@@ -3498,6 +3512,12 @@ window.PRICES = {
     {
      "name": "Faina alba de grau 000 Baneasa 1kg",
      "price": 2.95,
+     "pack": 1000,
+     "url": "https://carrefour.ro/catalogsearch/result/?q=faina%20alba%20000"
+    },
+    {
+     "name": "Faina alba Grania superioara 000 pentru cozonac 1kg",
+     "price": 2.99,
      "pack": 1000,
      "url": "https://carrefour.ro/catalogsearch/result/?q=faina%20alba%20000"
     }
@@ -3511,7 +3531,7 @@ window.PRICES = {
     },
     {
      "name": "Hrisca Daruri din Moldova 500g",
-     "price": 13.59,
+     "price": 15.99,
      "pack": 500,
      "url": "https://carrefour.ro/catalogsearch/result/?q=hrisca"
     },
@@ -3523,12 +3543,6 @@ window.PRICES = {
     }
    ],
    "polenta": [
-    {
-     "name": "Malai Extra Sticlos Degermiat Morile Maties 1 Kg",
-     "price": 4.79,
-     "pack": 1000,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=malai"
-    },
     {
      "name": "Bio All Green malai ecologic 500 g",
      "price": 6.45,
@@ -3651,7 +3665,7 @@ window.PRICES = {
     },
     {
      "name": "Zacusca ciuperci Capricii si Delicii 550 g",
-     "price": 21.19,
+     "price": 20.55,
      "pack": 550,
      "url": "https://carrefour.ro/catalogsearch/result/?q=ciuperci%20champignon"
     }
@@ -3696,12 +3710,6 @@ window.PRICES = {
      "url": "https://carrefour.ro/catalogsearch/result/?q=rosii"
     },
     {
-     "name": "Rosii pasate Cirio, 1L",
-     "price": 11.99,
-     "pack": 1000,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=rosii"
-    },
-    {
      "name": "Rosii intregi Giana decojite 400g",
      "price": 5.19,
      "pack": 400,
@@ -3714,9 +3722,9 @@ window.PRICES = {
      "url": "https://carrefour.ro/catalogsearch/result/?q=rosii"
     },
     {
-     "name": "Rosii taiate fin Mutti 210g",
-     "price": 6.09,
-     "pack": 210,
+     "name": "Rosii decojite Mutti 400 g",
+     "price": 7.39,
+     "pack": 400,
      "url": "https://carrefour.ro/catalogsearch/result/?q=rosii"
     }
    ],
@@ -3789,13 +3797,13 @@ window.PRICES = {
    "chili": [
     {
      "name": "Ardei iute in otet Defne 370 ml",
-     "price": 5.69,
+     "price": 4.25,
      "pack": 370,
      "url": "https://carrefour.ro/catalogsearch/result/?q=ardei%20iute"
     },
     {
      "name": "Ardei iute in otet Carrefour Classic 260g",
-     "price": 5.39,
+     "price": 4.31,
      "pack": 260,
      "url": "https://carrefour.ro/catalogsearch/result/?q=ardei%20iute"
     },
@@ -3832,9 +3840,9 @@ window.PRICES = {
      "url": "https://carrefour.ro/catalogsearch/result/?q=porumb%20dulce%20conserva"
     },
     {
-     "name": "Porumb dulce boabe Gold Bonduelle, 530g",
-     "price": 12.99,
-     "pack": 530,
+     "name": "Porumb boabe, dulce si crocant, Bonduelle, 670g",
+     "price": 17.49,
+     "pack": 670,
      "url": "https://carrefour.ro/catalogsearch/result/?q=porumb%20dulce%20conserva"
     },
     {
@@ -3900,8 +3908,20 @@ window.PRICES = {
    ],
    "sugar": [
     {
-     "name": "Zahar alb cristal Margaritar 1Kg",
+     "name": "Zahar alb, Carrefour Classic, 1kg",
+     "price": 4.19,
+     "pack": 1000,
+     "url": "https://carrefour.ro/catalogsearch/result/?q=zahar%20alb"
+    },
+    {
+     "name": "Zahar cristal punga hartie Diamant 1kg",
      "price": 4.69,
+     "pack": 1000,
+     "url": "https://carrefour.ro/catalogsearch/result/?q=zahar%20alb"
+    },
+    {
+     "name": "Zahar fin Brilliant Diamant 1kg",
+     "price": 5.39,
      "pack": 1000,
      "url": "https://carrefour.ro/catalogsearch/result/?q=zahar%20alb"
     },
@@ -3912,30 +3932,10 @@ window.PRICES = {
      "url": "https://carrefour.ro/catalogsearch/result/?q=zahar%20alb"
     },
     {
-     "name": "Zahar Alb Baghete Carrefour Classic, 400g",
-     "price": 5.89,
-     "pack": 400,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=zahar%20alb"
-    },
-    {
-     "name": "Baghete Zahar Alb Diamant 1Kg",
-     "price": 16.49,
-     "pack": 1000,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=zahar%20alb"
-    },
-    {
      "name": "Baghete Zahar Alb Diamant 50x5g",
      "price": 4.99,
      "pack": 250,
      "url": "https://carrefour.ro/catalogsearch/result/?q=zahar%20alb"
-    }
-   ],
-   "yeast": [
-    {
-     "name": "Drojdie uscata Carrefour Classic 7g",
-     "price": 1.09,
-     "pack": 7,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=drojdie%20uscata"
     }
    ],
    "baking_powder": [
@@ -3943,12 +3943,6 @@ window.PRICES = {
      "name": "Praf de copt Ruf 15g",
      "price": 0.59,
      "pack": 15,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=praf%20de%20copt"
-    },
-    {
-     "name": "Dr.Oetker Praf de Copt 10g",
-     "price": 0.59,
-     "pack": 10,
      "url": "https://carrefour.ro/catalogsearch/result/?q=praf%20de%20copt"
     },
     {
@@ -3961,6 +3955,12 @@ window.PRICES = {
      "name": "Praf de copt Carrefour Bio, 5x7g",
      "price": 4.09,
      "pack": 35,
+     "url": "https://carrefour.ro/catalogsearch/result/?q=praf%20de%20copt"
+    },
+    {
+     "name": "Praf Copt Bio 3X17G Bio Vegan",
+     "price": 7.25,
+     "pack": 51,
      "url": "https://carrefour.ro/catalogsearch/result/?q=praf%20de%20copt"
     }
    ],
@@ -3984,9 +3984,9 @@ window.PRICES = {
      "url": "https://carrefour.ro/catalogsearch/result/?q=scortisoara%20macinata"
     },
     {
-     "name": "Scortisoara macinata Cosmin 15g",
-     "price": 1.89,
-     "pack": 15,
+     "name": "Heidi Winter Portocala&Scortisoara 90G",
+     "price": 10.99,
+     "pack": 90,
      "url": "https://carrefour.ro/catalogsearch/result/?q=scortisoara%20macinata"
     }
    ],
@@ -4004,15 +4004,15 @@ window.PRICES = {
      "url": "https://carrefour.ro/catalogsearch/result/?q=miere"
     },
     {
-     "name": "Miere poliflora Carrefour Classic 900g",
-     "price": 22.49,
-     "pack": 900,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=miere"
-    },
-    {
      "name": "Miere poliflora Roua Florilor 950 g",
      "price": 29.85,
      "pack": 950,
+     "url": "https://carrefour.ro/catalogsearch/result/?q=miere"
+    },
+    {
+     "name": "Miere poliflora Roua Florilor 500g",
+     "price": 16.49,
+     "pack": 500,
      "url": "https://carrefour.ro/catalogsearch/result/?q=miere"
     },
     {
@@ -4023,12 +4023,6 @@ window.PRICES = {
     }
    ],
    "oil_sun": [
-    {
-     "name": "Boniflor ulei rafinat de floarea soarelui 1L",
-     "price": 7.49,
-     "pack": 1000,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=ulei%20floarea%20soarelui"
-    },
     {
      "name": "Ulei din Floarea-Soarelui Spornic La Toate 1L",
      "price": 8.99,
@@ -4045,6 +4039,12 @@ window.PRICES = {
      "name": "Floriol ulei de floarea-soarelui natural bogat in vitamina E, 2L",
      "price": 18.59,
      "pack": 2000,
+     "url": "https://carrefour.ro/catalogsearch/result/?q=ulei%20floarea%20soarelui"
+    },
+    {
+     "name": "Ulei de floarea soarelui Spornic Omega 9, 1 l",
+     "price": 9.89,
+     "pack": 1000,
      "url": "https://carrefour.ro/catalogsearch/result/?q=ulei%20floarea%20soarelui"
     },
     {
@@ -4076,14 +4076,8 @@ window.PRICES = {
      "url": "https://carrefour.ro/catalogsearch/result/?q=pasta%20de%20tomate"
     },
     {
-     "name": "Pasta de tomate Drag de Romania 720g",
-     "price": 8.69,
-     "pack": 720,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=pasta%20de%20tomate"
-    },
-    {
      "name": "Pasta de tomate 24% Carrefour 400 g",
-     "price": 7.29,
+     "price": 5.83,
      "pack": 400,
      "url": "https://carrefour.ro/catalogsearch/result/?q=pasta%20de%20tomate"
     },
@@ -4094,8 +4088,14 @@ window.PRICES = {
      "url": "https://carrefour.ro/catalogsearch/result/?q=pasta%20de%20tomate"
     },
     {
+     "name": "Pasta de tomate 24% Univer, 720g",
+     "price": 13.49,
+     "pack": 720,
+     "url": "https://carrefour.ro/catalogsearch/result/?q=pasta%20de%20tomate"
+    },
+    {
      "name": "Pasta de tomate Giana, 70g",
-     "price": 2.09,
+     "price": 1.79,
      "pack": 70,
      "url": "https://carrefour.ro/catalogsearch/result/?q=pasta%20de%20tomate"
     }
@@ -4217,22 +4217,22 @@ window.PRICES = {
    "gochujang": [
     {
      "name": "Noodles Gochujang Beef 130G Maggi",
-     "price": 10.49,
+     "price": 12.49,
      "pack": 130,
      "url": "https://carrefour.ro/catalogsearch/result/?q=gochujang"
     }
    ],
    "kimchi": [
     {
-     "name": "Noodles Kimchi Chicken 130G Maggi",
-     "price": 10.49,
-     "pack": 130,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=kimchi"
-    },
-    {
      "name": "Tanoshi Kimchi 330G",
      "price": 28.99,
      "pack": 330,
+     "url": "https://carrefour.ro/catalogsearch/result/?q=kimchi"
+    },
+    {
+     "name": "Noodles Kimchi Chicken 130G Maggi",
+     "price": 12.49,
+     "pack": 130,
      "url": "https://carrefour.ro/catalogsearch/result/?q=kimchi"
     }
    ],
@@ -4272,26 +4272,26 @@ window.PRICES = {
    ],
    "mustard": [
     {
+     "name": "Mustar iute Carrefour 300 g",
+     "price": 2.92,
+     "pack": 300,
+     "url": "https://carrefour.ro/catalogsearch/result/?q=mustar"
+    },
+    {
      "name": "Mustar iute Simpl 175g",
      "price": 1.75,
      "pack": 175,
      "url": "https://carrefour.ro/catalogsearch/result/?q=mustar"
     },
     {
-     "name": "Mustar iute Carrefour 300 g",
-     "price": 3.65,
-     "pack": 300,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=mustar"
-    },
-    {
      "name": "Mustar de dulce La Minut 490g",
-     "price": 8.79,
+     "price": 7.45,
      "pack": 490,
      "url": "https://carrefour.ro/catalogsearch/result/?q=mustar"
     },
     {
      "name": "Mustar de masa La Minut 425g",
-     "price": 7.69,
+     "price": 7.59,
      "pack": 425,
      "url": "https://carrefour.ro/catalogsearch/result/?q=mustar"
     }
@@ -4310,20 +4310,20 @@ window.PRICES = {
      "url": "https://carrefour.ro/catalogsearch/result/?q=maioneza"
     },
     {
+     "name": "Sos maioneza de post Univer 420 g",
+     "price": 11.49,
+     "pack": 420,
+     "url": "https://carrefour.ro/catalogsearch/result/?q=maioneza"
+    },
+    {
      "name": "Maioneza Carrefour Classic cu mustar Dijon, 415g",
      "price": 11.59,
      "pack": 415,
      "url": "https://carrefour.ro/catalogsearch/result/?q=maioneza"
     },
     {
-     "name": "Sos maioneza de post Univer 420 g",
-     "price": 11.99,
-     "pack": 420,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=maioneza"
-    },
-    {
      "name": "Sos maioneza Hellmann's, Original 210ml",
-     "price": 14.49,
+     "price": 13.99,
      "pack": 210,
      "url": "https://carrefour.ro/catalogsearch/result/?q=maioneza"
     }
@@ -4336,15 +4336,15 @@ window.PRICES = {
      "url": "https://carrefour.ro/catalogsearch/result/?q=arahide%20prajite"
     },
     {
-     "name": "Arahide decojite Carrefour Classic prajite si sarate 300 g",
-     "price": 6.99,
-     "pack": 300,
+     "name": "Arahide decojite Carrefour Classic prajite si sarate 150g",
+     "price": 3.19,
+     "pack": 150,
      "url": "https://carrefour.ro/catalogsearch/result/?q=arahide%20prajite"
     },
     {
-     "name": "Arahide decojite Carrefour Classic prajite si sarate 150g",
-     "price": 3.99,
-     "pack": 150,
+     "name": "Arahide decojite Carrefour Classic prajite si sarate 300 g",
+     "price": 6.99,
+     "pack": 300,
      "url": "https://carrefour.ro/catalogsearch/result/?q=arahide%20prajite"
     },
     {
@@ -4362,6 +4362,12 @@ window.PRICES = {
    ],
    "red_wine": [
     {
+     "name": "Vin Rosu Sec. Strop de Grai. Red Cuvee Bag-in-box 2L",
+     "price": 29.99,
+     "pack": 2000,
+     "url": "https://carrefour.ro/catalogsearch/result/?q=vin%20rosu%20sec"
+    },
+    {
      "name": "Vin rosu sec, Budureasca Cuvee bag in box, 2 L",
      "price": 51.99,
      "pack": 2000,
@@ -4374,14 +4380,8 @@ window.PRICES = {
      "url": "https://carrefour.ro/catalogsearch/result/?q=vin%20rosu%20sec"
     },
     {
-     "name": "Vin rosu sec, Zodiac Burgund Mare, 0.75L",
-     "price": 31.49,
-     "pack": 750,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=vin%20rosu%20sec"
-    },
-    {
-     "name": "Vin rosu sec, Princiar Feteasca Neagra, 0.75L",
-     "price": 33.99,
+     "name": "Vin Rosu Sec. X+Y. Feteasca Neagra 0.75l",
+     "price": 23.9,
      "pack": 750,
      "url": "https://carrefour.ro/catalogsearch/result/?q=vin%20rosu%20sec"
     },
@@ -4432,6 +4432,12 @@ window.PRICES = {
      "url": "https://carrefour.ro/catalogsearch/result/?q=bulgur"
     },
     {
+     "name": "Bulgur Bio, Pronat, 200 g",
+     "price": 4.19,
+     "pack": 200,
+     "url": "https://carrefour.ro/catalogsearch/result/?q=bulgur"
+    },
+    {
      "name": "Bulgur Pirifan 500g",
      "price": 11.49,
      "pack": 500,
@@ -4441,12 +4447,6 @@ window.PRICES = {
      "name": "Bulgur Baktat 500g",
      "price": 11.99,
      "pack": 500,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=bulgur"
-    },
-    {
-     "name": "Bulgur Bio, Pronat, 200 g",
-     "price": 5.49,
-     "pack": 200,
      "url": "https://carrefour.ro/catalogsearch/result/?q=bulgur"
     }
    ],
@@ -4467,7 +4467,7 @@ window.PRICES = {
     },
     {
      "name": "Fidea cu ou Monte Banato 200g",
-     "price": 4.19,
+     "price": 4.39,
      "pack": 200,
      "url": "https://carrefour.ro/catalogsearch/result/?q=fidea"
     },
@@ -4479,7 +4479,7 @@ window.PRICES = {
     },
     {
      "name": "Fidea cu rosii Knorr 65g",
-     "price": 2.59,
+     "price": 2.99,
      "pack": 65,
      "url": "https://carrefour.ro/catalogsearch/result/?q=fidea"
     }
@@ -4531,7 +4531,7 @@ window.PRICES = {
    "olives": [
     {
      "name": "Masline Kalamata Fara Samburi 850G",
-     "price": 31.99,
+     "price": 30.49,
      "pack": 850,
      "url": "https://carrefour.ro/catalogsearch/result/?q=masline%20negre%20fara%20samburi"
     },
@@ -4586,7 +4586,7 @@ window.PRICES = {
      "url": "https://carrefour.ro/catalogsearch/result/?q=gem"
     },
     {
-     "name": "Gem De Caise200 g Darbo",
+     "name": "Gem De Capsuni200 g Darbo",
      "price": 23.49,
      "pack": 200,
      "url": "https://carrefour.ro/catalogsearch/result/?q=gem"
@@ -4601,20 +4601,20 @@ window.PRICES = {
     },
     {
      "name": "Yummy Tableta Cacao Cu Bucati De Arahide 85G",
-     "price": 5.29,
+     "price": 4.99,
      "pack": 85,
+     "url": "https://carrefour.ro/catalogsearch/result/?q=cacao%20pudra"
+    },
+    {
+     "name": "Pudra Cacao 100% 250G Carrefour Original",
+     "price": 19.99,
+     "pack": 250,
      "url": "https://carrefour.ro/catalogsearch/result/?q=cacao%20pudra"
     },
     {
      "name": "Happy Lea Napolitana Fara Zahar Cacao 95G",
      "price": 7.69,
      "pack": 95,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=cacao%20pudra"
-    },
-    {
-     "name": "Pudra Cacao 100% 250G Carrefour Original",
-     "price": 25.99,
-     "pack": 250,
      "url": "https://carrefour.ro/catalogsearch/result/?q=cacao%20pudra"
     }
    ],
@@ -4626,26 +4626,26 @@ window.PRICES = {
      "url": "https://carrefour.ro/catalogsearch/result/?q=ciocolata%20neagra"
     },
     {
+     "name": "Ciocolata neagra Poiana cu 65% cacao 80 g",
+     "price": 5.99,
+     "pack": 80,
+     "url": "https://carrefour.ro/catalogsearch/result/?q=ciocolata%20neagra"
+    },
+    {
      "name": "Ciocolata Neagra Alpinella 90g",
      "price": 6.99,
      "pack": 90,
      "url": "https://carrefour.ro/catalogsearch/result/?q=ciocolata%20neagra"
     },
     {
-     "name": "Ciocolata neagra Poiana cu 65% cacao 80 g",
-     "price": 6.29,
-     "pack": 80,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=ciocolata%20neagra"
-    },
-    {
-     "name": "Ciocolata neagra Poiana 80g",
-     "price": 6.29,
-     "pack": 80,
+     "name": "Ciocolata neagra cu alune intregi Carrefour Extra, 200g",
+     "price": 17.99,
+     "pack": 200,
      "url": "https://carrefour.ro/catalogsearch/result/?q=ciocolata%20neagra"
     },
     {
      "name": "Ciocolata neagra Lindt Excellence cu 99% cacao 50 g",
-     "price": 29.49,
+     "price": 28.49,
      "pack": 50,
      "url": "https://carrefour.ro/catalogsearch/result/?q=ciocolata%20neagra"
     }
@@ -4705,14 +4705,20 @@ window.PRICES = {
    "orange": [
     {
      "name": "Fanta Portocale 2L",
-     "price": 12.89,
+     "price": 12.09,
      "pack": 2000,
      "url": "https://carrefour.ro/catalogsearch/result/?q=portocale"
     },
     {
-     "name": "Pachet 4 sticle Fanta Portocale, 4x0.33 L",
-     "price": 29.16,
-     "pack": 1320,
+     "name": "Peroni Gusti 0% alc., Portocale Rosii, 4X0.5L",
+     "price": 23.14,
+     "pack": 2000,
+     "url": "https://carrefour.ro/catalogsearch/result/?q=portocale"
+    },
+    {
+     "name": "Fanta Portocale Doza 250 ml",
+     "price": 3.99,
+     "pack": 250,
      "url": "https://carrefour.ro/catalogsearch/result/?q=portocale"
     }
    ],
@@ -4744,15 +4750,15 @@ window.PRICES = {
      "url": "https://carrefour.ro/catalogsearch/result/?q=fasole%20verde%20congelata"
     },
     {
-     "name": "Fasole verde pastai Carrefour Bio, 720ml",
-     "price": 14.99,
-     "pack": 720,
-     "url": "https://carrefour.ro/catalogsearch/result/?q=fasole%20verde%20congelata"
-    },
-    {
      "name": "Fasole verde taiata Carrefour Classic, 360g",
      "price": 8.89,
      "pack": 360,
+     "url": "https://carrefour.ro/catalogsearch/result/?q=fasole%20verde%20congelata"
+    },
+    {
+     "name": "Fasole verde Bonduelle pastai rotunde si taiate, 400g",
+     "price": 10.99,
+     "pack": 400,
      "url": "https://carrefour.ro/catalogsearch/result/?q=fasole%20verde%20congelata"
     },
     {
@@ -4766,152 +4772,92 @@ window.PRICES = {
   "Kaufland": {
    "milk": [
     {
-     "name": "K-Free Lapte UHT\n1,5% grăsime 1 l",
-     "price": 5.99,
-     "pack": 1000,
+     "name": "Olympus lapte\n1,5 l 1,5 l",
+     "price": 12.49,
+     "pack": 1500,
      "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
      "promo": true
     },
     {
-     "name": "Ulker Petit Beurre\nlapte 450 g",
-     "price": 9.99,
-     "pack": 450,
+     "name": "Zuzu Lapte fără lactoză\n1l 1l",
+     "price": 8.99,
+     "pack": 1000,
      "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
      "promo": true
     }
    ],
    "yogurt": [
     {
-     "name": "Covalact Iaurt 900 g",
-     "price": 8.29,
+     "name": "Covalact Iaurt cremos\n900g 900g",
+     "price": 9.79,
      "pack": 900,
      "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
      "promo": true
     },
     {
-     "name": "Lacto Fresh Iaurt stil grecesc\n10% grăsime 900 g",
-     "price": 10.99,
-     "pack": 900,
-     "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
-     "promo": true
-    },
-    {
-     "name": "Zuzu Divin Iaurt în stil grecesc\n140 g 140 g",
-     "price": 2.49,
-     "pack": 140,
+     "name": "Muller Supreme iaurt  cireșe\n150g 150g",
+     "price": 4.59,
+     "pack": 150,
      "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
      "promo": true
     }
    ],
-   "pasta": [
+   "rice": [
     {
-     "name": "Casale del Salento Paste proaspete\nRigatoni, 350 g 350 g",
-     "price": 7.99,
-     "pack": 350,
+     "name": "Deroni Orez 1 kg",
+     "price": 6.59,
+     "pack": 1000,
      "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
      "promo": true
     }
    ],
    "chickpea": [
     {
-     "name": "Deroni Năut\n500g",
-     "price": 6.99,
+     "name": "NATURA Năut decojit 500 g",
+     "price": 4.99,
      "pack": 500,
      "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
      "promo": true
     }
    ],
-   "tuna": [
+   "salmon": [
     {
-     "name": "Double Dutch Apă tonică\ndiverse sortimente 0,2 l",
-     "price": 8.59,
-     "pack": 200,
-     "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
-     "promo": true
-    },
-    {
-     "name": "Defish Ton bucăți\nîn ulei 170 g",
-     "price": 8.99,
-     "pack": 170,
-     "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
-     "promo": true
-    },
-    {
-     "name": "Le Tribute apă tonică clasic\n0,2 l 0,2 l",
-     "price": 11.79,
-     "pack": 200,
-     "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
-     "promo": true
-    },
-    {
-     "name": "Rio Mare Ton bucăți 3x65 g",
-     "price": 24.99,
-     "pack": 195,
+     "name": "Dayseaday File somon\n3x125g 3x125g",
+     "price": 59.99,
+     "pack": 375,
      "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
      "promo": true
     }
    ],
    "potato": [
     {
-     "name": "Rusty Cartofi preprăjiţi\n1 kg 1 kg",
-     "price": 6.49,
-     "pack": 1000,
+     "name": "Cartofi roşii plasă 5 kg\ncalitatea I plasă 5kg",
+     "price": 9.99,
+     "pack": 5000,
      "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
      "promo": true
-    }
-   ],
-   "carrot": [
+    },
     {
-     "name": "K-Bio Morcovi\n750 g 750 g",
-     "price": 7.49,
-     "pack": 750,
-     "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
-     "promo": true
-    }
-   ],
-   "oil": [
-    {
-     "name": "Terra Creta Kolymvari ulei măsline 500 ml",
-     "price": 29.99,
-     "pack": 500,
-     "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
-     "promo": true
-    }
-   ],
-   "beef_stew": [
-    {
-     "name": "Sano Vita Mix 5 semințe 200 g",
-     "price": 7.49,
-     "pack": 200,
+     "name": "Aviko Cartofi Original\npentru Airfryer 600 g 600 g",
+     "price": 8.49,
+     "pack": 600,
      "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
      "promo": true
     }
    ],
    "ham": [
     {
-     "name": "Matache Măcelaru Șuncă Praga\n100gr 100gr",
-     "price": 5.39,
-     "pack": 100,
+     "name": "Wein Şuncă 200 g",
+     "price": 5.49,
+     "pack": 200,
      "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
      "promo": true
-    },
+    }
+   ],
+   "noodles": [
     {
-     "name": "Matache Măcelaru Șuncă din piept de pui\n150 g 150 g",
-     "price": 8.79,
-     "pack": 150,
-     "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
-     "promo": true
-    },
-    {
-     "name": "Meda Şuncă toast\n100 g 100 g",
-     "price": 5.99,
-     "pack": 100,
-     "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
-     "promo": true
-    },
-    {
-     "name": "Aivia Înlocuitor vegan pt. șuncă\n200 g 200 g",
-     "price": 19.99,
+     "name": "Băneasa Tăiţei\nde casã cuiburi 200 g",
+     "price": 2.99,
      "pack": 200,
      "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
      "promo": true
@@ -4919,254 +4865,110 @@ window.PRICES = {
    ],
    "flour": [
     {
-     "name": "K-Classic Făină albă\nde grâu 1 kg",
-     "price": 1.65,
-     "pack": 1000,
+     "name": "RAFTUL BUNICII Făină de grâu tip 000\n2 kg 2 kg",
+     "price": 4.69,
+     "pack": 2000,
      "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
      "promo": true
     }
    ],
    "polenta": [
     {
-     "name": "Goldmaya Mălai 1 kg",
-     "price": 2.59,
+     "name": "K-Classic Mălai\n1 kg 1 kg",
+     "price": 1.79,
      "pack": 1000,
      "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
      "promo": true
     }
    ],
-   "tortilla": [
+   "fresh_tomato": [
     {
-     "name": "K-Classic Lipie Tortilla\ndin făină de GRÂU 320 g",
-     "price": 6.99,
-     "pack": 6,
-     "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
-     "promo": true
-    }
-   ],
-   "avocado": [
-    {
-     "name": "Avocado buc",
-     "price": 3.49,
-     "pack": 1,
-     "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
-     "promo": true
-    },
-    {
-     "name": "K-Bio Avocado caserolă 2 buc",
+     "name": "Cartofi roşii plasă 5 kg\ncalitatea I plasă 5kg",
      "price": 9.99,
-     "pack": 2,
+     "pack": 5000,
      "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
      "promo": true
     }
    ],
-   "eggplant": [
+   "beetroot": [
     {
-     "name": "Piramida Vinete tocate\n450 g 450 g",
-     "price": 4.79,
-     "pack": 450,
+     "name": "Santal kiddo Băut răcorit necarbo\nmăr, sfeclă roșie, căpșune 0,20 l",
+     "price": 3.59,
+     "pack": 200,
      "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
      "promo": true
     }
    ],
-   "mushroom": [
+   "lemon": [
     {
-     "name": "K-Classic Ciuperci 400 g",
-     "price": 5.99,
-     "pack": 400,
-     "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
-     "promo": true
-    },
-    {
-     "name": "Ciuperci grill brune caserolă 1 kg caserolă 1kg",
-     "price": 14.99,
-     "pack": 1000,
-     "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
-     "promo": true
-    }
-   ],
-   "chili": [
-    {
-     "name": "Ardei iute rosu 50g calitatea I\nbuc 50g",
-     "price": 7.99,
-     "pack": 50,
-     "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
-     "promo": true
-    }
-   ],
-   "corn": [
-    {
-     "name": "K-Classic Porumb dulce\n340 g 340 g",
+     "name": "Lămâi netratate 500g\ncalitatea I pachet 500 g",
      "price": 4.99,
-     "pack": 340,
-     "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
-     "promo": true
-    },
-    {
-     "name": "Olympia Porumb dulce 340 g",
-     "price": 7.49,
-     "pack": 340,
+     "pack": 500,
      "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
      "promo": true
     }
    ],
-   "sour_cream": [
+   "cheese_slices": [
     {
-     "name": "McVities Crackers\nsmântână 110 g",
-     "price": 7.39,
-     "pack": 110,
-     "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
-     "promo": true
-    }
-   ],
-   "mozzarella": [
-    {
-     "name": "K-BIO MOZZARELLA 45% GR.\n125G 125 g",
+     "name": "Dublin Dairy Cheddar de vacă Irish alb\n48% grăsime, 100 g 100 g",
      "price": 5.99,
-     "pack": 125,
+     "pack": 100,
      "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
      "promo": true
     }
    ],
    "telemea": [
     {
-     "name": "Lacto Fresh Telemea semisărată de vacă\n37% grăsime, 100 g 100 g",
-     "price": 1.99,
+     "name": "Lacto Fresh Telemea de vacă sărată\n42% grăsime, 100 g 100 g",
+     "price": 2.09,
      "pack": 100,
      "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
      "promo": true
     },
     {
-     "name": "Josi Telemea sedilă\nlapte oaie 45% gr. kg 100 G",
-     "price": 3.39,
+     "name": "Plaiurile Moldovei Telemea de oaie\n47% grăsime, 100 g 100 g",
+     "price": 5.59,
      "pack": 100,
-     "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
-     "promo": true
-    },
-    {
-     "name": "Plaiurile Moldovei Telemea vacă în saramură\n40% grăsime, 1 kg 1 kg",
-     "price": 33.99,
-     "pack": 1000,
-     "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
-     "promo": true
-    }
-   ],
-   "mustard": [
-    {
-     "name": "Bunătăţi de la Bunica Muştar dulce\n500 g 500 g",
-     "price": 9.99,
-     "pack": 500,
-     "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
-     "promo": true
-    }
-   ],
-   "mayonnaise": [
-    {
-     "name": "Univer Sos maioneză\nde post 420 g",
-     "price": 9.49,
-     "pack": 420,
-     "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
-     "promo": true
-    }
-   ],
-   "peanuts": [
-    {
-     "name": "Mogyi Arahide prăjite 300 g",
-     "price": 7.89,
-     "pack": 300,
-     "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
-     "promo": true
-    },
-    {
-     "name": "KLC Arahide în coajă calitatea I\n400g punga 400g",
-     "price": 11.99,
-     "pack": 400,
      "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
      "promo": true
     }
    ],
    "red_wine": [
     {
-     "name": "Vila Beciu Vin roșu / alb 1,5 l",
-     "price": 15.99,
-     "pack": 1500,
+     "name": "Via del Molino Vin alb / roșu / rosé 5 l",
+     "price": 44.99,
+     "pack": 5000,
      "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
      "promo": true
     },
     {
-     "name": "Cervus Cepturum Vin alb / rosé / roșu 3 l",
+     "name": "Crama Stârmina Vin alb / roșu / rosé 3 l",
      "price": 34.99,
      "pack": 3000,
      "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
      "promo": true
-    },
-    {
-     "name": "Proles Pontica Vin alb / roşu / rosé 1,5 l",
-     "price": 18.99,
-     "pack": 1500,
-     "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
-     "promo": true
-    },
-    {
-     "name": "Crama Basilescu Vin alb / roșu / rosé 2 l",
-     "price": 29.99,
-     "pack": 2000,
-     "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
-     "promo": true
-    },
-    {
-     "name": "Zestrea Vin roşu / alb / rosé 0,75l",
-     "price": 11.49,
-     "pack": 750,
-     "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
-     "promo": true
     }
    ],
-   "semolina": [
+   "puff_pastry": [
     {
-     "name": "K-Classic Griş 500 g",
-     "price": 1.99,
-     "pack": 500,
-     "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
-     "promo": true
-    },
-    {
-     "name": "K-Classic Grisine natur\n200 g 200 g",
-     "price": 7.99,
-     "pack": 200,
-     "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
-     "promo": true
-    }
-   ],
-   "buns": [
-    {
-     "name": "Schulstad Gourmet Chifle hamburger 4x81 g",
-     "price": 8.99,
-     "pack": 4,
-     "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
-     "promo": true
-    }
-   ],
-   "pita": [
-    {
-     "name": "K-Classic Lipie Tortilla\ndin făină de GRÂU 320 g",
+     "name": "Bonito Aluat foietaj 2 x 400 g",
      "price": 6.99,
-     "pack": 5,
+     "pack": 800,
      "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
      "promo": true
     }
    ],
    "olives": [
     {
-     "name": "Măsline kalamata blond calibru 231/260 100 g",
-     "price": 1.69,
+     "name": "Măsline negre Mamouth 100 G",
+     "price": 1.79,
      "pack": 100,
      "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
      "promo": true
     },
     {
-     "name": "Măsline negre Atlas 100 G",
-     "price": 1.79,
+     "name": "Măsline mix tricolori 100 G",
+     "price": 6.49,
      "pack": 100,
      "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
      "promo": true
@@ -5174,25 +4976,18 @@ window.PRICES = {
    ],
    "cocoa": [
     {
-     "name": "Dragon Superfoods Cacao\necologică 200 g",
-     "price": 39.99,
-     "pack": 200,
+     "name": "7 Days Minicroissant\nCacao 300 g",
+     "price": 13.59,
+     "pack": 300,
      "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
      "promo": true
     }
    ],
    "green_beans": [
     {
-     "name": "Casa ţărănească Fasole verde 1 kg",
-     "price": 8.99,
-     "pack": 1000,
-     "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
-     "promo": true
-    },
-    {
-     "name": "Râureni Fasole verde\npăstăi, tăiată 690 g",
-     "price": 6.99,
-     "pack": 690,
+     "name": "Edenia Fasole verde întreagă\n1,33 kg 1,33 kg",
+     "price": 17.99,
+     "pack": 1330,
      "url": "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.html",
      "promo": true
     }
